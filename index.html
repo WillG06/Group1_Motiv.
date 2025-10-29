@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motiv Car Hire - Birmingham</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+<header>
+    <div class="container header-content">
+        <div class="logo">
+            <img src="logo2.png" alt="Logo">
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">Cars</a></li>
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Register</a></li>
+                <li><a href="login.html">Login</a></li>
+		<li><a href="#">🌐︎</a></li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Motiv, Car Rental</h1>
+                <p>At Motiv, we make car hire enjoyable! With flexible pick-up options, a variety of quality vehicles, and smooth booking, every journey feels effortless.</p>
+                
+            </div>
+            <div class="booking-form">
+                <h2>Reserve a Vehicle</h2>
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label for="pickup-location">Pick-up Location</label>
+                        <select id="pickup-location">
+                            <option value="">Select a location</option>
+                            <option value="airport">Birmingham Airport</option>
+                            <option value="city-center">Liverpool City Center</option>
+                            <option value="central-london">Central London</option>
+                            <option value="new-station">Manchester New Station</option>
+			    <option value="sheffield-station">Sheffield Station</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Pick-up Date & Time</label>
+                        <div class="date-time-group">
+                            <div>
+                                <input type="date" id="pickup-date">
+                            </div>
+                            <div>
+                                <input type="time" id="pickup-time" value="12:00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Drop-off Date & Time</label>
+                        <div class="date-time-group">
+                            <div>
+                                <input type="date" id="dropoff-date">
+                            </div>
+                            <div>
+                                <input type="time" id="dropoff-time" value="12:00">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="book-btn">Show Available Cars</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+<section class="features">
+    <div class="container">
+        <h2 class="section-title">Why Choose Motiv?</h2>
+        <div class="features-grid">
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="cars1.png" alt="Vehicle Selection">
+                </div>
+                <h3>Wide Vehicle Selection</h3>
+                <p>Choose from economy cars, premium sedans, SUVs, and electric vehicles to suit your needs.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="location1.png" alt="Convenient Locations">
+                </div>
+                <h3>Convenient Locations</h3>
+                <p>Multiple pickup and drop-off locations across Birmingham for your convenience.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="money1.png" alt="Best Price Guarantee">
+                </div>
+                <h3>Best Price Guarantee</h3>
+                <p>We offer competitive rates with no hidden fees and a best price guarantee.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <img src="cust1.png" alt="Customer Support">
+                </div>
+                <h3>24/7 Support</h3>
+                <p>Our customer service team is available around the clock to assist you.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cities-section">
+    <h2 class="section-title">Top Cities for Car Hire</h2>
+
+    <div class="city-grid">
+        <div class="city-card">
+            <img src="city1.png" alt="London">
+            <div class="city-name">London</div>
+        </div>
+        <div class="city-card">
+            <img src="city2.jpg" alt="Birmingham">
+            <div class="city-name">Birmingham</div>
+        </div>
+        <div class="city-card">
+            <img src="city3.jpeg" alt="Sheffield">
+            <div class="city-name">Sheffield</div>
+        </div>
+        <div class="city-card">
+            <img src="city4.jpg" alt="Liverpool">
+            <div class="city-name">Liverpool</div>
+        </div>
+        <div class="city-card">
+            <img src="city5.jpg" alt="Manchester">
+            <div class="city-name">Manchester</div>
+        </div>
+    </div>
+</section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Motiv, Car Rental</h3>
+                    <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#">Our Fleet</a></li>
+                        <li><a href="#">Locations</a></li>
+                        <li><a href="#">Offers</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul>
+                        <li></i>New Street Station, Birmingham</li>
+                        <li> 0712345678</li>
+                        <li> info@motivcarrental.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
