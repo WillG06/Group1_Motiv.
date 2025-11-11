@@ -1,201 +1,377 @@
-
-<!-- Made by 240115551 // Will Giles -> 31/10/25 ( DONE ) -->
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 
 <head>
-	<title>Login to Motiv.</title>
-
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-
-	<link rel="icon" type="image/png" href="images/icons/favicon.ico" />
-	<link rel="stylesheet" type="text/css" href="fonts/font-awesome-4.7.0/css/font-awesome.min.css"> <!--import fonts-->
-
-
-	<link rel="stylesheet" type="text/css" href="css/loginPage.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Hire</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-	<div class="LoginPageLimit">
-		<div class="Background-colours">
-			<div class="login-box">
+    <!-- Page 1: Reservation Form -->
+    <div id="page1" class="page active">
+        <div class="header">
+            <div class="headerContent">
+                <div class="logo">Logo</div>
+            </div>
+        </div>
 
-				<div class="login100-pic js-tilt">
-					<img src="images/img-01.png" alt="IMG">
-				</div>
+        <div class="hero">
+            <h1>CAR HIRE</h1>
+            <p>This section will change as necessary.</p>
+            <p>This section will change as necessary. <a href="#">This section will change as necessary.</a> This
+                section will change as necessary.</p>
 
-				<form class="login100-form validate-form">
-					<span class="login-title">Member Login</span>
+            <div class="promoBanner">
+                <h2>Prepay and get 10% off</h2>
+                <p>This section will change as necessary.</p>
+            </div>
+        </div>
 
-					<!-- llogin inputs -->                      <!--alert-validate-->
-					<div class="login-fields">
-						<div class="input-wrap validate-input " data-validate="Valid email is required: ex@abc.xyz">
-							<input class="input100" type="text" name="email" placeholder="Email / Member ID">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-envelope" aria-hidden="true"></i></span>
-						</div>
+        <div class="container">
+            <div class="reservationForm">
+                <div class="formHeader">
+                    <h2>Reserve a Vehicle</h2>
+                    <div class="links">
+                        or <a href="#">View</a>/<a href="#">Modify</a>/<a href="#">Cancel Reservation</a>
+                    </div>
+                </div>
 
-						<div class="input-wrap validate-input" data-validate="Password is required">
-							<input class="input100" type="password" name="pass" placeholder="Password">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-lock" aria-hidden="true"></i></span>
-						</div>
-					</div>
+                <div class="formGroup">
+                    <label>Pick-up & Return Location (Postcode, City or Airport)<span class="required">*</span></label>
+                    <div class="locationInput">
+                        <input type="text" id="location" value="Birmingham Airport" placeholder="Provide a Location">
+                        <button class="clearBtn" onclick="clearLocation()">×</button>
+                    </div>
+                </div>
 
-					<!-- register input (hidden on logn page) -->
-					<div class="register-fields">
-						<div class="input-wrap validate-input" data-validate="Full name is required">
-							<input class="input100" type="text" name="fullname" placeholder="Full Name">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-user" aria-hidden="true"></i></span>
-						</div>
+                <div class="formGroup">
+                    <div class="checkboxGroup">
+                        <input type="checkbox" id="differentLocation">
+                        <label for="differentLocation" style="font-weight: normal;">Return to a different
+                            location</label>
+                        <span class="infoIcon">i</span>
+                    </div>
+                </div>
 
-						<div class="input-wrap validate-input" data-validate="Valid email is required: ex@abc.xyz">
-							<input class="input100" type="text" name="reg_email" placeholder="Email / Member ID">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-envelope" aria-hidden="true"></i></span>
-						</div>
+                <div class="dateTimeRow">
+                    <div class="formGroup">
+                        <label>Pick-up<span class="required">*</span></label>
+                        <div class="datePickerWrapper">
+                            <input type="text" id="pickupDate" value="06 Nov 2025" placeholder="DD Mon YYYY" readonly>
+                            <div id="pickupCalendar" class="calendarDropdown"></div>
+                        </div>
+                    </div>
+                    <div class="formGroup">
+                        <label>&nbsp;</label>
+                        <select id="pickupTime">
+                            <option>00:00</option>
+                            <option>00:30</option>
+                            <option>01:00</option>
+                            <option>01:30</option>
+                            <option>02:00</option>
+                            <option>02:30</option>
+                            <option>03:00</option>
+                            <option>03:30</option>
+                            <option>04:00</option>
+                            <option>04:30</option>
+                            <option>05:00</option>
+                            <option>05:30</option>
+                            <option>06:00</option>
+                            <option>06:30</option>
+                            <option>07:00</option>
+                            <option>07:30</option>
+                            <option>08:00</option>
+                            <option>08:30</option>
+                            <option>09:00</option>
+                            <option>09:30</option>
+                            <option>10:00</option>
+                            <option>10:30</option>
+                            <option>11:00</option>
+                            <option>11:30</option>
+                            <option>12:00</option>
+                            <option>12:30</option>
+                            <option>13:00</option>
+                            <option>13:30</option>
+                            <option>14:00</option>
+                            <option>14:30</option>
+                            <option>15:00</option>
+                            <option>15:30</option>
+                            <option>16:00</option>
+                            <option>16:30</option>
+                            <option>17:00</option>
+                            <option>17:30</option>
+                            <option>18:00</option>
+                            <option>18:30</option>
+                            <option>19:00</option>
+                            <option>19:30</option>
+                            <option>20:00</option>
+                            <option>20:30</option>
+                            <option>21:00</option>
+                            <option>21:30</option>
+                            <option>22:00</option>
+                            <option>22:30</option>
+                            <option>23:00</option>
+                            <option>23:30</option>
+                        </select>
+                    </div>
+                    <div class="formGroup">
+                        <label>Return<span class="required">*</span></label>
+                        <div class="datePickerWrapper">
+                            <input type="text" id="returnDate" value="09 Nov 2025" placeholder="DD Mon YYYY" readonly>
+                            <div id="returnCalendar" class="calendarDropdown"></div>
+                        </div>
+                    </div>
+                    <div class="formGroup">
+                        <label>&nbsp;</label>
+                        <select id="returnTime">
+                            <option>00:00</option>
+                            <option>00:30</option>
+                            <option>01:00</option>
+                            <option>01:30</option>
+                            <option>02:00</option>
+                            <option>02:30</option>
+                            <option>03:00</option>
+                            <option>03:30</option>
+                            <option>04:00</option>
+                            <option>04:30</option>
+                            <option>05:00</option>
+                            <option>05:30</option>
+                            <option>06:00</option>
+                            <option>06:30</option>
+                            <option>07:00</option>
+                            <option>07:30</option>
+                            <option>08:00</option>
+                            <option>08:30</option>
+                            <option>09:00</option>
+                            <option>09:30</option>
+                            <option>10:00</option>
+                            <option>10:30</option>
+                            <option>11:00</option>
+                            <option>11:30</option>
+                            <option selected>12:00</option>
+                            <option>12:30</option>
+                            <option>13:00</option>
+                            <option>13:30</option>
+                            <option>14:00</option>
+                            <option>14:30</option>
+                            <option>15:00</option>
+                            <option>15:30</option>
+                            <option>16:00</option>
+                            <option>16:30</option>
+                            <option>17:00</option>
+                            <option>17:30</option>
+                            <option>18:00</option>
+                            <option>18:30</option>
+                            <option>19:00</option>
+                            <option>19:30</option>
+                            <option>20:00</option>
+                            <option>20:30</option>
+                            <option>21:00</option>
+                            <option>21:30</option>
+                            <option>22:00</option>
+                            <option>22:30</option>
+                            <option>23:00</option>
+                            <option>23:30</option>
+                        </select>
+                    </div>
+                </div>
 
-						<div class="input-wrap validate-input" data-validate="Password is required">
-							<input class="input100" type="password" name="reg_pass" placeholder="Password">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-lock" aria-hidden="true"></i></span>
-						</div>
+                <div class="dateTimeRow">
+                    <div class="formGroup">
+                        <label>Renter Age Filter<span class="required">*</span></label>
+                        <select>
+                            <option>30+</option>
+                            <option>25-29</option>
+                            <option>21-24</option>
+                            <option>18-20</option>
+                        </select>
+                    </div>
+                    <div class="formGroup">
+                        <label>Account Number <span class="infoIcon">i</span></label>
+                        <input type="text" placeholder="">
+                    </div>
+                    <div class="formGroup">
+                        <label>Vehicle Class <span class="infoIcon">i</span></label>
+                        <select>
+                            <option>All Vehicles</option>
+                            <option>Hatchbacks</option>
+                            <option>SUVs</option>
+                            <option>Saloons</option>
+                            <option>Convertibles</option>
+                            <option>Estates</option>
+                            <option>Minivans</option>
+                            <option>Compact cars</option>
+                            <option>Executive cars</option>
+                            <option>Electric cars</option>
+                        </select>
+                    </div>
+                </div>
 
-						<div class="input-wrap validate-input" data-validate="Confirm password is required">
-							<input class="input100" type="password" name="confirm_pass" placeholder="Confirm Password">
-							<span class="focus-input100"></span>
-							<span class="symbol-input100"><i class="fa fa-lock" aria-hidden="true"></i></span>
-						</div>
-					</div>
+                <button class="browseBtn" onclick="showVehicles()">Browse Vehicles</button>
+            </div>
+        </div>
+    </div>
 
-
-					<div class="container" onclick="this.classList.toggle('active')">
-
-						<span class="text">LOGIN</span>
-						<svg class="fingerprint fingerprint-base" xmlns="http://www.w3.org/2000/svg" width="100"
-							height="100" viewBox="0 0 100 100">
-							<g class="fingerprint-out" fill="none" stroke-width="2" stroke-linecap="round">
-								<path class="odd"
-									d="m 25.117139,57.142857 c 0,0 -1.968558,-7.660465 -0.643619,-13.149003 1.324939,-5.488538 4.659682,-8.994751 4.659682,-8.994751" />
-								<path class="odd"
-									d="m 31.925369,31.477584 c 0,0 2.153609,-2.934998 9.074971,-5.105078 6.921362,-2.17008 11.799844,-0.618718 11.799844,-0.618718" />
-								<path class="odd"
-									d="m 57.131213,26.814448 c 0,0 5.127709,1.731228 9.899495,7.513009 4.771786,5.781781 4.772971,12.109204 4.772971,12.109204" />
-								<path class="odd" d="m 72.334009,50.76769 0.09597,2.298098 -0.09597,2.386485" />
-								<path class="even"
-									d="m 27.849282,62.75 c 0,0 1.286086,-1.279223 1.25,-4.25 -0.03609,-2.970777 -1.606117,-7.675266 -0.625,-12.75 0.981117,-5.074734 4.5,-9.5 4.5,-9.5" />
-								<path class="even"
-									d="m 36.224282,33.625 c 0,0 8.821171,-7.174484 19.3125,-2.8125 10.491329,4.361984 11.870558,14.952665 11.870558,14.952665" />
-								<path class="even"
-									d="m 68.349282,49.75 c 0,0 0.500124,3.82939 0.5625,5.8125 0.06238,1.98311 -0.1875,5.9375 -0.1875,5.9375" />
-								<path class="odd"
-									d="m 31.099282,65.625 c 0,0 1.764703,-4.224042 2,-7.375 0.235297,-3.150958 -1.943873,-9.276886 0.426777,-15.441942 2.370649,-6.165056 8.073223,-7.933058 8.073223,-7.933058" />
-								<path class="odd"
-									d="m 45.849282,33.625 c 0,0 12.805566,-1.968622 17,9.9375 4.194434,11.906122 1.125,24.0625 1.125,24.0625" />
-								<path class="even"
-									d="m 59.099282,70.25 c 0,0 0.870577,-2.956221 1.1875,-4.5625 0.316923,-1.606279 0.5625,-5.0625 0.5625,-5.0625" />
-								<path class="even"
-									d="m 60.901059,56.286612 c 0,0 0.903689,-9.415996 -3.801777,-14.849112 -3.03125,-3.5 -7.329245,-4.723939 -11.867187,-3.8125 -5.523438,1.109375 -7.570313,5.75 -7.570313,5.75" />
-								<path class="even"
-									d="m 34.072577,68.846248 c 0,0 2.274231,-4.165782 2.839205,-9.033748 0.443558,-3.821814 -0.49394,-5.649939 -0.714206,-8.05386 -0.220265,-2.403922 0.21421,-4.63364 0.21421,-4.63364" />
-								<path class="odd"
-									d="m 37.774165,70.831845 c 0,0 2.692139,-6.147592 3.223034,-11.251208 0.530895,-5.103616 -2.18372,-7.95562 -0.153491,-13.647655 2.030229,-5.692035 8.108442,-4.538898 8.108442,-4.538898" />
-								<path class="odd"
-									d="m 54.391174,71.715729 c 0,0 2.359472,-5.427681 2.519068,-16.175068 0.159595,-10.747388 -4.375223,-12.993087 -4.375223,-12.993087" />
-								<path class="even"
-									d="m 49.474282,73.625 c 0,0 3.730297,-8.451831 3.577665,-16.493718 -0.152632,-8.041887 -0.364805,-11.869326 -4.765165,-11.756282 -4.400364,0.113044 -3.875,4.875 -3.875,4.875" />
-								<path class="even"
-									d="m 41.132922,72.334447 c 0,0 2.49775,-5.267079 3.181981,-8.883029 0.68423,-3.61595 0.353553,-9.413359 0.353553,-9.413359" />
-								<path class="odd"
-									d="m 45.161782,73.75 c 0,0 1.534894,-3.679847 2.40625,-6.53125 0.871356,-2.851403 1.28125,-7.15625 1.28125,-7.15625" />
-								<path class="odd"
-									d="m 48.801947,56.125 c 0,0 0.234502,-1.809418 0.109835,-3.375 -0.124667,-1.565582 -0.5625,-3.1875 -0.5625,-3.1875" />
-							</g>
-						</svg>
-						<svg class="fingerprint fingerprint-active" xmlns="http://www.w3.org/2000/svg" width="100"
-							height="100" viewBox="0 0 100 100">
-							<g class="fingerprint-out" fill="none" stroke-width="2" stroke-linecap="round">
-								<path class="odd"
-									d="m 25.117139,57.142857 c 0,0 -1.968558,-7.660465 -0.643619,-13.149003 1.324939,-5.488538 4.659682,-8.994751 4.659682,-8.994751" />
-								<path class="odd"
-									d="m 31.925369,31.477584 c 0,0 2.153609,-2.934998 9.074971,-5.105078 6.921362,-2.17008 11.799844,-0.618718 11.799844,-0.618718" />
-								<path class="odd"
-									d="m 57.131213,26.814448 c 0,0 5.127709,1.731228 9.899495,7.513009 4.771786,5.781781 4.772971,12.109204 4.772971,12.109204" />
-								<path class="odd" d="m 72.334009,50.76769 0.09597,2.298098 -0.09597,2.386485" />
-								<path class="even"
-									d="m 27.849282,62.75 c 0,0 1.286086,-1.279223 1.25,-4.25 -0.03609,-2.970777 -1.606117,-7.675266 -0.625,-12.75 0.981117,-5.074734 4.5,-9.5 4.5,-9.5" />
-								<path class="even"
-									d="m 36.224282,33.625 c 0,0 8.821171,-7.174484 19.3125,-2.8125 10.491329,4.361984 11.870558,14.952665 11.870558,14.952665" />
-								<path class="even"
-									d="m 68.349282,49.75 c 0,0 0.500124,3.82939 0.5625,5.8125 0.06238,1.98311 -0.1875,5.9375 -0.1875,5.9375" />
-								<path class="odd"
-									d="m 31.099282,65.625 c 0,0 1.764703,-4.224042 2,-7.375 0.235297,-3.150958 -1.943873,-9.276886 0.426777,-15.441942 2.370649,-6.165056 8.073223,-7.933058 8.073223,-7.933058" />
-								<path class="odd"
-									d="m 45.849282,33.625 c 0,0 12.805566,-1.968622 17,9.9375 4.194434,11.906122 1.125,24.0625 1.125,24.0625" />
-								<path class="even"
-									d="m 59.099282,70.25 c 0,0 0.870577,-2.956221 1.1875,-4.5625 0.316923,-1.606279 0.5625,-5.0625 0.5625,-5.0625" />
-								<path class="even"
-									d="m 60.901059,56.286612 c 0,0 0.903689,-9.415996 -3.801777,-14.849112 -3.03125,-3.5 -7.329245,-4.723939 -11.867187,-3.8125 -5.523438,1.109375 -7.570313,5.75 -7.570313,5.75" />
-								<path class="even"
-									d="m 34.072577,68.846248 c 0,0 2.274231,-4.165782 2.839205,-9.033748 0.443558,-3.821814 -0.49394,-5.649939 -0.714206,-8.05386 -0.220265,-2.403922 0.21421,-4.63364 0.21421,-4.63364" />
-								<path class="odd"
-									d="m 37.774165,70.831845 c 0,0 2.692139,-6.147592 3.223034,-11.251208 0.530895,-5.103616 -2.18372,-7.95562 -0.153491,-13.647655 2.030229,-5.692035 8.108442,-4.538898 8.108442,-4.538898" />
-								<path class="odd"
-									d="m 54.391174,71.715729 c 0,0 2.359472,-5.427681 2.519068,-16.175068 0.159595,-10.747388 -4.375223,-12.993087 -4.375223,-12.993087" />
-								<path class="even"
-									d="m 49.474282,73.625 c 0,0 3.730297,-8.451831 3.577665,-16.493718 -0.152632,-8.041887 -0.364805,-11.869326 -4.765165,-11.756282 -4.400364,0.113044 -3.875,4.875 -3.875,4.875" />
-								<path class="even"
-									d="m 41.132922,72.334447 c 0,0 2.49775,-5.267079 3.181981,-8.883029 0.68423,-3.61595 0.353553,-9.413359 0.353553,-9.413359" />
-								<path class="odd"
-									d="m 45.161782,73.75 c 0,0 1.534894,-3.679847 2.40625,-6.53125 0.871356,-2.851403 1.28125,-7.15625 1.28125,-7.15625" />
-								<path class="odd"
-									d="m 48.801947,56.125 c 0,0 0.234502,-1.809418 0.109835,-3.375 -0.124667,-1.565582 -0.5625,-3.1875 -0.5625,-3.1875" />
-							</g>
-						</svg>
-
-						<svg class="ok" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
-							viewBox="0 0 100 100">
-							<path d="M34.912 50.75l10.89 10.125L67 36.75" fill="none" stroke="#fff" stroke-width="6" />
-						</svg>
-
-						<svg class="cross" xmlns="http://www.w3.org/2000/svg" width="100" height="100"
-							viewBox="0 0 100 100">
-							<path d="M30 30 L70 70 M70 30 L30 70" fill="none" stroke="#fff" stroke-width="6"
-								stroke-linecap="round" />
-						</svg>
-
-					</div>
-
-
-					<div class="text-center p-t-12">
-						<span class="txt1">
-							Forgot
-						</span>
-						<a class="txt2" href="#">
-							Username / Password?
-						</a>
-					</div>
-
-					<div class="text-center p-t-136">
-						<a class="txt2" href="#" id="toggleForm">
-							Create your Account
-							<i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>
-						</a>
-					</div>
-				</form>
-			</div>
-		</div>
-	</div>
+    <!-- Page 2: Vehicle Selection -->
+    <div id="page2" class="page">
+        <div class="header">
+            <div class="headerContent">
+                <div class="logo">Car Hire</div>
+            </div>
+        </div>
 
 
 
-	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-	<script src="js/loginPage.js"></script>
+        <div class="container">
+            <div class="rentalDetails">
+                <div class="rentalDetailItem clickable" onclick="editSection('rental')">
+                    <strong>RENTAL DETAILS <span class="editLink">Edit</span></strong>
+                    <div>Thu, Nov 06, 00:00</div>
+                    <div>Sun, Nov 09, 12:00</div>
+                </div>
+                <div class="rentalDetailItem clickable" onclick="editSection('pickup')">
+                    <strong>PICK-UP & RETURN <span class="editLink">Edit</span></strong>
+                    <div>Birmingham</div>
+                </div>
+                <div class="rentalDetailItem clickable" onclick="editSection('vehicle')">
+                    <strong>VEHICLE</strong>
+                    <div>Select</div>
+                </div>
+                <div class="rentalDetailItem clickable" onclick="editSection('extras')">
+                    <strong>EXTRAS</strong>
+                </div>
+                <div class="rentalDetailItem clickable" onclick="editSection('review')">
+                    <strong>REVIEW & RESERVE</strong>
+                </div>
+            </div>
 
+            <div class="vehiclesHeader">
+                <h2>Choose a Vehicle Class <span style="font-weight: normal; font-size: 14px;">63 Results</span></h2>
+                <div class="sortBy">
+                    <label>SORT BY</label>
+                    <select>
+                        <option>Featured</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebarLayout">
+                <aside class="sidebar">
+                    <div class="membershipCard">
+                        <div class="logo" style="background-color: #8B1538; color: white; padding: 8px; border: none;">
+                            Rewards Plus®</div>
+                        <h3 style="margin-top: 15px;">Pay & Save</h3>
+                        <div class="membershipBtns">
+                            <button class="btnEnrol">Enrol</button>
+                            <button class="btnPay">Pay in Points</button>
+                        </div>
+                    </div>
+
+                    <div class="filters">
+                        <h3>Filters</h3>
+
+                        <div class="filterGroup">
+                            <strong>TRANSMISSION</strong>
+                            <div style="color: #999; font-size: 11px; margin-top: 5px;">Total from:</div>
+                            <div class="filterItem">
+                                <label><input type="checkbox" checked> Automatic</label>
+                                <span>£67</span>
+                            </div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Manual</label>
+                                <span>£56</span>
+                            </div>
+                        </div>
+
+                        <div class="filterGroup">
+                            <strong>MILEAGE</strong>
+                            <div style="color: #999; font-size: 11px; margin-top: 5px;">Total from:</div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Unlimited Mileage</label>
+                                <span>£45</span>
+                            </div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Limited Mileage</label>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <div class="vehicleList">
+                    <div class="vehicleCard">
+                        <div class="vehicleImage">
+                            <div class="vehicleBadge">✓ Recommended for you</div>
+                        </div>
+                        <div class="vehicleInfo">
+                            <h3>Intermediate SUV</h3>
+                            <div class="vehicleSubtitle">Nissan Qashqai or similar</div>
+                            <div class="vehicleFeatures">
+                                <span>🔧 Automatic</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 3 Bags</span>
+                            </div>
+                            <a class="featuresLink" onclick="showFeatures('suv')">Features & Price Details ↘</a>
+                        </div>
+                        <div class="vehiclePricing">
+                            <div class="priceLabel">BEST PRICE</div>
+                            <div class="price">£89<sup>01</sup></div>
+                            <div class="priceTotal">Total</div>
+                            <button class="selectBtn" onclick="selectVehicle('Intermediate SUV')">Select</button>
+                        </div>
+                    </div>
+
+                    <div class="vehicleCard">
+                        <div class="vehicleImage">
+                            <div class="vehicleBadge">✓ Recommended for you</div>
+                        </div>
+                        <div class="vehicleInfo">
+                            <h3>Compact Elite</h3>
+                            <div class="vehicleSubtitle">Mercedes A Class or similar</div>
+                            <div class="vehicleFeatures">
+                                <span>🔧 Automatic</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 3 Bags</span>
+                            </div>
+                            <a class="featuresLink" onclick="showFeatures('compact')">Features & Price Details ↘</a>
+                        </div>
+                        <div class="vehiclePricing">
+                            <div class="priceLabel">BEST PRICE</div>
+                            <div class="price">£123<sup>45</sup></div>
+                            <div class="priceTotal">Total</div>
+                            <button class="selectBtn" onclick="selectVehicle('Compact Elite')">Select</button>
+                        </div>
+                    </div>
+
+                    <div class="vehicleCard">
+                        <div class="vehicleImage">
+                        </div>
+                        <div class="vehicleInfo">
+                            <h3>Economy 4 Door</h3>
+                            <div class="vehicleSubtitle">Vauxhall Corsa or similar</div>
+                            <div class="vehicleFeatures">
+                                <span>🔧 Manual</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 2 Bags</span>
+                            </div>
+                            <a class="featuresLink" onclick="showFeatures('economy')">Features & Price Details ↘</a>
+                        </div>
+                        <div class="vehiclePricing">
+                            <div class="priceLabel">BEST PRICE</div>
+                            <div class="price">£76<sup>54</sup></div>
+                            <div class="priceTotal">Total</div>
+                            <button class="selectBtn" onclick="selectVehicle('Economy 4 Door')">Select</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 
 </html>
