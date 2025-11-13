@@ -1,0 +1,133 @@
+body {
+margin: 0;
+padding: 20px;
+font-family: Arial, sans-serif;
+background-color: #f8f9fc;
+color: white;
+text-align: center;
+}
+
+h2, p { margin: 10px; }
+
+/* --- Top nav --- */
+ul {
+list-style-type: none;
+margin: 0;
+padding: 0;
+overflow: hidden;
+background-color: #333333;
+}
+ul li { float: left; }
+ul li a {
+display: block;
+color: white;
+text-align: center;
+padding: 14px 16px;
+text-decoration: none;
+}
+ul li a:hover { background-color: #111111; }
+
+/* --- Headings & text  --- */
+h2 {
+background-color: #8B1538;
+color: rgb(255, 255, 255);
+padding: 10px 0;
+margin-bottom: 30px;
+}
+
+h3 {
+color: rgb(0, 0, 0);
+padding: 10px 0;
+margin-bottom: 30px;
+}
+
+p {
+color: rgb(0, 0, 0);
+padding: 10px 0;
+margin-bottom: 30px;
+}
+
+/* --- Cards layout --- */
+.card-container {
+display: flex;
+justify-content: center;
+flex-wrap: wrap;
+gap: 20px;
+}
+
+details > summary {
+padding: 4px;
+width: 200px;
+background-color: #8B1538;
+border: none;
+box-shadow: 1px 1px 2px #bbbbbb;
+cursor: pointer;
+}
+
+details > p {
+background-color: #eeeeee;
+padding: 4px;
+margin: 0;
+box-shadow: 1px 1px 2px #bbbbbb;
+}
+
+.card {
+background-color: white;
+border: 1px solid #ddd;
+border-radius: 10px;
+width: 250px;
+padding: 15px;
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+text-align: left;
+}
+
+/* Image box shows your background-image */
+.img-box {
+background-size: cover;
+background-position: center;
+background-color: #f0f0f0;
+height: 120px;
+border-radius: 8px;
+margin-bottom: 10px;
+}
+
+
+.price {
+font-weight: bold;
+color: #333;
+}
+
+
+.details-btn {
+background-color: #ff6b35;
+border: none;
+color: white;
+padding: 8px 12px;
+border-radius: 5px;
+cursor: pointer;
+}
+.details-btn:hover { background-color: #e65c29; }
+
+.filters-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;               /* space between label and dropdown */
+  margin: 10px 0 20px;    /* tight to the top */
+}
+
+.filters-title {
+  margin: 0;              /* remove big default h3 margins */
+  padding: 0;
+  color: rgb(0, 0, 0);    /* matches your h3 color */
+  font-size: 1rem;
+  text-transform: lowercase;
+}
+
+.filters-select {
+  margin: 0;              /* sit flush with the title */
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #000;
+}
