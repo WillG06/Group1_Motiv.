@@ -130,7 +130,7 @@ class DatePicker {
     }
 }
 
-// Initialise date pickers
+// Initialize date pickers
 window.datePickers = {};
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -144,19 +144,23 @@ function clearLocation() {
 }
 
 function showVehicles() {
-    document.getElementById('page1').classList.remove('active');
-    document.getElementById('page2').classList.add('active');
+    goToPage('page2');
+}
+
+function goToPage(pageId) {
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    document.getElementById(pageId).classList.add('active');
     window.scrollTo(0, 0);
 }
 
 function editSection(section) {
     console.log('Editing section:', section);
-    alert('Editing ' + section + ' section');
 }
 
 function selectVehicle(vehicleName) {
     console.log('Selected vehicle:', vehicleName);
-    alert('You selected: ' + vehicleName);
 }
 
 function showFeatures(vehicleType) {
