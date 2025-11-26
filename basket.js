@@ -167,3 +167,40 @@ function showFeatures(vehicleType) {
     console.log('Showing features for:', vehicleType);
     alert('Showing features and price details');
 }
+
+// Extras functionality
+let selectedExtras = [];
+
+function toggleExtra(button) {
+    const card = button.closest('.extraCard');
+    const extraName = card.querySelector('h4').textContent;
+    const priceText = card.querySelector('.priceAmount').textContent;
+    const priceValue = parseFloat(priceText.replace('£', ''));
+
+    if (button.classList.contains('added')) {
+        button.classList.remove('added');
+        button.textContent = 'Add';
+        selectedExtras = selectedExtras.filter(e => e.name !== extraName);
+    } else {
+        button.classList.add('added');
+        button.textContent = 'Remove';
+        selectedExtras.push({
+            name: extraName,
+            price: priceValue
+        });
+    }
+
+    updateExtrasSummary();
+}
+
+function updateExtrasSummary() {
+    const count = selectedExtras.length;
+    const total = selectedExtras.reduce((sum, extra) => sum + extra.price, 0);
+
+    document.getElementById('extrasCount').textContent =
+        count === 0 ? '0 items selected' :
+            count === 1 ? '1 item selected' :
+                `${count} items selected`;
+
+    document.getElementById('extrasTotal').textContent = `£${total.toFixed(2)}`;
+}

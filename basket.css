@@ -23,15 +23,9 @@ body {
     padding: 0 30px;
 }
 
-.logo {
-    background-color: white;
-    display: inline-block;
-    padding: 8px 18px;
-    font-weight: bold;
-    color: #8B1538;
-    border: 2px solid #8B1538;
-    font-size: 16px;
-    letter-spacing: 0.5px;
+.logo img {
+    height: 50px;
+    display: block;
 }
 
 .hero {
@@ -64,6 +58,7 @@ body {
     margin: 30px auto;
     padding: 24px;
     text-align: center;
+    border-radius: 12px;
 }
 
 .promoBanner h2 {
@@ -82,7 +77,7 @@ body {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
     padding: 35px;
-    border-radius: 6px;
+    border-radius: 12px;
     margin-bottom: 30px;
 }
 
@@ -129,7 +124,7 @@ select {
     width: 100%;
     padding: 14px;
     border: 1px solid #ccc;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 15px;
     transition: border-color 0.2s;
 }
@@ -162,7 +157,20 @@ select:focus {
 
 .dateTimeRow {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 24px;
+}
+
+.dateTimeGroup {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+}
+
+.bottomRow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
@@ -170,12 +178,19 @@ select:focus {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: 4px;
 }
 
 .checkboxGroup input[type="checkbox"] {
     width: 18px;
     height: 18px;
     cursor: pointer;
+    margin: 0;
+    flex-shrink: 0;
+}
+
+.checkboxGroup label {
+    margin: 0;
 }
 
 .infoIcon {
@@ -198,7 +213,7 @@ select:focus {
     padding: 16px 50px;
     font-size: 16px;
     font-weight: 600;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
     display: block;
     margin: 30px auto 0;
@@ -221,7 +236,7 @@ select:focus {
     left: 0;
     background: white;
     border: 1px solid #ccc;
-    border-radius: 6px;
+    border-radius: 12px;
     padding: 20px;
     z-index: 1000;
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
@@ -245,7 +260,7 @@ select:focus {
     color: white;
     border: none;
     padding: 8px 14px;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
     transition: background-color 0.2s;
@@ -278,7 +293,7 @@ select:focus {
     text-align: center;
     padding: 10px;
     cursor: pointer;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 14px;
     transition: background-color 0.2s;
 }
@@ -325,13 +340,19 @@ select:focus {
     gap: 12px;
     flex: 1;
     position: relative;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.step:hover {
+    opacity: 0.8;
 }
 
 .stepNumber {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background-color: #8B1538;
+    background-color: #ccc;
     color: white;
     display: flex;
     align-items: center;
@@ -340,8 +361,8 @@ select:focus {
     font-size: 14px;
 }
 
-.step.inactive .stepNumber {
-    background-color: #ccc;
+.step.active .stepNumber {
+    background-color: #8B1538;
 }
 
 .stepLabel {
@@ -358,7 +379,7 @@ select:focus {
     background-color: #f8e8ed;
     padding: 20px;
     margin-bottom: 35px;
-    border-radius: 6px;
+    border-radius: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -377,7 +398,7 @@ select:focus {
     cursor: pointer;
     transition: background-color 0.2s;
     padding: 12px;
-    border-radius: 6px;
+    border-radius: 10px;
 }
 
 .rentalDetailItem.clickable:hover {
@@ -400,7 +421,7 @@ select:focus {
 .vehiclesHeader {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: baseline;
     margin-bottom: 30px;
 }
 
@@ -416,9 +437,14 @@ select:focus {
     font-weight: 600;
 }
 
+.sortBy label {
+    margin-bottom: 0;
+}
+
 .sortBy select {
     width: 170px;
     font-size: 14px;
+    padding: 10px 12px;
 }
 
 .sidebarLayout {
@@ -431,14 +457,14 @@ select:focus {
     background-color: #2d2d2d;
     color: white;
     padding: 25px;
-    border-radius: 6px;
+    border-radius: 12px;
     height: fit-content;
 }
 
 .membershipCard {
     background-color: #1a1a1a;
     padding: 20px;
-    border-radius: 6px;
+    border-radius: 10px;
     margin-bottom: 25px;
 }
 
@@ -459,7 +485,7 @@ select:focus {
     border: 1px solid white;
     background-color: transparent;
     color: white;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 13px;
     transition: all 0.2s;
@@ -522,7 +548,7 @@ select:focus {
 
 .vehicleCard {
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 16px;
     padding: 25px;
     background-color: white;
     display: grid;
@@ -540,7 +566,7 @@ select:focus {
     background-color: #f8e8ed;
     color: #8B1538;
     padding: 6px 14px;
-    border-radius: 5px;
+    border-radius: 8px;
     font-size: 13px;
     display: inline-block;
     margin-bottom: 12px;
@@ -555,6 +581,8 @@ select:focus {
 .vehicleImage img {
     width: 100%;
     height: auto;
+    border-radius: 8px;
+    object-fit: cover;
 }
 
 .vehicleInfo h3 {
@@ -628,7 +656,7 @@ select:focus {
     color: white;
     border: none;
     padding: 14px 32px;
-    border-radius: 6px;
+    border-radius: 10px;
     cursor: pointer;
     font-size: 15px;
     font-weight: 600;
@@ -646,6 +674,170 @@ select:focus {
 
 .page.active {
     display: block;
+}
+
+/* Extras Page Styles */
+.extrasGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 35px;
+    margin-bottom: 40px;
+}
+
+.extraCategory {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 30px;
+}
+
+.categoryTitle {
+    font-size: 22px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #8B1538;
+    color: #8B1538;
+}
+
+.extraCard {
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    transition: box-shadow 0.2s;
+}
+
+.extraCard:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.extraCard:last-child {
+    margin-bottom: 0;
+}
+
+.extraHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    gap: 20px;
+}
+
+.extraCard h4 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    color: #333;
+}
+
+.extraDescription {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.extraPrice {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.priceAmount {
+    font-size: 24px;
+    font-weight: bold;
+    color: #8B1538;
+    line-height: 1;
+}
+
+.priceUnit {
+    font-size: 12px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.extraActions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.addExtraBtn {
+    background-color: white;
+    color: #8B1538;
+    border: 2px solid #8B1538;
+    padding: 10px 30px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.addExtraBtn:hover {
+    background-color: #8B1538;
+    color: white;
+}
+
+.addExtraBtn.added {
+    background-color: #8B1538;
+    color: white;
+    border-color: #8B1538;
+}
+
+.addExtraBtn.added:after {
+    content: " ✓";
+}
+
+.learnMore {
+    color: #8B1538;
+    text-decoration: underline;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.learnMore:hover {
+    color: #6B0F2A;
+}
+
+.extrasSummary {
+    background-color: #f8e8ed;
+    border: 2px solid #8B1538;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.summaryContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.summaryLeft {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 16px;
+}
+
+.summaryLeft strong {
+    color: #8B1538;
+}
+
+.summaryRight {
+    text-align: right;
+}
+
+.summaryTotal {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 18px;
+}
+
+.totalAmount {
+    font-size: 28px;
+    font-weight: bold;
+    color: #8B1538;
 }
 
 @media (max-width: 768px) {
@@ -666,11 +858,55 @@ select:focus {
         grid-template-columns: 1fr;
     }
 
+    .dateTimeGroup {
+        grid-template-columns: 2fr 1fr;
+    }
+
+    .bottomRow {
+        grid-template-columns: 1fr;
+    }
+
     .progressSteps {
         flex-wrap: wrap;
     }
 
     .stepArrow {
         display: none;
+    }
+
+    .extraHeader {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .extraPrice {
+        text-align: left;
+    }
+
+    .extraActions {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .addExtraBtn {
+        width: 100%;
+    }
+
+    .summaryContent {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .summaryLeft {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .summaryRight {
+        text-align: left;
+        width: 100%;
     }
 }
