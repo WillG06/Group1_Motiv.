@@ -312,6 +312,27 @@
                         <h3>Filters</h3>
 
                         <div class="filterGroup">
+                            <strong>FUEL TYPE</strong>
+                            <div style="color: #999; font-size: 13px; margin-top: 8px;">Total from:</div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Petrol</label>
+                                <span>£52</span>
+                            </div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Diesel</label>
+                                <span>£58</span>
+                            </div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Hybrid</label>
+                                <span>£72</span>
+                            </div>
+                            <div class="filterItem">
+                                <label><input type="checkbox"> Electric</label>
+                                <span>£85</span>
+                            </div>
+                        </div>
+
+                        <div class="filterGroup">
                             <strong>TRANSMISSION</strong>
                             <div style="color: #999; font-size: 13px; margin-top: 8px;">Total from:</div>
                             <div class="filterItem">
@@ -348,15 +369,15 @@
                             <h3>Intermediate SUV</h3>
                             <div class="vehicleSubtitle">Nissan Qashqai or similar</div>
                             <div class="vehicleFeatures">
-                                <span> Automatic</span>
-                                <span> 5 People</span>
-                                <span> 3 Bags</span>
+                                <span>🔧 Automatic</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 3 Bags</span>
                             </div>
                             <a class="featuresLink" onclick="showFeatures('suv')">Features & Price Details ⓘ</a>
                         </div>
                         <div class="vehiclePricing">
                             <div class="priceLabel">BEST PRICE</div>
-                            <div class="price">£89<sup>.01</sup></div>
+                            <div class="price">£98<sup>43</sup></div>
                             <div class="priceTotal">Total</div>
                             <button class="selectBtn" onclick="goToPage('page3')">Select</button>
                         </div>
@@ -371,15 +392,15 @@
                             <h3>Compact Elite</h3>
                             <div class="vehicleSubtitle">Mercedes A Class or similar</div>
                             <div class="vehicleFeatures">
-                                <span> Automatic</span>
-                                <span> 5 People</span>
-                                <span> 3 Bags</span>
+                                <span>🔧 Automatic</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 3 Bags</span>
                             </div>
                             <a class="featuresLink" onclick="showFeatures('compact')">Features & Price Details ⓘ</a>
                         </div>
                         <div class="vehiclePricing">
                             <div class="priceLabel">BEST PRICE</div>
-                            <div class="price">£123<sup>.45</sup></div>
+                            <div class="price">£121<sup>43</sup></div>
                             <div class="priceTotal">Total</div>
                             <button class="selectBtn" onclick="goToPage('page3')">Select</button>
                         </div>
@@ -393,15 +414,15 @@
                             <h3>Economy 4 Door</h3>
                             <div class="vehicleSubtitle">Vauxhall Corsa or similar</div>
                             <div class="vehicleFeatures">
-                                <span> Manual</span>
-                                <span> 5 People</span>
-                                <span> 2 Bags</span>
+                                <span>🔧 Manual</span>
+                                <span>👥 5 People</span>
+                                <span>🧳 2 Bags</span>
                             </div>
                             <a class="featuresLink" onclick="showFeatures('economy')">Features & Price Details ⓘ</a>
                         </div>
                         <div class="vehiclePricing">
                             <div class="priceLabel">BEST PRICE</div>
-                            <div class="price">£76<sup>.54</sup></div>
+                            <div class="price">£76<sup>20</sup></div>
                             <div class="priceTotal">Total</div>
                             <button class="selectBtn" onclick="goToPage('page3')">Select</button>
                         </div>
@@ -496,7 +517,283 @@
         </div>
 
         <div class="container">
-            <h2 style="text-align: center; padding: 100px 0; font-size: 32px; color: #666;">Extras</h2>
+            <h2 style="font-size: 28px; margin-bottom: 30px;">Select Your Extras</h2>
+
+            <div class="extrasGrid">
+                <!-- Protection Products -->
+                <div class="extraCategory">
+                    <h3 class="categoryTitle">Protection Products</h3>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Collision Damage Waiver</h4>
+                                <p class="extraDescription">Reduces your liability for damage to the rental vehicle</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£15.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Personal Accident Insurance</h4>
+                                <p class="extraDescription">Covers medical costs for you and your passengers</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£12.50</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Theft Protection</h4>
+                                <p class="extraDescription">Reduces your liability if the vehicle is stolen</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£10.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Driver & Fees -->
+                <div class="extraCategory">
+                    <h3 class="categoryTitle">Additional Services</h3>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Additional Driver</h4>
+                                <p class="extraDescription">Add an extra authorised driver to your rental</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£10.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Young Driver Fee</h4>
+                                <p class="extraDescription">Required for drivers aged 21-24</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£15.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Pre-paid Fuel</h4>
+                                <p class="extraDescription">Purchase a full tank and return empty</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£70.00</div>
+                                <div class="priceUnit">one-time</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Driver & Fees -->
+                <div class="extraCategory">
+                    <h3 class="categoryTitle">Driver & Fees</h3>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Additional Driver</h4>
+                                <p class="extraDescription">Add an extra authorised driver to your rental</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£10.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Young Driver Fee</h4>
+                                <p class="extraDescription">Required surcharge for drivers aged 21-24</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£10.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Equipment & Services -->
+                <div class="extraCategory">
+                    <h3 class="categoryTitle">Equipment & Services</h3>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Child Safety Seat</h4>
+                                <p class="extraDescription">Suitable for children 9-18kg (Age 9 months to 4 years)</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£7.50</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Booster Seat</h4>
+                                <p class="extraDescription">Suitable for children 15-36kg (Age 4 to 11 years)</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£7.50</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Pre-paid Fuel</h4>
+                                <p class="extraDescription">Purchase a full tank and return empty</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£60.00</div>
+                                <div class="priceUnit">one-time</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>One-Way Rental Fee</h4>
+                                <p class="extraDescription">Drop off at a different location</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£45.00</div>
+                                <div class="priceUnit">one-time</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Out-of-Hours Service</h4>
+                                <p class="extraDescription">Collection or return outside standard opening hours</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£25.00</div>
+                                <div class="priceUnit">one-time</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+
+                    <div class="extraCard">
+                        <div class="extraHeader">
+                            <div>
+                                <h4>Additional Mileage</h4>
+                                <p class="extraDescription">Extra 100 miles per day beyond standard allowance</p>
+                            </div>
+                            <div class="extraPrice">
+                                <div class="priceAmount">£10.00</div>
+                                <div class="priceUnit">per day</div>
+                            </div>
+                        </div>
+                        <div class="extraActions">
+                            <button class="addExtraBtn" onclick="toggleExtra(this)">Add</button>
+                            <a href="#" class="learnMore">Learn more</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="extrasSummary">
+                <div class="summaryContent">
+                    <div class="summaryLeft">
+                        <strong>Selected Extras:</strong>
+                        <span id="extrasCount">0 items selected</span>
+                    </div>
+                    <div class="summaryRight">
+                        <div class="summaryTotal">
+                            <span>Extras Total:</span>
+                            <span class="totalAmount" id="extrasTotal">£0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <button class="browseBtn" onclick="goToPage('page5')">Continue to Review & Reserve</button>
         </div>
     </div>
