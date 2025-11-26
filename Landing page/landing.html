@@ -20,8 +20,24 @@
                 <li><a href="#">Cars</a></li>
                 <li><a href="#">Contact</a></li>
                 <li><a href="#">Register</a></li>
-                <li><a href="#">Login</a></li>
-		<li><a href="#">🌐︎</a></li>
+                <li><a href="loginPage.html">Login</a></li>
+		<li class="language-selector">
+                    <a href="#">🌐︎</a>
+                    <div class="language-dropdown">
+                        <a href="#" data-lang="en">English</a>
+                        <a href="#" data-lang="es">Español</a>
+                        <a href="#" data-lang="fr">Français</a>
+                        <a href="#" data-lang="de">Deutsch</a>
+                        <a href="#" data-lang="it">Italiano</a>
+                        <a href="#" data-lang="zh">中文</a>
+                    </div>
+                </li>
+                <li class="basket-indicator">
+                    <a href="basket.php">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span class="basket-count"><?php echo $basketCount; ?></span>
+                    </a>
+                </li>
             </ul>
         </nav>
     </div>
@@ -329,4 +345,5 @@
 </body>
 
 </html>
+
 
