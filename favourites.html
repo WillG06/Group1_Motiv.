@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motiv - My Favourites</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">Favourites</div>
+        <div class="form-area">
+            
+            <div class="car-card">
+                <span class="heart" onclick="this.style.color='#ccc'">♥</span>
+                <img src="" class="car-img">
+                <div class="car-title">Toyota Corolla 2023</div>
+                <div class="car-specs">Fuel: Petrol | Year: 2023 | Transmission: Automatic</div>
+                <div class="price">£45/day</div>
+                <button class="remove-btn" onclick="this.parentElement.style.display='none'">Remove</button>
+            </div>
+
+            <div class="car-card">
+                <span class="heart" onclick="this.style.color='#ccc'">♥</span>
+                <img src="" class="car-img">
+                <div class="car-title">Honda Civic 2022</div>
+                <div class="car-specs">Fuel: Hybrid | Year: 2022 | 5 Seats</div>
+                <div class="price">£52/day</div>
+                <button class="remove-btn" onclick="this.parentElement.style.display='none'">Remove</button>
+            </div>
+
+            <div class="car-card">
+                <span class="heart" onclick="this.style.color='#ccc'">♥</span>
+                <img src="" class="car-img">
+                <div class="car-title">BMW X3 2024</div>
+                <div class="car-specs">Fuel: Diesel | Year: 2024 | 7 Seats | 4WD</div>
+                <div class="price">£89/day</div>
+                <button class="remove-btn" onclick="this.parentElement.style.display='none'">Remove</button>
+            </div>
+
+            <div class="car-card">
+                <span class="heart" onclick="this.style.color='#ccc'">♥</span>
+                <img src="" class="car-img">
+                <div class="car-title">Audi A4 2023</div>
+                <div class="car-specs">Fuel: Petrol | Year: 2023 | Leather Seats</div>
+                <div class="price">£75/day</div>
+                <button class="remove-btn" onclick="this.parentElement.style.display='none'">Remove</button>
+            </div>
+
+            <button class="orange-btn" onclick="alert('Opening all cars...')">Browse More Cars</button>
+        </div>
+        
+        <div class="back-link">
+            <a href="#">← Back to Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>
