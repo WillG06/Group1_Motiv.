@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Motiv - Contact Us</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">Contact Motiv</div>
+        <div class="form-area">
+            <form id="contactForm">
+                <input type="text" placeholder="First Name" required>
+                <input type="text" placeholder="Last Name" required>
+                <input type="tel" placeholder="Phone Number" required>
+                <input type="email" placeholder="Email" required>
+                <input type="text" placeholder="Country" required>
+                <input type="text" placeholder="Postcode" required>
+                <textarea placeholder="Start typing..."></textarea>
+                <div class="char-count">0/700 Characters</div>
+                <button type="submit" class="orange-btn">Send Message</button>
+            </form>
+            <p id="status" style="text-align:center; margin-top:15px; font-weight:bold;"></p>
+        </div>
+        <div class="back-link">
+            <a href="#">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script>
+        const textarea = document.querySelector('textarea');
+        const count = document.querySelector('.char-count');
+        textarea.addEventListener('input', () => {
+            count.textContent = textarea.value.length + '/700 Characters';
+        });
+
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('status').innerHTML = '<span style="color:green;">Message sent successfully!</span>';
+        });
+    </script>
+</body>
+</html>
