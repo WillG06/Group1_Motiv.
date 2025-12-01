@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Page</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  
+   <img src="Picture1.png" alt="Motiv Logo" class="logo">
+
+  
+  <div class="container">
+   
+    <form id="paymentForm">
+
+      <div class="row">
+
+        
+        <div class="column">
+          <h3 class="title">Order Summary</h3>
+
+          <div class="summary-group">
+              <div class="summary-row">
+      <span class="car-name">Audi A3</span>
+      <span class="car-price">£70/day</span>
+    </div>
+
+    <div class="summary-row">
+      <span class="car-name">BMW X5</span>
+      <span class="car-price">£120/day</span>
+    </div>
+  </div>
+
+          <div class="summary-group">
+            <div class="summary-row"> 
+          <span class="summary-label">Start date</span>
+          <span class="summary-value" id="startDate">20 May 2025</span>
+          </div>
+          
+          
+          <div class="summary-row">
+            <span class="summary-label">End date</span>
+            <span class="summary-value" id="endDateDisplay">25 May 2025</span>
+          </div>
+          </div>
+          <div class="summary-group total">
+          <div class="summary-row">
+          <span class="summary-label">Total price</span>
+          <span class="summary-value" id="totalPrice">£850</span>
+          </div>
+          </div>
+        </div>
+
+     
+        <div class="column">
+          <h3 class="title">Payment</h3>
+
+          <div class="input-box">
+            <label for="cardName">Name on Card:</label>
+            <input id="cardName" type="text" placeholder="Cristiano Ronaldo" required>
+          </div>
+
+          <div class="input-box">
+            <label for="cardNumber">Card Number:</label>
+            <input id="cardNumber" type="text" placeholder="1111 1111 1111 1111" maxlength="19" required>
+          </div>
+
+          <div class="input-box">
+            <label for="expiryDate">Expiry Date:</label>
+            <input id="expiryDate" type="month" required>
+          </div>
+
+          <div class="input-box">
+            <label for="cvv">CVV:</label>
+            <input id="cvv" type="text" placeholder="000" maxlength="3" required>
+          </div>
+        </div>
+
+      </div>
+
+      <button type="submit" class="btn">Securely Pay</button>
+
+    </form>
+
+  </div>
+
+</body>
+</html>
