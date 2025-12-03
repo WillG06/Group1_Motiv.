@@ -527,44 +527,51 @@ nav ul li a.active {
     </style>
 </head>
 <body>
-    <header>
-    <div class="container header-content">
-        <div class="logo">
-            <img src="logo2.png" alt="Logo">
-        </div>
+   <header>
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo2.png" alt="Logo">
+            </div>
 
-        <nav>
-            <ul>
-                <li><a href="landing.php">Home</a></li>
-                <li><a href="cars.php">Cars</a></li>
-                <li><a href="#" class="active">Contact</a></li>
+            <nav>
+                <ul>
+                    <li class="dropdown">
+                        <a href="landing.php" class="dropbtn">Home <i class="fas fa-caret-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href="landing.php">Home</a>
+                            <a href="about.php">About</a>
+                        </div>
+                    <li><a href="cars.php">Cars</a></li>
+                    <li><a href="contact.php">Contact</a></li>
 
-                <?php if (!isset($_SESSION['user'])): ?>
-                    <li><a href="register.php">Register</a></li>
-                    <li><a href="loginPage.php">Login</a></li>
-                <?php else: ?>
-                    <li><a href="customer-dashboard.php">Dashboard</a></li>
-                    <li>
-                        <a href="logout.php" style="color: #ff7f50;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                    <?php if (!isset($_SESSION['user'])): ?>
+                        <li><a href="register.php">Register</a></li>
+                        <li><a href="loginPage.php">Login</a></li>
+                    <?php else: ?>
+                        <li><a href="customer-dashboard.php">Dashboard</a></li>
+                        <li>
+                            <a href="logout.php" style="color: #ff7f50;">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <li><a href="#">🌐︎</a></li>
+
+                    <li class="basket-indicator">
+                        <a href="basket.php">
+                            <i class="fas fa-shopping-basket"></i>
+                            <?php if ($basketCount > 0): ?>
+                                <span class="basket-count"><?php echo $basketCount; ?></span>
+                            <?php endif; ?>
                         </a>
                     </li>
-                <?php endif; ?>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-                <li><a href="#">🌐︎</a></li>
 
-                <li class="basket-indicator">
-                    <a href="basket.php">
-                        <i class="fas fa-shopping-basket"></i>
-                        <?php if ($basketCount > 0): ?>
-                            <span class="basket-count"><?php echo $basketCount; ?></span>
-                        <?php endif; ?>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
-</header>
 
     <section class="contact-container">
         <div class="contact-header">
@@ -844,4 +851,5 @@ nav ul li a.active {
 if (isset($conn)) {
     $conn->close();
 }
+
 ?>
