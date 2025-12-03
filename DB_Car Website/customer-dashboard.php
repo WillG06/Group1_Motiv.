@@ -180,6 +180,8 @@ $upcoming_rentals_stmt->close();
 
     <nav class="topbar__center" aria-label="Primary">
       <!-- Favourites button (you can later connect this to $favorites_count if you want) -->
+     <button id="customer-theme-toggle" class="icon-btn" aria-label="Toggle dark mode">🌙</button>
+
       <button class="icon-btn" aria-label="Saved (Favourites)" id="btn-favourites" title="Favourites">
         <span class="icon">♡</span>
       </button>
@@ -325,4 +327,5 @@ $upcoming_rentals_stmt->close();
   <script src="app.js" defer></script>
 </body>
 </html>
+
 
