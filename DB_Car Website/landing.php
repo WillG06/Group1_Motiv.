@@ -423,7 +423,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
 
             <nav>
                 <ul>
-                    <li><a href="landing.php">Home</a></li>
+                    <li class="dropdown">
+                    	<a href="landing.php" class="dropbtn">Home <i class="fas fa-caret-down"></i></a>
+                    		<div class="dropdown-content">
+                        <a href="landing.php">Home</a>
+                        <a href="about.php">About</a>
+                   		 </div>
                     <li><a href="cars.php" class="active">Cars</a></li>
                     <li><a href="contact.php">Contact</a></li>
 
@@ -453,6 +458,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
             </nav>
         </div>
     </header>
+
 
 
     <section class="hero">
@@ -911,4 +917,5 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php
 // Close database connection
 $conn->close();
+
 ?>
