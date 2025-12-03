@@ -465,10 +465,12 @@ if ($citiesQuery) {
   <main class="main">
     <header class="main__header">
       <h1>Admin</h1>
-      <div class="today-chip" id="today-chip">
-        Today • Admin ID: <?php echo htmlspecialchars($user['memberId'] ?? $user['id']); ?>
+      <div class="header-right">
+        <button id="admin-theme-toggle" class="icon-btn" aria-label="Toggle dark mode">🌙</button>
+        <div class="today-chip" id="today-chip">Today</div>
       </div>
     </header>
+
 
     <!-- Flash messages -->
     <?php if (!empty($successMessage)): ?>
@@ -883,4 +885,5 @@ if ($citiesQuery) {
 <?php
 $conn->close();
 ?>
+
 
