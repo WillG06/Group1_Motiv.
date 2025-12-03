@@ -149,7 +149,8 @@ $upcoming_rentals = $upcoming_rentals_result->fetch_all(MYSQLI_ASSOC);
 $upcoming_rentals_stmt->close();
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -324,3 +325,4 @@ $upcoming_rentals_stmt->close();
   <script src="app.js" defer></script>
 </body>
 </html>
+
