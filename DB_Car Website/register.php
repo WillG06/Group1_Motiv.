@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $_POST = array();
 
-                    // Redirect after success
+                    
                     header("Refresh: 2; URL=customer-dashboard.php");
                 }
             } catch(PDOException $e) {
@@ -147,7 +147,7 @@ if (isset($_SESSION['customer_id']) && $pdo) {
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
         $basket_count = $result['count'] ?? 0;
     } catch(PDOException $e) {
-        // Silently fail
+        
         error_log("Basket count error: " . $e->getMessage());
     }
 }
@@ -447,6 +447,46 @@ if (isset($_SESSION['customer_id']) && $pdo) {
             line-height: 1.4;
         }
 
+        /* Dropdown styles for header */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-content a:hover {
+            background-color: #f5f5f5;
+            color: var(--cobalt-blue);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -465,6 +505,7 @@ if (isset($_SESSION['customer_id']) && $pdo) {
 
         nav ul li {
             margin: 0;
+            position: relative;
         }
 
         nav ul li a {
@@ -519,6 +560,26 @@ if (isset($_SESSION['customer_id']) && $pdo) {
             .register-form-container {
                 margin: 0 auto;
             }
+            
+            /* Responsive dropdown */
+            .dropdown-content {
+                position: static;
+                box-shadow: none;
+                background-color: transparent;
+            }
+            
+            .dropdown-content a {
+                color: white;
+                padding: 10px 20px;
+            }
+            
+            .dropdown:hover .dropdown-content {
+                display: none;
+            }
+            
+            .dropdown.active .dropdown-content {
+                display: block;
+            }
         }
         
         @media (max-width: 768px) {
@@ -538,6 +599,12 @@ if (isset($_SESSION['customer_id']) && $pdo) {
                 grid-template-columns: 1fr;
                 gap: 0;
             }
+            
+            nav ul {
+                gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
         }
         
         @media (max-width: 480px) {
@@ -550,43 +617,49 @@ if (isset($_SESSION['customer_id']) && $pdo) {
 </head>
 <body>
     <header>
-    <div class="container header-content">
-        <div class="logo">
-            <img src="logo2.png" alt="Logo">
-        </div>
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo2.png" alt="Logo">
+            </div>
 
-        <nav>
-            <ul>
-                <li><a href="landing.php">Home</a></li>
-                <li><a href="cars.php">Cars</a></li>
-                <li><a href="contact.php">Contact</a></li>
+            <nav>
+                <ul>
+                    <li class="dropdown">
+                        <a href="landing.php" class="dropbtn">Home <i class="fas fa-caret-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href="landing.php">Home</a>
+                            <a href="about.php">About</a>
+                        </div>
+                    </li>
+                    <li><a href="cars.php">Cars</a></li>
+                    <li><a href="contact.php">Contact</a></li>
 
-                <?php if (!$is_logged_in): ?>
-                    <li><a href="register.php" class="active">Register</a></li>
-                    <li><a href="loginPage.php">Login</a></li>
-                <?php else: ?>
-                    <li><a href="customer-dashboard.php">Dashboard</a></li>
-                    <li>
-                        <a href="logout.php" style="color: #ff7f50;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                    <?php if (!$is_logged_in): ?>
+                        <li><a href="register.php" class="active">Register</a></li>
+                        <li><a href="loginPage.php">Login</a></li>
+                    <?php else: ?>
+                        <li><a href="customer-dashboard.php">Dashboard</a></li>
+                        <li>
+                            <a href="logout.php" style="color: #ff7f50;">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    <?php endif; ?>
+
+                    <li><a href="#">🌐︎</a></li>
+
+                    <li class="basket-indicator">
+                        <a href="basket.php">
+                            <i class="fas fa-shopping-basket"></i>
+                            <?php if ($basket_count > 0): ?>
+                                <span class="basket-count"><?php echo $basket_count; ?></span>
+                            <?php endif; ?>
                         </a>
                     </li>
-                <?php endif; ?>
-
-                <li><a href="#">🌐︎</a></li>
-
-                <li class="basket-indicator">
-                    <a href="basket.php">
-                        <i class="fas fa-shopping-basket"></i>
-                        <?php if ($basket_count > 0): ?>
-                            <span class="basket-count"><?php echo $basket_count; ?></span>
-                        <?php endif; ?>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
-</header>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
     <section class="register-container">
         <div class="register-content">
@@ -896,6 +969,32 @@ if (isset($_SESSION['customer_id']) && $pdo) {
                 
                 formMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
+            
+           
+            const dropdowns = document.querySelectorAll('.dropdown');
+            dropdowns.forEach(dropdown => {
+                const dropbtn = dropdown.querySelector('.dropbtn');
+                dropbtn.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 992) {
+                        e.preventDefault();
+                        dropdowns.forEach(other => {
+                            if (other !== dropdown) {
+                                other.classList.remove('active');
+                            }
+                        });
+                        dropdown.classList.toggle('active');
+                    }
+                });
+            });
+            
+            
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown') && window.innerWidth <= 992) {
+                    dropdowns.forEach(dropdown => {
+                        dropdown.classList.remove('active');
+                    });
+                }
+            });
         });
     </script>
 </body>
