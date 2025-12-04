@@ -108,12 +108,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         
     } elseif ($loginType === 'admin') {
-        $identifier = $_POST['email'] ?? ''; // now can be email and or member id 
+        $identifier = $_POST['email'] ?? ''; // Can now be email OR member ID
 
         if (empty($identifier) || empty($password)) {
             $response['message'] = 'Please fill in all fields';
         } else {
-            
+            // Check if identifier is numeric (member ID) or email
             if (is_numeric($identifier)) {
                 // Login with member ID
                 $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE agent_id = ?");
