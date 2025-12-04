@@ -159,7 +159,6 @@ iframe {
 }
 
 
-
 /* LOGIN */
 
 .LoginPageLimit {
@@ -462,6 +461,11 @@ iframe {
   left: 50%;
   transform: translateX(-50%);
   z-index: 101;
+}
+
+.alert-mismatch::before {
+  content: "Passwords do not match";
+  color: #fff;
 }
 
 
@@ -890,3 +894,27 @@ iframe {
 .login100-form.register-mode .input-wrap[data-validate*="Confirm password"] {
   order: 3;
 }
+
+.register-fields {
+    display: none;
+}
+
+.register-mode .login-fields {
+    display: none;
+}
+
+.register-mode .register-fields {
+    display: block;
+}
+
+/* --- FIX: Show validation bubble for driving licence + all register fields --- */
+.register-fields .validate-input.alert-validate::before,
+.register-fields .validate-input.alert-validate::after {
+    display: block;
+}
+
+.register-fields .validate-input.alert-validate .input100 {
+    border: 2px solid #d96817;
+    animation: shake 0.3s;
+}
+
