@@ -17,39 +17,38 @@
     });
 
     function validate(input) {
-    if (!$(input).is(':visible')) {
+        if (!$(input).is(':visible')) {
+            return true;
+        }
+
+        if (
+            $(input).attr('type') === 'email' ||
+            $(input).attr('name') === 'email' ||
+            $(input).attr('name') === 'reg_email'
+        ) {
+            const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/;
+
+            if (!$(input).val().trim().match(emailRegex)) {
+                return false;
+            }
+
+        } else if ($(input).attr('id') === 'regDriving') {
+
+            const licenceRegex = /^[A-Z9]{5}\d{6}[A-Z]{2}\d{2}$/i;
+
+            if (!$(input).val().trim().match(licenceRegex)) {
+                return false;
+            }
+
+        } else {
+
+            if ($(input).val().trim() === '') {
+                return false;
+            }
+        }
+
         return true;
     }
-
-    if (
-        $(input).attr('type') === 'email' ||
-        $(input).attr('name') === 'email' ||
-        $(input).attr('name') === 'reg_email'
-    ) {
-        const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/;
-
-        if (!$(input).val().trim().match(emailRegex)) {
-            return false;
-        }
-
-    } else if ($(input).attr('id') === 'regDriving') {
-
-        const licenceRegex = /^[A-Z9]{5}\d{6}[A-Z]{2}\d{2}$/i;
-
-        if (!$(input).val().trim().match(licenceRegex)) {
-            return false;
-        }
-
-    } else {
-
-        if ($(input).val().trim() === '') {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 
     function showValidate(input) {
         var thisAlert = $(input).parent();
@@ -133,15 +132,17 @@
         });
     }
 
-    // Toggle between login and register - FIXED VERSION
+    // Toggle between login and register
     document.addEventListener("DOMContentLoaded", function () {
         const toggleLink = document.getElementById("toggleForm");
         const form = document.querySelector(".login100-form");
         const title = form.querySelector(".login-title");
         const textButton = document.querySelector(".text");
         const formActionInput = document.getElementById("formAction");
+        const loginTypeInput = document.getElementById("loginType");
         const loginFields = document.querySelector('.login-fields');
         const registerFields = document.querySelector('.register-fields');
+        const emailInput = document.getElementById('loginEmail');
 
         if (toggleLink && form && title && textButton) {
             toggleLink.addEventListener("click", function (e) {
@@ -163,13 +164,48 @@
                     if (loginFields) loginFields.style.display = 'block';
                     if (registerFields) registerFields.style.display = 'none';
                     
+                    // Reset to customer login when going back to login
+                    if (loginTypeInput) loginTypeInput.value = 'customer';
                     title.textContent = "Member Login";
                     textButton.textContent = "LOGIN";
+                    if (emailInput) emailInput.placeholder = 'Email / Member ID';
                     toggleLink.innerHTML = 'Create your Account <i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>';
                     if (formActionInput) formActionInput.value = "login";
                 }
             });
         }
+
+        // Admin login toggle
+        const adminToggle = document.createElement('a');
+        adminToggle.href = '#';
+        adminToggle.className = 'txt2 admin-toggle';
+        adminToggle.style.display = 'block';
+        adminToggle.style.marginTop = '10px';
+        adminToggle.textContent = 'Login as Admin';
+        
+        const forgotSection = document.querySelector('.text-center.p-t-12');
+        if (forgotSection) {
+            forgotSection.appendChild(adminToggle);
+        }
+
+        adminToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Only allow toggle when NOT in register mode
+            if (!form.classList.contains("register-mode")) {
+                if (loginTypeInput && loginTypeInput.value === 'customer') {
+                    loginTypeInput.value = 'admin';
+                    this.textContent = 'Login as Customer';
+                    if (emailInput) emailInput.placeholder = 'Email / Member ID';
+                    title.textContent = "Admin Login";
+                } else if (loginTypeInput) {
+                    loginTypeInput.value = 'customer';
+                    this.textContent = 'Login as Admin';
+                    if (emailInput) emailInput.placeholder = 'Email / Member ID';
+                    title.textContent = "Member Login";
+                }
+            }
+        });
     });
 
     // AJAX authentication
@@ -270,11 +306,12 @@
             } else {
                 const email = $('#loginEmail').val().trim();
                 const password = $('#loginPassword').val().trim();
+                const loginType = $('#loginType').val() || 'customer';
 
                 formData.append('action', 'login');
                 formData.append('email', email);
                 formData.append('password', password);
-                formData.append('loginType', 'customer');
+                formData.append('loginType', loginType);
             }
 
             try {
