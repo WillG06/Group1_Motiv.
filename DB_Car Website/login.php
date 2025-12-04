@@ -14,11 +14,14 @@ if (isset($_SESSION['user'])) {
 
 $basketCount = 0;
 
-// Initialize demo data
+
+$conn = getDBConnection();
+
+
 initializeDemoData();
 
 function initializeDemoData() {
-    $conn = getDBConnection();
+    global $conn;  //start global
     
     $customerPassword = password_hash('demo123', PASSWORD_DEFAULT);
     $adminPassword = password_hash('admin123', PASSWORD_DEFAULT);
@@ -56,103 +59,102 @@ function initializeDemoData() {
         $stmt->execute();
         $stmt->close();
     }
-    $conn->close(); 
+    // $conn->close(); 
 }
 
 // POST request for login
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $conn = getDBConnection();
+    // Reuse the global connection OR create a new one if it was closed
+    if (!isset($conn) || !$conn->ping()) {
+        $conn = getDBConnection();
+    }
 
     $action = $_POST['action'] ?? '';
     $response = ['success' => false, 'message' => ''];
     
     try {
         if ($action === 'login') {
-    $loginType = $_POST['loginType'] ?? 'customer';
-    $password = $_POST['password'] ?? '';
-    
-    if ($loginType === 'customer') {
-        $email = $_POST['email'] ?? '';
-        
-        if (empty($email) || empty($password)) {
-            $response['message'] = 'Please fill in all fields';
-        } else {
-            $stmt = $conn->prepare("SELECT customer_id, first_name, last_name, email, password FROM customers WHERE email = ?");
-            $stmt->bind_param("s", $email);
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $loginType = $_POST['loginType'] ?? 'customer';
+            $password = $_POST['password'] ?? '';
             
-            if ($result->num_rows === 1) {
-                $user = $result->fetch_assoc();
-                if (password_verify($password, $user['password'])) {
-                    $_SESSION['user'] = [
-                        'id' => $user['customer_id'],
-                        'firstName' => $user['first_name'],
-                        'lastName' => $user['last_name'],
-                        'email' => $user['email'],
-                        'role' => 'customer'
-                    ];
-                    
-                    $response = [
-                        'success' => true,
-                        'message' => 'Login successful',
-                        'redirect' => 'customer-dashboard.php'
-                    ];
+            if ($loginType === 'customer') {
+                $email = $_POST['email'] ?? '';
+                
+                if (empty($email) || empty($password)) {
+                    $response['message'] = 'Please fill in all fields';
                 } else {
-                    $response['message'] = 'Invalid email or password';
-                }
-            } else {
-                $response['message'] = 'Customer not found';
-            }
-            $stmt->close();
-        }
-        
-    } elseif ($loginType === 'admin') {
-        $identifier = $_POST['email'] ?? ''; // Can now be email OR member ID
-
-        if (empty($identifier) || empty($password)) {
-            $response['message'] = 'Please fill in all fields';
-        } else {
-            // Check if identifier is numeric (member ID) or email
-            if (is_numeric($identifier)) {
-                // Login with member ID
-                $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE agent_id = ?");
-                $stmt->bind_param("i", $identifier);
-            } else {
-                // Login with email
-                $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE email = ?");
-                $stmt->bind_param("s", $identifier);
-            }
-    
-            $stmt->execute();
-            $result = $stmt->get_result();
-    
-            if ($result->num_rows === 1) {
-                $user = $result->fetch_assoc();
-                if (password_verify($password, $user['password'])) {
-                    $_SESSION['user'] = [
-                        'id' => $user['agent_id'],
-                        'firstName' => $user['first_name'],
-                        'lastName' => $user['last_name'],
-                        'email' => $user['email'],
-                        'role' => 'admin'
-                    ];
+                    $stmt = $conn->prepare("SELECT customer_id, first_name, last_name, email, password FROM customers WHERE email = ?");
+                    $stmt->bind_param("s", $email);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
                     
-                    $response = [
-                        'success' => true,
-                        'message' => 'Admin login successful',
-                        'redirect' => 'admin-dashboard.php'
-                    ];
-                } else {
-                    $response['message'] = 'Invalid credentials';
+                    if ($result->num_rows === 1) {
+                        $user = $result->fetch_assoc();
+                        if (password_verify($password, $user['password'])) {
+                            $_SESSION['user'] = [
+                                'id' => $user['customer_id'],
+                                'firstName' => $user['first_name'],
+                                'lastName' => $user['last_name'],
+                                'email' => $user['email'],
+                                'role' => 'customer'
+                            ];
+                            
+                            $response = [
+                                'success' => true,
+                                'message' => 'Login successful',
+                                'redirect' => 'customer-dashboard.php'
+                            ];
+                        } else {
+                            $response['message'] = 'Invalid email or password';
+                        }
+                    } else {
+                        $response['message'] = 'Customer not found';
+                    }
+                    $stmt->close();
                 }
-            } else {
-                $response['message'] = 'Admin account not found';
-            }
-            $stmt->close();
-        }
-    }
+                
+            } elseif ($loginType === 'admin') {
+                $identifier = $_POST['email'] ?? '';
 
+                if (empty($identifier) || empty($password)) {
+                    $response['message'] = 'Please fill in all fields';
+                } else {
+                    if (is_numeric($identifier)) {
+                        $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE agent_id = ?");
+                        $stmt->bind_param("i", $identifier);
+                    } else {
+                        $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE email = ?");
+                        $stmt->bind_param("s", $identifier);
+                    }
+            
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+            
+                    if ($result->num_rows === 1) {
+                        $user = $result->fetch_assoc();
+                        if (password_verify($password, $user['password'])) {
+                            $_SESSION['user'] = [
+                                'id' => $user['agent_id'],
+                                'firstName' => $user['first_name'],
+                                'lastName' => $user['last_name'],
+                                'email' => $user['email'],
+                                'role' => 'admin'
+                            ];
+                            
+                            $response = [
+                                'success' => true,
+                                'message' => 'Admin login successful',
+                                'redirect' => 'customer-dashboard.php'
+                            ];
+                        } else {
+                            $response['message'] = 'Invalid credentials';
+                        }
+                    } else {
+                        $response['message'] = 'Admin account not found';
+                    }
+                    $stmt->close();
+                }
+            }
             
         } elseif ($action === 'register') {
             $fullname = trim($_POST['fullname'] ?? '');
