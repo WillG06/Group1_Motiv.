@@ -175,7 +175,6 @@
             });
         }
 
-        // Admin login toggle
         const adminToggle = document.createElement('a');
         adminToggle.href = '#';
         adminToggle.className = 'txt2 admin-toggle';
