@@ -17,28 +17,39 @@
     });
 
     function validate(input) {
-        if (!$(input).is(':visible')) {
-            return true;
-        }
-
-        if (
-            $(input).attr('type') === 'email' ||
-            $(input).attr('name') === 'email' ||
-            $(input).attr('name') === 'reg_email'
-        ) {
-            const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/;
-
-            if (!$(input).val().trim().match(emailRegex)) {
-                return false;
-            }
-        } else {
-            if ($(input).val().trim() === '') {
-                return false;
-            }
-        }
-
+    if (!$(input).is(':visible')) {
         return true;
     }
+
+    if (
+        $(input).attr('type') === 'email' ||
+        $(input).attr('name') === 'email' ||
+        $(input).attr('name') === 'reg_email'
+    ) {
+        const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/;
+
+        if (!$(input).val().trim().match(emailRegex)) {
+            return false;
+        }
+
+    } else if ($(input).attr('id') === 'regDriving') {
+
+        const licenceRegex = /^[A-Z9]{5}\d{6}[A-Z]{2}\d{2}$/i;
+
+        if (!$(input).val().trim().match(licenceRegex)) {
+            return false;
+        }
+
+    } else {
+
+        if ($(input).val().trim() === '') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 
     function showValidate(input) {
         var thisAlert = $(input).parent();
@@ -58,6 +69,7 @@
         if (isRegisterMode) {
             const nameInput = $('#regFullname');
             const emailInput = $('#regEmail');
+            const drivingInput = $('#regDriving');          
             const passInput = $('#regPassword');
             const confirmInput = $('#confirmPassword');
 
@@ -65,10 +77,17 @@
                 showValidate(nameInput[0]);
                 check = false;
             }
+
             if (!validate(emailInput[0])) {
                 showValidate(emailInput[0]);
                 check = false;
             }
+
+            if (!validate(drivingInput[0])) {
+                showValidate(drivingInput[0]);
+                check = false;
+            }
+
             if (!validate(passInput[0])) {
                 showValidate(passInput[0]);
                 check = false;
@@ -243,6 +262,11 @@
                 formData.append('email', email);
                 formData.append('password', password);
                 formData.append('confirm_password', confirmPassword);
+        
+                const driving = $('#regDriving').val().trim();
+                formData.append('driving_licence', driving);
+
+                
             } else {
                 const email = $('#loginEmail').val().trim();
                 const password = $('#loginPassword').val().trim();
@@ -270,14 +294,14 @@
                     // Redirect after successful login/registration
                     setTimeout(() => {
                         window.location.href = result.redirect;
-                    }, 1500);
+                    }, 6000);
                 } else {
                     showResult(false);
                     
                     // Show error message
                     setTimeout(() => {
                         alert(result.message);
-                    }, 1000);
+                    }, 6000);
                 }
             } catch (error) {
                 console.error('Error:', error);
