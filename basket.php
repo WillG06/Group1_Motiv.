@@ -1,3 +1,6 @@
+// This code won't be used
+
+
 <?php
 session_start();
 require_once 'db.php';
@@ -2082,4 +2085,5 @@ $grandTotal = $basketTotal + $extrasTotal;
 $conn->close();
 
 ?>
+
 
