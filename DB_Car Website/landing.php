@@ -798,17 +798,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
     </footer>
 
     <script>
-        // Set minimum dates for date inputs
+
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('pickup-date').setAttribute('min', today);
         document.getElementById('dropoff-date').setAttribute('min', today);
-        
-        // Update dropoff date min when pickup date changes
         document.getElementById('pickup-date').addEventListener('change', function() {
             document.getElementById('dropoff-date').setAttribute('min', this.value);
         });
         
-        // Form validation
         document.getElementById('bookingForm').addEventListener('submit', function(e) {
             const pickupLocation = document.getElementById('pickup-location').value;
             const pickupDate = document.getElementById('pickup-date').value;
@@ -822,7 +819,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
                 return;
             }
             
-            // Validate dates
             const pickupDateTime = new Date(pickupDate + ' ' + pickupTime);
             const dropoffDateTime = new Date(dropoffDate + ' ' + dropoffTime);
             
@@ -833,7 +829,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
             }
         });
         
-        // Language selector functionality
+
         document.addEventListener('DOMContentLoaded', function() {
             const languageLinks = document.querySelectorAll('.language-dropdown a');
             languageLinks.forEach(link => {
@@ -841,22 +837,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
                     e.preventDefault();
                     const selectedLang = this.getAttribute('data-lang');
                     
-                    // Store language preference
                     localStorage.setItem('selectedLanguage', selectedLang);
                     
-                    // You can implement actual language switching here
                     alert(`Language changed to: ${this.textContent.trim()}`);
                     
-                    // For full implementation, you would:
-                    // 1. Send AJAX request to set language preference in session/database
-                    // 2. Reload the page with new language strings
                 });
             });
             
-            // Apply stored language preference
             const storedLang = localStorage.getItem('selectedLanguage');
             if (storedLang) {
-                // Highlight the current language in dropdown
                 languageLinks.forEach(link => {
                     if (link.getAttribute('data-lang') === storedLang) {
                         link.style.fontWeight = 'bold';
@@ -908,14 +897,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         servicesScroll.addEventListener('scroll', updateScrollButtons);
-        updateScrollButtons(); // Initial check
+        updateScrollButtons(); 
     }
 });
     </script>
 </body>
 </html>
 <?php
-// Close database connection
-$conn->close();
 
+$conn->close();
 ?>
