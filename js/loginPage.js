@@ -1,4 +1,4 @@
-/* Made by 240115551 // Will Giles -> working updated version as of 14/11/2025*/
+/* Made by 240115551 // Will Giles -> working updated version as of 03/12/2025 */
 
 (function ($) {
     "use strict";
@@ -7,7 +7,6 @@
 
     $('.validate-form').on('submit', function (e) {
         e.preventDefault();
-
         return false;
     });
 
@@ -17,10 +16,7 @@
         });
     });
 
-
     function validate(input) {
-
-        // Skip validation if the input isnt visible
         if (!$(input).is(':visible')) {
             return true;
         }
@@ -30,9 +26,9 @@
             $(input).attr('name') === 'email' ||
             $(input).attr('name') === 'reg_email'
         ) {
-            const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/; // check email format
+            const emailRegex = /^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{1,5}|[0-9]{1,3})(\]?)$/;
 
-            if (!$(input).val().trim().match(emailRegex)) { //if matches above
+            if (!$(input).val().trim().match(emailRegex)) {
                 return false;
             }
         } else {
@@ -44,44 +40,32 @@
         return true;
     }
 
-
-
-
-
     function showValidate(input) {
-        var thisAlert = $(input).parent();        //error alert
+        var thisAlert = $(input).parent();
         $(thisAlert).addClass('alert-validate');
     }
+    
     function hideValidate(input) {
         var thisAlert = $(input).parent();
         $(thisAlert).removeClass('alert-validate');
     }
 
-
-
-
-
-    // Validate all visible inputs
     function validateAllInputs() {
         const form = document.querySelector(".login100-form");
         const isRegisterMode = form.classList.contains("register-mode");
         let check = true;
 
         if (isRegisterMode) {
-            
-
-            const nameInput = $('input[name="fullname"]:visible');
-            const emailInput = $('input[name="reg_email"]:visible');
-            const passInput = $('input[name="reg_pass"]:visible');
-            const confirmInput = $('input[name="confirm_pass"]:visible');
-
-
+            const nameInput = $('#regFullname');
+            const emailInput = $('#regEmail');
+            const passInput = $('#regPassword');
+            const confirmInput = $('#confirmPassword');
 
             if (!validate(nameInput[0])) {
                 showValidate(nameInput[0]);
                 check = false;
             }
-            if (!validate(emailInput[0])) {              //REGISTER FEILDS
+            if (!validate(emailInput[0])) {
                 showValidate(emailInput[0]);
                 check = false;
             }
@@ -93,20 +77,21 @@
                 showValidate(confirmInput[0]);
                 check = false;
             }
-            
-            if (passInput.val().trim() !== confirmInput.val().trim()) {  //matches passwod?
-                showValidate(confirmInput[0]);
+
+            if (passInput.val().trim() !== "" &&
+                confirmInput.val().trim() !== "" &&
+                passInput.val().trim() !== confirmInput.val().trim()) {
+                showMismatch(confirmInput[0]);
                 check = false;
             }
-        } else {
-            
-            const emailInput = $('input[name="email"]:visible');     
-            const passInput = $('input[name="pass"]:visible'); 
 
+        } else {
+            const emailInput = $('#loginEmail');
+            const passInput = $('#loginPassword');
 
             if (!validate(emailInput[0])) {
-                showValidate(emailInput[0]);             //LOGIN FIELDS
-                check = false;      
+                showValidate(emailInput[0]);
+                check = false;
             }
             if (!validate(passInput[0])) {
                 showValidate(passInput[0]);
@@ -117,116 +102,192 @@
         return check;
     }
 
+    function showMismatch(input) {
+        var thisAlert = $(input).parent();
+        $(thisAlert).addClass('alert-mismatch');
+    }
+
     const container = document.querySelector('.container');
     if (container) {
         container.addEventListener('animationend', () => {
             container.classList.remove('active');
-
-            //reset icons
-            const ok = container.querySelector('.ok');
-            const cross = container.querySelector('.cross');
         });
-
     }
 
-    // login  --  register pages
-
+    // Toggle between login and register - FIXED VERSION
     document.addEventListener("DOMContentLoaded", function () {
-
-
         const toggleLink = document.getElementById("toggleForm");
         const form = document.querySelector(".login100-form");
         const title = form.querySelector(".login-title");
         const textButton = document.querySelector(".text");
+        const formActionInput = document.getElementById("formAction");
+        const loginFields = document.querySelector('.login-fields');
+        const registerFields = document.querySelector('.register-fields');
 
-        toggleLink.addEventListener("click", function (e) {
-            e.preventDefault();
+        if (toggleLink && form && title && textButton) {
+            toggleLink.addEventListener("click", function (e) {
+                e.preventDefault();
 
-            form.classList.toggle("register-mode");
+                form.classList.toggle("register-mode");
 
-            if (form.classList.contains("register-mode")) {
-                title.textContent = "Register Account";
-                textButton.textContent = "REGISTER";
-                toggleLink.innerHTML = 'Already have an account? <i class="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>';
-            } else {
-                title.textContent = "Member Login";
-                textButton.textContent = "LOGIN";
-                toggleLink.innerHTML = 'Create your Account <i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>';
-            }
-        });
+                if (form.classList.contains("register-mode")) {
+                    // SHOW REGISTER FIELDS
+                    if (loginFields) loginFields.style.display = 'none';
+                    if (registerFields) registerFields.style.display = 'block';
+                    
+                    title.textContent = "Create Account";
+                    textButton.textContent = "REGISTER";
+                    toggleLink.innerHTML = 'Already have an account? <i class="fa fa-long-arrow-left m-l-5" aria-hidden="true"></i>';
+                    if (formActionInput) formActionInput.value = "register";
+                } else {
+                    // SHOW LOGIN FIELDS
+                    if (loginFields) loginFields.style.display = 'block';
+                    if (registerFields) registerFields.style.display = 'none';
+                    
+                    title.textContent = "Member Login";
+                    textButton.textContent = "LOGIN";
+                    toggleLink.innerHTML = 'Create your Account <i class="fa fa-long-arrow-right m-l-5" aria-hidden="true"></i>';
+                    if (formActionInput) formActionInput.value = "login";
+                }
+            });
+        }
     });
 
-    // valid?
+    // AJAX authentication
     $(document).ready(function () {
         const container = document.querySelector('.container');
+        if (!container) return;
+
         const ok = container.querySelector('.ok');
         const cross = container.querySelector('.cross');
 
- 
-        ok.style.display = 'none';
-        ok.style.opacity = '0';               //OFF
-        cross.style.display = 'none';
-        cross.style.opacity = '0';
-
-        
-        const validUser = {
-            email: '240115551@aston.ac.uk',   //example user while database not linked
-            pass: '12345'
-        };
-
+        if (ok && cross) {
+            ok.style.display = 'none';
+            ok.style.opacity = '0';
+            cross.style.display = 'none';
+            cross.style.opacity = '0';
+        }
 
         function showResult(isSuccess) {
-
             container.classList.add('active');
 
-            if (isSuccess) {
+            if (isSuccess && ok) {
                 ok.style.display = 'block';
                 ok.style.opacity = '1';
-            } else {
+            } else if (!isSuccess && cross) {
                 cross.style.display = 'block';
                 cross.style.opacity = '1';
             }
         }
 
-        //reset anim
         container.addEventListener('animationend', () => {
             container.classList.remove('active');
 
-            ok.style.display = 'none';
-            ok.style.opacity = '0';
-            cross.style.display = 'none';
-            cross.style.opacity = '0';
+            if (ok && cross) {
+                ok.style.display = 'none';
+                ok.style.opacity = '0';
+                cross.style.display = 'none';
+                cross.style.opacity = '0';
+            }
         });
 
-        // login/register pressed
-        container.addEventListener('click', (e) => {
+        // Remove validation alerts on input
+        document.querySelectorAll('.input100').forEach(input => {
+            input.addEventListener('input', function() {
+                this.closest('.input-wrap').classList.remove('alert-validate');
+                this.closest('.input-wrap').classList.remove('alert-mismatch');
+            });
+
+            input.addEventListener('blur', function() {
+                if ($(this).is(':visible')) {
+                    validate(this);
+                }
+            });
+        });
+
+        // Handle form submission
+        container.addEventListener('click', async (e) => {
             e.preventDefault();
 
             const form = document.querySelector(".login100-form");
-            const isRegisterMode = form.classList.contains("register-mode");  //both that need pressing 
+            const isRegisterMode = form.classList.contains("register-mode");
 
             const isValid = validateAllInputs();
 
             if (!isValid) {
-                
                 showResult(false);
-                console.log('Validation failed!');  // STILL HAPPENS AFTR ANIMATION GOES, MAY CHANGE
+                console.log('Validation failed!');
                 return;
             }
 
-            let success = false;
-
+            // Prepare form data
+            const formData = new FormData();
+            
             if (isRegisterMode) {
-                success = true; 
-            } else {
-                const email = $('input[name="email"]').val().trim();
-                const pass = $('input[name="pass"]').val().trim();
-                success = (email === validUser.email && pass === validUser.pass);
-            }
-            showResult(success);
+                const fullname = $('#regFullname').val().trim();
+                const email = $('#regEmail').val().trim();
+                const password = $('#regPassword').val().trim();
+                const confirmPassword = $('#confirmPassword').val().trim();
 
+                // Check password match
+                if (password !== confirmPassword) {
+                    showResult(false);
+                    setTimeout(() => {
+                        alert('Passwords do not match');
+                    }, 1000);
+                    return;
+                }
+
+                formData.append('action', 'register');
+                formData.append('fullname', fullname);
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('confirm_password', confirmPassword);
+            } else {
+                const email = $('#loginEmail').val().trim();
+                const password = $('#loginPassword').val().trim();
+
+                formData.append('action', 'login');
+                formData.append('email', email);
+                formData.append('password', password);
+                formData.append('loginType', 'customer');
+            }
+
+            try {
+                const response = await fetch('login.php', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showResult(true);
+                    
+                    // Redirect after successful login/registration
+                    setTimeout(() => {
+                        window.location.href = result.redirect;
+                    }, 1500);
+                } else {
+                    showResult(false);
+                    
+                    // Show error message
+                    setTimeout(() => {
+                        alert(result.message);
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showResult(false);
+                
+                setTimeout(() => {
+                    alert('An error occurred. Please try again.');
+                }, 1000);
+            }
         });
     });
-
 
 })(jQuery);
