@@ -1,77 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Car Listing</title>
-<link rel="stylesheet" href="Styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Listing</title>
+  <link rel="stylesheet" href="Styles.css" />
+</head>
+
+<body>
 
 
-<ul>
-<li><a href="#home">home</a></li>
-<li><a href="#cars">cars</a></li>
-<li><a href="#contact">contact</a></li>
-<li><a href="#register">register</a></li>
-<li><a href="#login">login</a></li>
-</ul>
+  <header class="main-header">
+
+    <div class="logo">
+      <span class="logo-mark">motiv.</span>
+    </div>
+
+    <nav class="main-nav">
+      <ul class="nav-links">
+        <li><a href="#home">home</a></li>
+        <li><a href="#cars">cars</a></li>
+        <li><a href="#contact">contact</a></li>
+        <li><a href="#register">register</a></li>
+        <li><a href="#login">login</a></li>
+      </ul>
+    </nav>
+
+    <a href="basket.html" class="basket-header-btn" aria-label="View basket">🛒</a>
+  </header>
 
 
-<h2>Car Listing</h2>
-<div class="filters-row">
-<h3 class="filters-title">filter by:</h3>
-<select>
-    <option value="Alphabet">Alphabet</option>
-    <option value="high-Low" selected>High to Low</option>
-    <option value="low-high">Low to High</option>
-    <option value="relevant">Most relevant</option>
+  <h2>Car Listing</h2>
+
+
+  <div class="filters-row">
+    <h3 class="filters-title">filter by:</h3>
+    <select class="filters-select">
+      <option value="Alphabet">Alphabet</option>
+      <option value="high-Low" selected>High to Low</option>
+      <option value="low-high">Low to High</option>
+      <option value="relevant">Most relevant</option>
     </select>
-</div>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-<title>HTML dropdown</title>
+  </div>
 
-<!-- Ford ST -->
-<div class="card-container">
+
+ <!-- ===== CAR CARDS GRID ===== -->
+<section class="card-grid" id="cars">
+
+<!-- Ford Fiesta ST -->
 <div class="card">
-<div class="img-box" style="background-image:url('images/fordST.jpg')"></div>
-<h3 class="car-title">Ford Fiesta ST</h3>
-<p class="price">£29.41/day</p>
-<details>
-<summary>More Details</summary>
-<p>Fuel Type: Petrol | Transmission: Manual | Body type: Hatchback | Engine: 6.0L</p>
-|Seats: 5 |registration: 2016
-</details>
+
+  <div class="car-image-wrap">
+    <div class="img-box" style="background-image:url('images/fordST.jpg')"></div>
+
+    <div class="card-icons">
+      <button class="icon-btn heart-btn">♡</button>
+      <button class="icon-btn basket-btn">🛒</button>
+    </div>
+  </div>
+
+  <h3 class="car-title">Ford Fiesta ST</h3>
+  <p class="price">£29.41/day</p>
+
+  <details>
+    <summary>More Details</summary>
+    <p>
+      Fuel Type: Petrol | Transmission: Manual | Body type: Hatchback | Engine: 6.0L |
+      Seats: 5 | registration: 2016
+    </p>
+  </details>
 
 </div>
 
-<!-- Range Rover SVR -->
-<div class="card-container">
-<div class="card">
-<div class="img-box" style="background-image:url('images/rangeSVR.jpg')"></div>
-<h3>Range Rover SVR </h3>
-<p class="price">£69.57/day</p>
-<details>
-<summary>More Details</summary>
-<p>Fuel Type: Hybrid/Petrol | Transmission: automatic| Body type: SUV | Engine: 3.0L</p>
-|Seats: 5 |registration: 2018</p>
-</details>
 
-</div>
 
-</div>
-<!-- BMW M840i -->
-<div class="card-container">
-<div class="card">
-<div class="img-box" style="background-image:url('images/bmwM8.jpg')"></div>
-<h3>BMW M840i </h3>
-<p class="price">£49.67/day</p>
-<details>
-<summary>More Details</summary>
-<p>Fuel Type: Hybrid/Petrol | Transmission: automatic | Body type: SUV | Engine: 2.2L</p>
-|Seats: 5 |registration: 2020</p>
-</details>
-</div>
-</div>
+  <!-- Range Rover SVR -->
+  <div class="card">
+
+    <div class="car-image-wrap">
+      <div class="img-box" style="background-image:url('images/rangeSVR.jpg')"></div>
+
+      <div class="card-icons">
+        <button class="icon-btn heart-btn">♡</button>
+        <button class="icon-btn basket-btn">🛒</button>
+      </div>
+    </div>
+
+    <h3 class="car-title">Range Rover SVR</h3>
+    <p class="price">£69.57/day</p>
+
+    <details>
+      <summary>More Details</summary>
+      <p>
+        Fuel Type: Hybrid/Petrol | Transmission: automatic | Body type: SUV | Engine: 3.0L |
+        Seats: 5 | registration: 2018
+      </p>
+    </details>
+
+  </div>
+
+
+  <!-- BMW M840i -->
+  <div class="card">
+
+    <div class="car-image-wrap">
+      <div class="img-box" style="background-image:url('images/bmwM8.jpg')"></div>
+
+      <div class="card-icons">
+        <button class="icon-btn heart-btn">♡</button>
+        <button class="icon-btn basket-btn">🛒</button>
+      </div>
+    </div>
+
+    <h3 class="car-title">BMW M840i</h3>
+    <p class="price">£49.67/day</p>
+
+    <details>
+      <summary>More Details</summary>
+      <p>
+        Fuel Type: Hybrid/Petrol | Transmission: automatic | Body type: SUV | Engine: 2.2L |
+        Seats: 5 | registration: 2020
+      </p>
+    </details>
+
+  </div>
 </body>
 </html>
