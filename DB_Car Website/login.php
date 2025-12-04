@@ -68,87 +68,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     try {
         if ($action === 'login') {
-            $loginType = $_POST['loginType'] ?? 'customer';
-            $password = $_POST['password'] ?? '';
+    $loginType = $_POST['loginType'] ?? 'customer';
+    $password = $_POST['password'] ?? '';
+    
+    if ($loginType === 'customer') {
+        $email = $_POST['email'] ?? '';
+        
+        if (empty($email) || empty($password)) {
+            $response['message'] = 'Please fill in all fields';
+        } else {
+            $stmt = $conn->prepare("SELECT customer_id, first_name, last_name, email, password FROM customers WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
             
-            if ($loginType === 'customer') {
-                $email = $_POST['email'] ?? '';
-                
-                if (empty($email) || empty($password)) {
-                    $response['message'] = 'Please fill in all fields';
-                } else {
-                    $stmt = $conn->prepare("SELECT customer_id, first_name, last_name, email, password FROM customers WHERE email = ?");
-                    $stmt->bind_param("s", $email);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+                if (password_verify($password, $user['password'])) {
+                    $_SESSION['user'] = [
+                        'id' => $user['customer_id'],
+                        'firstName' => $user['first_name'],
+                        'lastName' => $user['last_name'],
+                        'email' => $user['email'],
+                        'role' => 'customer'
+                    ];
                     
-                    if ($result->num_rows === 1) {
-                        $user = $result->fetch_assoc();
-                        if (password_verify($password, $user['password'])) {
-                            $_SESSION['user'] = [
-                                'id' => $user['customer_id'],
-                                'firstName' => $user['first_name'],
-                                'lastName' => $user['last_name'],
-                                'email' => $user['email'],
-                                'role' => 'customer'
-                            ];
-                            
-                            $response = [
-                                'success' => true,
-                                'message' => 'Login successful',
-                                'redirect' => 'customer-dashboard.php'
-                            ];
-                        } else {
-                            $response['message'] = 'Invalid email or password';
-                        }
-                    } else {
-                        $response['message'] = 'Customer not found';
-                    }
-                    $stmt->close();
-                }
-                
-            } elseif ($loginType === 'admin') {
-                $memberId = $_POST['memberId'] ?? '';
-                
-                if (empty($memberId) || empty($password)) {
-                    $response['message'] = 'Please fill in all fields';
+                    $response = [
+                        'success' => true,
+                        'message' => 'Login successful',
+                        'redirect' => 'customer-dashboard.php'
+                    ];
                 } else {
-                    $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE agent_id = ?");
-                    $stmt->bind_param("i", $memberId);
-                    $stmt->execute();
-                    $result = $stmt->get_result();
-                    
-                    if ($result->num_rows === 1) {
-                        $user = $result->fetch_assoc();
-                        if (password_verify($password, $user['password'])) {
-                            $_SESSION['user'] = [
-                                'id' => $user['agent_id'],
-                                'firstName' => $user['first_name'],
-                                'lastName' => $user['last_name'],
-                                'email' => $user['email'],
-                                'role' => 'admin'
-                            ];
-                            
-                            $response = [
-                                'success' => true,
-                                'message' => 'Admin login successful',
-                                'redirect' => 'admin-dashboard.php'
-                            ];
-                        } else {
-                            $response['message'] = 'Invalid password';
-                        }
-                    } else {
-                        $response['message'] = 'Admin not found';
-                    }
-                    $stmt->close();
+                    $response['message'] = 'Invalid email or password';
                 }
+            } else {
+                $response['message'] = 'Customer not found';
             }
+            $stmt->close();
+        }
+        
+    } elseif ($loginType === 'admin') {
+        $identifier = $_POST['email'] ?? ''; // now can be email and or member id 
+
+        if (empty($identifier) || empty($password)) {
+            $response['message'] = 'Please fill in all fields';
+        } else {
+            
+            if (is_numeric($identifier)) {
+                // Login with member ID
+                $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE agent_id = ?");
+                $stmt->bind_param("i", $identifier);
+            } else {
+                // Login with email
+                $stmt = $conn->prepare("SELECT agent_id, first_name, last_name, email, password FROM agents WHERE email = ?");
+                $stmt->bind_param("s", $identifier);
+            }
+    
+            $stmt->execute();
+            $result = $stmt->get_result();
+    
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+                if (password_verify($password, $user['password'])) {
+                    $_SESSION['user'] = [
+                        'id' => $user['agent_id'],
+                        'firstName' => $user['first_name'],
+                        'lastName' => $user['last_name'],
+                        'email' => $user['email'],
+                        'role' => 'admin'
+                    ];
+                    
+                    $response = [
+                        'success' => true,
+                        'message' => 'Admin login successful',
+                        'redirect' => 'admin-dashboard.php'
+                    ];
+                } else {
+                    $response['message'] = 'Invalid credentials';
+                }
+            } else {
+                $response['message'] = 'Admin account not found';
+            }
+            $stmt->close();
+        }
+    }
+
             
         } elseif ($action === 'register') {
             $fullname = trim($_POST['fullname'] ?? '');
             $email = trim($_POST['email'] ?? '');
+            $drivingLicence = trim($_POST['driving_licence'] ?? '');
             $password = trim($_POST['password'] ?? '');
             $confirm_password = trim($_POST['confirm_password'] ?? '');
+
             
             if (empty($fullname) || empty($email) || empty($password) || empty($confirm_password)) {
                 $response['message'] = 'Please fill in all fields';
@@ -244,6 +256,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body>
+
+
     <div class="LoginPageLimit">
         <div class="Background-colours">
             <div class="login-box">
@@ -271,31 +285,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <!-- Register inputs -->
-                    <div class="register-fields" style="display: none;">
+                    <div class="register-fields">
                         <div class="input-wrap validate-input" data-validate="Full name is required">
-                            <input class="input100" type="text" name="fullname" id="regFullname" placeholder="Full Name">
+                            <input class="input100" type="text" id="regFullname" name="fullname" placeholder="Full Name">
                             <span class="focus-input100"></span>
-                            <span class="symbol-input100"><i class="fa fa-user" aria-hidden="true"></i></span>
+                            <span class="symbol-input100"><i class="fa fa-user"></i></span>
                         </div>
 
-                        <div class="input-wrap validate-input" data-validate="Valid email is required: ex@abc.xyz">
-                            <input class="input100" type="text" name="reg_email" id="regEmail" placeholder="Email / Member ID">
+                        <div class="input-wrap validate-input" data-validate="Valid email is required">
+                            <input class="input100" type="text" id="regEmail" name="reg_email" placeholder="Email / Member ID">
                             <span class="focus-input100"></span>
-                            <span class="symbol-input100"><i class="fa fa-envelope" aria-hidden="true"></i></span>
+                            <span class="symbol-input100"><i class="fa fa-envelope"></i></span>
                         </div>
+
+                        <div class="input-wrap validate-input" data-validate="Driving licence format: ABCDE123456AB12">
+                            <input class="input100" type="text" id="regDriving" name="driving_licence" placeholder="Driving Licence Number">
+                            <span class="focus-input100"></span>
+                            <span class="symbol-input100"><i class="fa fa-id-card"></i></span>
+                        </div>
+
 
                         <div class="input-wrap validate-input" data-validate="Password is required">
-                            <input class="input100" type="password" name="reg_password" id="regPassword" placeholder="Password">
+                            <input class="input100" type="password" id="regPassword" placeholder="Password">
                             <span class="focus-input100"></span>
-                            <span class="symbol-input100"><i class="fa fa-lock" aria-hidden="true"></i></span>
+                            <span class="symbol-input100"><i class="fa fa-lock"></i></span>
                         </div>
 
-                        <div class="input-wrap validate-input" data-validate="Confirm password is required">
-                            <input class="input100" type="password" name="confirm_password" id="confirmPassword" placeholder="Confirm Password">
+                        <div class="input-wrap validate-input" data-validate="Confirm password">
+                            <input class="input100" type="password" id="confirmPassword" placeholder="Confirm Password">
                             <span class="focus-input100"></span>
-                            <span class="symbol-input100"><i class="fa fa-lock" aria-hidden="true"></i></span>
+                            <span class="symbol-input100"><i class="fa fa-lock"></i></span>
                         </div>
                     </div>
+
 
                     <input type="hidden" name="action" id="formAction" value="login">
                     <input type="hidden" name="loginType" id="loginType" value="customer">
@@ -397,7 +419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="text-center p-t-12">
                         <span class="txt1">Forgot</span>
-                        <a class="txt2" href="#">Username / Password?</a>
+                        <a class="txt2" href="forgotPassword.php">Username / Password?</a>
                     </div>
 
                     <div class="text-center p-t-136">
