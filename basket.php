@@ -1676,18 +1676,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                             </div>
                             <div class="payment-name">Credit/Debit Card</div>
                         </div>
-                        <div class="payment-method" data-method="paypal">
-                            <div class="payment-icon">
-                                <i class="fab fa-paypal"></i>
-                            </div>
-                            <div class="payment-name">PayPal</div>
-                        </div>
-                        <div class="payment-method" data-method="googlepay">
-                            <div class="payment-icon">
-                                <i class="fab fa-google-pay"></i>
-                            </div>
-                            <div class="payment-name">Google Pay</div>
-                        </div>
                     </div>
                     
                     <input type="hidden" name="payment_method" id="paymentMethod" required>
@@ -2086,5 +2074,6 @@ $grandTotal = $basketTotal + $extrasTotal;
 <?php
 
 $conn->close();
+
 
 ?>
