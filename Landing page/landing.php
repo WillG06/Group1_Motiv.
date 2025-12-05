@@ -558,62 +558,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
 
     <div class="city-grid">
         <?php
-        $topCitiesQuery = $conn->query("
-            SELECT c.city_id, c.city_name, c.region 
-            FROM cities c 
-            ORDER BY c.city_name 
-            LIMIT 5
-        ");
-
-        $extensions = ['png', 'jpg', 'jpeg'];
-
-        if ($topCitiesQuery->num_rows > 0) {
-            while ($city = $topCitiesQuery->fetch_assoc()) {
-
+        $cities = [
+            ['name' => 'Birmingham', 'image' => 'city1.jpg'],
+            ['name' => 'London', 'image' => 'city2.png'],
+            ['name' => 'Liverpool', 'image' => 'city3.jpeg'],
+            ['name' => 'Manchester', 'image' => 'city4.jpg'],
+            ['name' => 'Sheffield', 'image' => 'city5.jpg']
+        ];
+        
+        foreach ($cities as $city) {
+            $imagePath = $city['image'];
+            
+            if (!file_exists($imagePath)) {
                 $imagePath = 'city_default.jpg';
-                $baseName = 'city' . $city['city_id'];
-
-                foreach ($extensions as $ext) {
-                    $candidate = $baseName . '.' . $ext;
-                    if (file_exists($candidate)) {
-                        $imagePath = $candidate;
-                        break;
-                    }
-                }
-
-                echo '
-                <div class="city-card">
-                    <img src="' . $imagePath . '" alt="' . htmlspecialchars($city['city_name']) . '">
-                    <div class="city-name">' . htmlspecialchars($city['city_name']) . '</div>
-                </div>';
             }
-        } else {
-            $defaultCities = ['London', 'Birmingham', 'Sheffield', 'Liverpool', 'Manchester'];
-
-            foreach ($defaultCities as $index => $cityName) {
-
-                $imagePath = 'city_default.jpg';
-                $baseName = 'city' . ($index + 1);
-
-                foreach ($extensions as $ext) {
-                    $candidate = $baseName . '.' . $ext;
-                    if (file_exists($candidate)) {
-                        $imagePath = $candidate;
-                        break;
-                    }
-                }
-
-                echo '
-                <div class="city-card">
-                    <img src="' . $imagePath . '" alt="' . $cityName . '">
-                    <div class="city-name">' . $cityName . '</div>
-                </div>';
-            }
+            
+            echo '
+            <div class="city-card">
+                <img src="' . $imagePath . '" alt="' . $city['name'] . '">
+                <div class="city-name">' . $city['name'] . '</div>
+            </div>';
         }
         ?>
     </div>
 </section>
-
 
 <section class="best-selling-section">
     <div class="container">
@@ -906,3 +874,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
 $conn->close();
 ?>
+
