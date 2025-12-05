@@ -15,7 +15,7 @@
   
   <div class="container">
    
-    <form id="paymentForm">
+    <form id="paymentForm" method="post" action="payment.php">
 
       <div class="row">
 
@@ -66,7 +66,9 @@
 
           <div class="input-box">
             <label for="cardNumber">Card Number:</label>
-            <input id="cardNumber" type="text" placeholder="1111 1111 1111 1111" maxlength="19" required>
+            <input id="cardNumber" 
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type="number" placeholder="XXXX XXXX XXXX XXXX" maxlength="16" required>
           </div>
 
           <div class="input-box">
@@ -76,17 +78,19 @@
 
           <div class="input-box">
             <label for="cvv">CVV:</label>
-            <input id="cvv" type="text" placeholder="000" maxlength="3" required>
+            <input id="cvv"
+            oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+            type="number" placeholder="000" maxlength="3" required>
           </div>
         </div>
 
       </div>
-
+      
       <button type="submit" class="btn">Securely Pay</button>
 
     </form>
 
   </div>
-
+  <script src="script.js"></script>
 </body>
 </html>

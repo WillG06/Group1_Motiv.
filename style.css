@@ -60,6 +60,14 @@ form .row {
   font-size: 15px;
 }
 
+input {
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+  }
+  -moz-appearance: textfield;
+}
 
 .column .flex {
   display: flex;
@@ -89,12 +97,16 @@ form .btn:hover {
 }
 
 
+body {
+  padding-top: 100px; 
+}
+
 .logo {
-  width: 130px;
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 120px;
   height: auto;
-  object-fit: contain;
-  margin: 20px auto;
-  display: block;
 }
 
 
