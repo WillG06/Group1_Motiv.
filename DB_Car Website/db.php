@@ -1,8 +1,8 @@
 <?php
-$host = 'localhost';
-$username = 'root';
-$password = 'AstonUni786!';
-$database = 'car_rental_db';
+$host = 'localhost';   
+$username = 'cs2team1';
+$password = 'GIzgRTkFQWYg5bByiUxSMhhcJ';
+$database = 'cs2team1_db';
 
 $conn = new mysqli($host, $username, $password, $database);
 
