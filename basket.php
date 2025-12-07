@@ -1806,12 +1806,12 @@ $grandTotal = $basketTotal + $extrasTotal;
                 <?php elseif (!empty($basketItems)): ?>
                 
                     <?php if ($currentStep == 1): ?>
-                        <a href="basket.php?step=2" class="checkout-btn">Proceed to Checkout</a>
+                        <a href="basket.php?step=2" class="checkout-btn">Continue to Rental Details</a>
                     <?php else: ?>
                         <a href="basket.php?step=1" class="checkout-btn">Back to Basket</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                    <button class="checkout-btn" disabled>Continue to Rental Details</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -2077,3 +2077,4 @@ $conn->close();
 
 
 ?>
+
