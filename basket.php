@@ -516,6 +516,50 @@ $grandTotal = $basketTotal + $extrasTotal;
     <link rel="stylesheet" href="style.css">
     <style>
         /* Extras */
+                .extrasSummary {
+            background-color: #f8e8ed;
+            border: 2px solid #8B1538;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            margin-top: 30px;
+        }
+        
+        .summaryContent {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .summaryLeft {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 16px;
+        }
+        
+        .summaryLeft strong {
+            color: #333;
+            font-weight: 700;
+        }
+        
+        .summaryRight {
+            text-align: right;
+        }
+        
+        .summaryTotal {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 18px;
+        }
+        
+        .totalAmount {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8B1538;
+        }
+
         .extras-grid {
             display: flex;
             flex-direction: column;
@@ -1248,16 +1292,28 @@ $grandTotal = $basketTotal + $extrasTotal;
             }
         }
         
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             .basket-items,
             .basket-summary,
             .step-content {
                 padding: 20px;
             }
             
-            .step-actions {
-                flex-direction: column;
-                gap: 15px;
+            .summaryContent {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+            }
+
+            .summaryLeft {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            }
+
+            .summaryRight {
+            text-align: left;
+            width: 100%;
             }
             
             .btn-back,
@@ -1517,6 +1573,22 @@ $grandTotal = $basketTotal + $extrasTotal;
                             </div>
                         <?php endforeach; ?>
                     </div>
+            
+                    <div class="extrasSummary">
+                        <div class="summaryContent">
+                            <div class="summaryLeft">
+                                <strong>Selected Extras:</strong>
+                                <span id="extrasCount">0 items selected</span>
+                            </div>
+                            <div class="summaryRight">
+                                <div class="summaryTotal">
+                                    <span>Extras Total:</span>
+                                    <span class="totalAmount" id="extrasTotal">£0.00</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     
                     <div class="step-actions">
                         <a href="basket.php?step=2" class="btn-back">Back to Rental Details</a>
@@ -1925,8 +1997,11 @@ $grandTotal = $basketTotal + $extrasTotal;
                             extraOption.classList.add('selected');
                             checkbox.checked = true;
                         }
+
+                        updateExtrasSummary();
                     }
                 });
+                updateExtrasSummary();
             }
             
             const cardNumberInput = document.getElementById('cardNumber');
@@ -2002,7 +2077,42 @@ $grandTotal = $basketTotal + $extrasTotal;
                     }
                 });
             }
+            
+            function updateExtrasSummary() {
+                const selectedCheckboxes = document.querySelectorAll('.extra-option input[type="checkbox"]:checked');
+                const count = selectedCheckboxes.length;
+                let total = 0;
+                
+                const rentalDays = <?php echo !empty($basketItems) ? $basketItems[0]['rental_days'] : 1; ?>;
+                
+                selectedCheckboxes.forEach(checkbox => {
+                    const extraOption = checkbox.closest('.extra-option');
+                    const priceText = extraOption.querySelector('.price-amount').textContent;
+                    const price = parseFloat(priceText.replace('£', ''));
+                    const unit = extraOption.getAttribute('data-unit');
 
+                    if (unit === 'per day') {
+                        total += (price * rentalDays);
+                    } else {
+                        total += price;
+                    }
+                });
+
+                const extrasCountElement = document.getElementById('extrasCount');
+                const extrasTotalElement = document.getElementById('extrasTotal');
+                
+                if (extrasCountElement) {
+                    extrasCountElement.textContent = 
+                        count === 0 ? '0 items selected' :
+                        count === 1 ? '1 item selected' :
+                        `${count} items selected`;
+                }
+                
+                if (extrasTotalElement) {
+                    extrasTotalElement.textContent = `£${total.toFixed(2)}`;
+                }
+            }                
+  
             const basketLink = document.getElementById('basketLink');
             if (basketLink) {
                 basketLink.addEventListener('click', function(e) {
@@ -2077,4 +2187,5 @@ $conn->close();
 
 
 ?>
+
 
