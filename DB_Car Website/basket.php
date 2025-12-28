@@ -1853,17 +1853,31 @@ $grandTotal = $basketTotal + $extrasTotal;
             if (dropoffDate) {
                 dropoffDate.min = today;
             }
-            // Check over this section again. Testing
+            // Check over this section again
             const steps = document.querySelectorAll('.step');
-    steps.forEach((step, index) => {
-        step.addEventListener('click', function () {
+            steps.forEach((step, index) => {
+                step.style.cursor = 'pointer';
+        
+                step.addEventListener('click', function() {
+                    const stepNumber = index + 1;
+                    const currentStep = <?php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
+    
+                    if (stepNumber <= currentStep || this.classList.contains('completed')) {
+                        window.location.href = 'basket.php?step=' + stepNumber;
+            }
+        });
+        // Check this section again
+        step.addEventListener('mouseenter', function() {
             const stepNumber = index + 1;
-            const currentStep = <? php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
-
+            const currentStep = <?php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
             
             if (stepNumber <= currentStep || this.classList.contains('completed')) {
-                window.location.href = 'basket.php?step=' + stepNumber;
+                this.style.opacity = '0.7';
             }
+        });
+        
+        step.addEventListener('mouseleave', function() {
+            this.style.opacity = '1';
         });
     });
             // This is fine as normal
@@ -1903,29 +1917,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                         }
                     }
                 });
-            }
-            function updateExtrasCount() {
-                const checkedBoxes = document.querySelectorAll('#extrasGrid input[type="checkbox"]:checked');
-                const count = checkedBoxes.length;
-                const countElement = document.getElementById('extrasCount');
-
-                if (countElement) {
-                    countElement.textContent = count + ' item' + (count !== 1 ? 's' : '') + ' selected';
-                }
-
-        // Calculate total
-                let total = 0;
-                checkedBoxes.forEach(box => {
-                    const extraOption = box.closest('.extra-option');
-                    const priceText = extraOption.querySelector('.price-amount').textContent;
-                    const price = parseFloat(priceText.replace('£', '').replace(',', ''));
-                    total += price;
-                });
-
-                const totalElement = document.getElementById('extrasTotal');
-                if (totalElement) {
-                    totalElement.textContent = '£' + total.toFixed(2);
-                }
             }
             
             const cardNumberInput = document.getElementById('cardNumber');
@@ -2048,7 +2039,7 @@ $grandTotal = $basketTotal + $extrasTotal;
                             }, 600);
                         }
                         
-                        let basketCount = basketLink.querySelector('.basket-count');
+                                                let basketCount = basketLink.querySelector('.basket-count');
                         if (basketCount) {
                             let count = parseInt(basketCount.textContent) + 1;
                             basketCount.textContent = count;
