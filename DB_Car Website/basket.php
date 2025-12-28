@@ -356,19 +356,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $bookingIds = [];
             $totalAmount = 0;
 
-            $extrasTotal = 0;
-            if (!empty($selectedExtras)) {
-                foreach ($selectedExtras as $extraId) {
-                    foreach ($extras as $extra) {
-                        if ($extra['extra_id'] == $extraId) {
-                            $extrasTotal += $extra['price'];
-                            break;
+            foreach ($basketItemsForBooking as $item) {
+                // Calculate total price per extra item based on rental period
+                $extrasTotal = 0;
+                if (!empty($selectedExtras)) {
+                    foreach ($selectedExtras as $extraId) {
+                        foreach ($extras as $extra) {
+                            if ($extra['extra_id'] == $extraId) {
+                                // Apply per-item rental days for accurate pricing
+                                if ($extra['unit'] === 'per day') {
+                                    $extrasTotal += ($extra['price'] * $item['rental_days']);
+                                } else {
+                                    $extrasTotal += $extra['price'];
+                                }
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            
-            foreach ($basketItemsForBooking as $item) {
+        
                 $itemTotal = $item['estimated_total'] + $extrasTotal;
                 
                 $bookingQuery = $conn->prepare("
@@ -480,11 +486,19 @@ foreach ($basketItems as $item) {
 
 
 $extrasTotal = 0;
-if (!empty($selectedExtras)) {
+if (!empty($selectedExtras) && !empty($basketItems)) {
+    // Use the amount rental days from the first basket item
+    $rentalDays = $basketItems[0]['rental_days'];
+    
     foreach ($selectedExtras as $extraId) {
         foreach ($extras as $extra) {
             if ($extra['extra_id'] == $extraId) {
-                $extrasTotal += $extra['price'];
+                // Multiply extras by the amount of days for items prices per day, flat rate used for items used once
+                if ($extra['unit'] === 'per day') {
+                    $extrasTotal += ($extra['price'] * $rentalDays);
+                } else {
+                    $extrasTotal += $extra['price'];
+                }
                 break;
             }
         }
@@ -1470,23 +1484,36 @@ $grandTotal = $basketTotal + $extrasTotal;
 
             <div class="step-content <?php echo $currentStep == 3 ? 'active' : ''; ?>" id="step3">
                 <h2 class="section-title">Additional Services & Extras</h2>
-                <p>Enhance your rental experience with these optional extras</p>
+                <p style="margin-bottom: 30px; color: #666;">Enhance your rental experience with these optional extras</p>
                 
                 <form method="POST" id="extrasForm">
                     <input type="hidden" name="save_extras" value="1">
                     
                     <div class="extras-grid" id="extrasGrid">
-                        <?php foreach ($extras as $extra): ?>
-                            <div class="extra-option <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'selected' : ''; ?>" 
-                                 data-id="<?php echo $extra['extra_id']; ?>">
-                                <div class="extra-header">
-                                    <div class="extra-name"><?php echo htmlspecialchars($extra['name']); ?></div>
-                                    <div class="extra-price">+£<?php echo number_format($extra['price'], 2); ?></div>
-                                </div>
-                                <div class="extra-description"><?php echo htmlspecialchars($extra['description']); ?></div>
-                                <input type="checkbox" name="extras[]" value="<?php echo $extra['extra_id']; ?>" 
-                                       <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'checked' : ''; ?> 
-                                       style="display: none;">
+                        <?php foreach ($extrasByCategory as $category => $categoryExtras): ?>
+                            <div class="extra-category">
+                                <div class="category-title"><?php echo htmlspecialchars($category); ?></div>
+                                
+                                <?php foreach ($categoryExtras as $extra): ?>
+                                    <div class="extra-option <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'selected' : ''; ?>" 
+                                         data-id="<?php echo $extra['extra_id']; ?>"
+                                         data-price="<?php echo $extra['price']; ?>"
+                                         data-unit="<?php echo $extra['unit']; ?>">
+                                        <div class="extra-header">
+                                            <div style="flex: 1;">
+                                                <div class="extra-name"><?php echo htmlspecialchars($extra['name']); ?></div>
+                                                <div class="extra-description"><?php echo htmlspecialchars($extra['description']); ?></div>
+                                            </div>
+                                            <div class="extra-price">
+                                                <div class="price-amount">£<?php echo number_format($extra['price'], 2); ?></div>
+                                                <div class="price-unit"><?php echo htmlspecialchars($extra['unit']); ?></div>
+                                            </div>
+                                        </div>
+                                        <input type="checkbox" name="extras[]" value="<?php echo $extra['extra_id']; ?>" 
+                                               <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'checked' : ''; ?> 
+                                               style="display: none;">
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -1497,7 +1524,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                     </div>
                 </form>
             </div>
-
             <div class="step-content <?php echo $currentStep == 4 ? 'active' : ''; ?>" id="step4">
                 <h2 class="section-title">Booking Confirmation</h2>
                 <p style="margin-bottom: 25px; color: #666;">Please review your booking details before proceeding to payment</p>
@@ -1650,18 +1676,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                             </div>
                             <div class="payment-name">Credit/Debit Card</div>
                         </div>
-                        <div class="payment-method" data-method="paypal">
-                            <div class="payment-icon">
-                                <i class="fab fa-paypal"></i>
-                            </div>
-                            <div class="payment-name">PayPal</div>
-                        </div>
-                        <div class="payment-method" data-method="googlepay">
-                            <div class="payment-icon">
-                                <i class="fab fa-google-pay"></i>
-                            </div>
-                            <div class="payment-name">Google Pay</div>
-                        </div>
                     </div>
                     
                     <input type="hidden" name="payment_method" id="paymentMethod" required>
@@ -1792,12 +1806,12 @@ $grandTotal = $basketTotal + $extrasTotal;
                 <?php elseif (!empty($basketItems)): ?>
                 
                     <?php if ($currentStep == 1): ?>
-                        <a href="basket.php?step=2" class="checkout-btn">Proceed to Checkout</a>
+                        <a href="basket.php?step=2" class="checkout-btn">Continue to Rental Details</a>
                     <?php else: ?>
                         <a href="basket.php?step=1" class="checkout-btn">Back to Basket</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                    <button class="checkout-btn" disabled>Continue to Rental Details</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -1834,8 +1848,34 @@ $grandTotal = $basketTotal + $extrasTotal;
         </div>
     </footer>
 
-    <script>
+        <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const currentStep = <?php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
+            
+            const steps = document.querySelectorAll('.step');
+            steps.forEach((step, index) => {
+                const stepNumber = index + 1;
+                
+                if (stepNumber <= currentStep) {
+                    step.style.cursor = 'pointer';
+                    
+                    step.addEventListener('click', function() {
+                        window.location.href = 'basket.php?step=' + stepNumber;
+                    });
+                    
+                    step.addEventListener('mouseenter', function() {
+                        this.style.opacity = '0.7';
+                    });
+                    
+                    step.addEventListener('mouseleave', function() {
+                        this.style.opacity = '1';
+                    });
+                } else {
+
+                    step.style.cursor = 'not-allowed';
+                    step.style.opacity = '0.6';
+                }
+            });
             
             const today = new Date().toISOString().split('T')[0];
             const pickupDate = document.getElementById('pickupDate');
@@ -1853,20 +1893,7 @@ $grandTotal = $basketTotal + $extrasTotal;
             if (dropoffDate) {
                 dropoffDate.min = today;
             }
-            // Check over this section again. Testing
-            const steps = document.querySelectorAll('.step');
-    steps.forEach((step, index) => {
-        step.addEventListener('click', function () {
-            const stepNumber = index + 1;
-            const currentStep = <? php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
-
             
-            if (stepNumber <= currentStep || this.classList.contains('completed')) {
-                window.location.href = 'basket.php?step=' + stepNumber;
-            }
-        });
-    });
-            // This is fine as normal
             const paymentMethods = document.querySelectorAll('.payment-method');
             const paymentMethodInput = document.getElementById('paymentMethod');
             const cardPaymentForm = document.getElementById('cardPaymentForm');
@@ -1878,20 +1905,17 @@ $grandTotal = $basketTotal + $extrasTotal;
                     const selectedMethod = this.getAttribute('data-method');
                     paymentMethodInput.value = selectedMethod;
                     
-                   
                     if (cardPaymentForm) {
                         cardPaymentForm.style.display = selectedMethod === 'card' ? 'block' : 'none';
                     }
                 });
             });
             
-           
             const extrasGrid = document.getElementById('extrasGrid');
             if (extrasGrid) {
                 extrasGrid.addEventListener('click', function(e) {
                     const extraOption = e.target.closest('.extra-option');
                     if (extraOption) {
-                        const extraId = extraOption.getAttribute('data-id');
                         const checkbox = extraOption.querySelector('input[type="checkbox"]');
                         
                         if (extraOption.classList.contains('selected')) {
@@ -1903,29 +1927,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                         }
                     }
                 });
-            }
-            function updateExtrasCount() {
-                const checkedBoxes = document.querySelectorAll('#extrasGrid input[type="checkbox"]:checked');
-                const count = checkedBoxes.length;
-                const countElement = document.getElementById('extrasCount');
-
-                if (countElement) {
-                    countElement.textContent = count + ' item' + (count !== 1 ? 's' : '') + ' selected';
-                }
-
-        // Calculate total
-                let total = 0;
-                checkedBoxes.forEach(box => {
-                    const extraOption = box.closest('.extra-option');
-                    const priceText = extraOption.querySelector('.price-amount').textContent;
-                    const price = parseFloat(priceText.replace('£', '').replace(',', ''));
-                    total += price;
-                });
-
-                const totalElement = document.getElementById('extrasTotal');
-                if (totalElement) {
-                    totalElement.textContent = '£' + total.toFixed(2);
-                }
             }
             
             const cardNumberInput = document.getElementById('cardNumber');
@@ -1948,7 +1949,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                 });
             }
             
-            
             const expiryDateInput = document.getElementById('expiryDate');
             if (expiryDateInput) {
                 expiryDateInput.addEventListener('input', function(e) {
@@ -1958,7 +1958,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                     }
                 });
             }
-            
             
             const paymentForm = document.getElementById('paymentForm');
             if (paymentForm) {
@@ -2004,7 +2003,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                 });
             }
 
-           
             const basketLink = document.getElementById('basketLink');
             if (basketLink) {
                 basketLink.addEventListener('click', function(e) {
@@ -2015,7 +2013,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                 });
             }
 
-            
             function showToast(message, type = 'success') {
                 const toast = document.getElementById('toast');
                 toast.textContent = message;
@@ -2026,7 +2023,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                 }, 3000);
             }
 
-            
             window.addToBasket = function(carId, carName) {
                 fetch('basket.php', {
                     method: 'POST',
@@ -2039,7 +2035,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                 .then(data => {
                     if (data.success) {
                         showToast(`${carName} added to basket!`, 'success');
-                        
                         
                         if (basketLink) {
                             basketLink.classList.add('animate');
@@ -2069,7 +2064,6 @@ $grandTotal = $basketTotal + $extrasTotal;
             };
         });
 
-
         function toggleDatesForm(itemId) {
             const form = document.getElementById('datesForm-' + itemId);
             form.classList.toggle('show');
@@ -2080,6 +2074,7 @@ $grandTotal = $basketTotal + $extrasTotal;
 <?php
 
 $conn->close();
+
 
 ?>
 
