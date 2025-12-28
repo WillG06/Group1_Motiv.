@@ -25,13 +25,34 @@ $basketCount = 0;
 $selectedExtras = [];
 
 $extras = [
-    ['extra_id' => 1, 'name' => 'Additional Driver', 'price' => 10.00, 'description' => 'Add an extra driver to your rental'],
-    ['extra_id' => 2, 'name' => 'Child Seat', 'price' => 5.00, 'description' => 'Child safety seat for young passengers'],
-    ['extra_id' => 3, 'name' => 'GPS Navigation', 'price' => 8.00, 'description' => 'Satellite navigation system'],
-    ['extra_id' => 4, 'name' => 'Full Insurance', 'price' => 15.00, 'description' => 'Comprehensive insurance coverage'],
-    ['extra_id' => 5, 'name' => 'Winter Tyres', 'price' => 12.00, 'description' => 'Winter tyres for snowy conditions'],
-    ['extra_id' => 6, 'name' => 'Roadside Assistance', 'price' => 7.00, 'description' => '24/7 roadside assistance']
+
+    ['extra_id' => 1, 'name' => 'Personal Accident Insurance', 'price' => 12.50, 'description' => 'Covers medical costs for you and your passengers', 'category' => 'Protection Products', 'unit' => 'per day'],
+    ['extra_id' => 2, 'name' => 'Theft Protection', 'price' => 10.00, 'description' => 'Reduces your liability if the vehicle is stolen', 'category' => 'Protection Products', 'unit' => 'per day'],
+    
+    ['extra_id' => 3, 'name' => 'Additional Driver', 'price' => 10.00, 'description' => 'Add an extra authorised driver to your rental', 'category' => 'Additional Services', 'unit' => 'per day'],
+    ['extra_id' => 4, 'name' => 'Young Driver Fee', 'price' => 15.00, 'description' => 'Required surcharge for drivers aged 21-24', 'category' => 'Additional Services', 'unit' => 'per day'],
+
+    ['extra_id' => 5, 'name' => 'Child Seat', 'price' => 7.50, 'description' => 'Suitable for children 9-18kg (Age 9 months to 4 years)', 'category' => 'Equipment & Services', 'unit' => 'per day'],
+    ['extra_id' => 6, 'name' => 'Booster Seat', 'price' => 7.50, 'description' => 'Suitable for children 15-36kg (Age 4 to 11 years)', 'category' => 'Equipment & Services', 'unit' => 'per day'],
+
+    ['extra_id' => 7, 'name' => 'GPS Navigation', 'price' => 8.00, 'description' => 'Satellite navigation system', 'category' => 'Equipment & Services', 'unit' => 'per day'],
+    ['extra_id' => 8, 'name' => 'Pre-paid Fuel', 'price' => 60.00, 'description' => 'Purchase a full tank and return empty', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
+
+    ['extra_id' => 9, 'name' => 'One-Way Rental Fee', 'price' => 45.00, 'description' => 'Drop off at a different location', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
+    ['extra_id' => 10, 'name' => 'Out-of-Hours Service', 'price' => 25.00, 'description' => 'Collection or return outside standard opening hours', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
+
+    ['extra_id' => 11, 'name' => 'Winter Tyres', 'price' => 12.00, 'description' => 'Winter tyres for snowy conditions', 'category' => 'Equipment & Services', 'unit' => 'per day'],
+    ['extra_id' => 12, 'name' => 'Roadside Assistance', 'price' => 7.00, 'description' => '24/7 roadside assistance', 'category' => 'Equipment & Services', 'unit' => 'per day'],
 ];
+
+$extrasByCategory = [];
+foreach ($extras as $extra) {
+    $category = $extra['category'];
+    if (!isset($extrasByCategory[$category])) {
+        $extrasByCategory[$category] = [];
+    }
+    $extrasByCategory[$category][] = $extra;
+}
 
 if (isset($_SESSION['error'])) {
     $errorMessage = $_SESSION['error'];
@@ -480,54 +501,146 @@ $grandTotal = $basketTotal + $extrasTotal;
     <title>Basket - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* Extras */
         .extras-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 35px;
+        }
+
+        .extra-category {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            padding: 30px;
+        }
+
+        .category-title {
+            font-size: 22px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--vivid-indigo);
+            color: var(--vivid-indigo);
+            font-weight: 700;
         }
         
         .extra-option {
-            border: 2px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 15px;
+            background-color: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
             cursor: pointer;
             transition: all 0.3s;
+            margin-bottom: 15px;
         }
-        
+
+        .extra-option:last-child {
+            margin-bottom: 0;
+        }
+
         .extra-option:hover {
             border-color: var(--cobalt-blue);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
         }
-        
+
         .extra-option.selected {
             border-color: var(--vivid-indigo);
             background: rgba(140, 0, 80, 0.05);
+            box-shadow: 0 4px 12px rgba(140, 0, 80, 0.15);
         }
         
         .extra-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            gap: 20px;
         }
         
         .extra-name {
-            font-weight: 600;
+            font-weight: 700;
             color: #333;
+            font-size: 18px;
+            margin-bottom: 8px;
         }
         
         .extra-price {
-            font-weight: 700;
+            text-align: right;
+            flex-shrink: 0;
+        }
+
+        .price-amount {
+            font-size: 24px;
+            font-weight: bold;
             color: var(--vivid-indigo);
+            line-height: 1;
+        }
+
+        .price-unit {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
         }
         
         .extra-description {
             color: #666;
             font-size: 0.9rem;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
-        /* Keep all your existing CSS styles */
+        .extra-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .learn-more {
+            color: var(--vivid-indigo);
+            text-decoration: underline;
+            font-size: 14px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .learn-more:hover {
+            color: var(--dark-magenta);
+        }
+
+        /* Progress Bar colour change */
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #ddd; 
+            z-index: 1;
+            transition: background-color 0.3s ease;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step.completed::after {
+            background: var(--vivid-indigo);
+        }
+        .step.active::after {
+            background: linear-gradient(to right, var(--vivid-indigo), #ddd);
+            
+        }
+
+        .step {
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .step:hover {
+            opacity: 0.8;
+        }
+
         .basket-container {
             padding: 40px 0;
             background-color: #f5f5f5;
@@ -602,25 +715,6 @@ $grandTotal = $basketTotal + $extrasTotal;
         .step.active .step-label {
             color: var(--vivid-indigo);
             font-weight: 600;
-        }
-        
-        .step::after {
-            content: '';
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            width: 100%;
-            height: 2px;
-            background: #ddd;
-            z-index: 1;
-        }
-        
-        .step:last-child::after {
-            display: none;
-        }
-        
-        .step.completed::after {
-            background: var(--vivid-indigo);
         }
         
         .checkout-content {
@@ -1759,7 +1853,20 @@ $grandTotal = $basketTotal + $extrasTotal;
             if (dropoffDate) {
                 dropoffDate.min = today;
             }
+            // Check over this section again. Testing
+            const steps = document.querySelectorAll('.step');
+    steps.forEach((step, index) => {
+        step.addEventListener('click', function () {
+            const stepNumber = index + 1;
+            const currentStep = <? php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
+
             
+            if (stepNumber <= currentStep || this.classList.contains('completed')) {
+                window.location.href = 'basket.php?step=' + stepNumber;
+            }
+        });
+    });
+            // This is fine as normal
             const paymentMethods = document.querySelectorAll('.payment-method');
             const paymentMethodInput = document.getElementById('paymentMethod');
             const cardPaymentForm = document.getElementById('cardPaymentForm');
@@ -1797,7 +1904,29 @@ $grandTotal = $basketTotal + $extrasTotal;
                     }
                 });
             }
-            
+            function updateExtrasCount() {
+                const checkedBoxes = document.querySelectorAll('#extrasGrid input[type="checkbox"]:checked');
+                const count = checkedBoxes.length;
+                const countElement = document.getElementById('extrasCount');
+
+                if (countElement) {
+                    countElement.textContent = count + ' item' + (count !== 1 ? 's' : '') + ' selected';
+                }
+
+        // Calculate total
+                let total = 0;
+                checkedBoxes.forEach(box => {
+                    const extraOption = box.closest('.extra-option');
+                    const priceText = extraOption.querySelector('.price-amount').textContent;
+                    const price = parseFloat(priceText.replace('£', '').replace(',', ''));
+                    total += price;
+                });
+
+                const totalElement = document.getElementById('extrasTotal');
+                if (totalElement) {
+                    totalElement.textContent = '£' + total.toFixed(2);
+                }
+            }
             
             const cardNumberInput = document.getElementById('cardNumber');
             if (cardNumberInput) {
@@ -1919,7 +2048,7 @@ $grandTotal = $basketTotal + $extrasTotal;
                             }, 600);
                         }
                         
-                                                let basketCount = basketLink.querySelector('.basket-count');
+                        let basketCount = basketLink.querySelector('.basket-count');
                         if (basketCount) {
                             let count = parseInt(basketCount.textContent) + 1;
                             basketCount.textContent = count;
@@ -1951,4 +2080,5 @@ $grandTotal = $basketTotal + $extrasTotal;
 <?php
 
 $conn->close();
+
 ?>
