@@ -148,7 +148,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Content-Type: application/json');
         echo json_encode($response);
         exit;
-        
     }
     
     if ($response['success']) {
@@ -904,5 +903,4 @@ nav ul li a.active {
         })();
     </script>
 </body>
-
 </html>
