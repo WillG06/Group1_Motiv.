@@ -66,11 +66,13 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motiv Car Hire - Birmingham</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -554,11 +556,28 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                 width: 100%;
                 max-width: 500px;
             }
+
+        #chatbot-frame {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 360px;
+        height: 520px;
+        border: none;
+        z-index: 9999;
+        background: transparent;
+}
+
         }
     </style>
 </head>
 <body data-theme="<?php echo $darkMode; ?>">
-  
+<iframe
+    src="chatbot.html"
+    id="chatbot-frame"
+    title="Motiv Chatbot">
+</iframe>
+
 <header>
     <div class="container header-content">
         <div class="logo">
