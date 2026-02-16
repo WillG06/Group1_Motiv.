@@ -336,7 +336,8 @@ if (isset($_SESSION['user'])) {
         }
         
         .map-section {
-            margin-top: 80px;
+            margin-top: 20px;
+            margin-bottom: 60px;
             padding: 0 20px;
             max-width: 1200px;
             margin-left: auto;
@@ -723,17 +724,18 @@ nav ul li a.active {
         </div>
         
         <div class="map-section">
-            <h2 class="map-title">Find Us</h2>
-            <div class="map-container">
-
-                <div style="text-align: center;">
-                    <i class="fas fa-map" style="font-size: 3rem; margin-bottom: 15px; display: block; color: var(--vivid-indigo);"></i>
-                    <p>Map</p>
-                    <p>New Street Station, Birmingham</p>
-                </div>
-            </div>
+        <h2 class="map-title">Find Us</h2>
+        <div class="map-container">
+            <iframe 
+                src="https://www.openstreetmap.org/export/embed.html?bbox=-1.9084%2C52.4747%2C-1.8912%2C52.4807&amp;layer=mapnik&amp;marker=52.4777%2C-1.8998" 
+                width="100%" 
+                height="100%" 
+                frameborder="0" 
+                scrolling="no">
+            </iframe>
         </div>
-    </section>
+    </div>
+</section>
 
     <footer>
         <div class="container">
@@ -849,4 +851,6 @@ nav ul li a.active {
 if (isset($conn)) {
     $conn->close();
 }
+
 ?>
+
