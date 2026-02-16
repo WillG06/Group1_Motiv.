@@ -336,7 +336,8 @@ if (isset($_SESSION['user'])) {
         }
         
         .map-section {
-            margin-top: 80px;
+            margin-top: 20px;
+            margin-bottom: 60px;
             padding: 0 20px;
             max-width: 1200px;
             margin-left: auto;
@@ -849,4 +850,5 @@ nav ul li a.active {
 if (isset($conn)) {
     $conn->close();
 }
+
 ?>
