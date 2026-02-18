@@ -62,11 +62,407 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['search_cars'])) {
 $darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
 $fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
 $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+// Language variables
+$themeText = 'Theme';
+$lightText = 'Light';
+$darkText = 'Dark';
+$fontSizeText = 'Font Size';
+$resetText = 'Reset';
+$languageText = 'Language';
+$heroTitle = 'Motiv, Car Rental';
+$heroText = 'At Motiv, we make car hire enjoyable! With flexible pick-up options, a variety of quality vehicles, and smooth booking, every journey feels effortless.';
+$reserveText = 'Reserve a Vehicle';
+$pickupLocationText = 'Pick-up Location';
+$selectLocationText = 'Select a location';
+$pickupDateTimeText = 'Pick-up Date & Time';
+$dropoffDateTimeText = 'Drop-off Date & Time';
+$showCarsText = 'Show Available Cars';
+$whyChooseText = 'Why Choose Motiv?';
+$vehicleSelectionText = 'Wide Vehicle Selection';
+$vehicleDescText = 'Choose from economy cars, premium sedans, SUVs, and electric vehicles to suit your needs.';
+$locationsText = 'Convenient Locations';
+$locationsDescText = 'Multiple pickup and drop-off locations across Birmingham for your convenience.';
+$priceGuaranteeText = 'Best Price Guarantee';
+$priceDescText = 'We offer competitive rates with no hidden fees and a best price guarantee.';
+$supportText = '24/7 Support';
+$supportDescText = 'Our customer service team is available around the clock to assist you.';
+$topCitiesText = 'Top Cities for Car Hire';
+$bestSellingText = 'Best Selling Services';
+$viewAllText = 'View All Listings';
+$popularText = 'Our most popular rental options with top customer ratings';
+$popularBadgeText = 'Most Popular';
+$bestValueText = 'Best Value';
+$ecoFriendlyText = 'Eco-Friendly';
+$suvText = 'Premium SUV';
+$economyText = 'Economy Car';
+$luxuryText = 'Luxury Sedan';
+$electricText = 'Electric Vehicle';
+$suvDescText = 'Spacious and comfortable SUVs perfect for family trips or group travel.';
+$economyDescText = 'Fuel-efficient and affordable cars ideal for city driving and short trips.';
+$luxuryDescText = 'Premium vehicles for business trips or special occasions with comfort.';
+$electricDescText = 'Environmentally friendly electric cars with modern features and operations.';
+$reviewsText = 'reviews';
+$seatsText = 'Seats:';
+$luggageText = 'Luggage:';
+$bagsText = 'bags';
+$fuelTypeText = 'Fuel Type:';
+$footerTaglineText = 'Your trusted partner for car rental services in Birmingham and beyond.';
+$quickLinksText = 'Quick Links';
+$ourFleetText = 'Our Fleet';
+$locationsText2 = 'Locations';
+$offersText = 'Offers';
+$contactUsText = 'Contact Us';
+$rightsReservedText = 'All rights reserved.';
+
+// Testimonial texts
+$suvTestimonialText = 'The SUV was perfect for our family vacation. Plenty of space and very comfortable!';
+$economyTestimonialText = 'Great value for money! The car was clean, efficient, and perfect for getting around the city.';
+$luxuryTestimonialText = 'The luxury sedan made our anniversary trip extra special. Smooth ride and excellent service!';
+$electricTestimonialText = 'My first EV experience was fantastic! The car was quiet, smooth, and charging was convenient.';
+
+// Spanish translations
+if ($language == 'es') {
+    $themeText = 'Tema';
+    $lightText = 'Claro';
+    $darkText = 'Oscuro';
+    $fontSizeText = 'Tamaño de fuente';
+    $resetText = 'Reiniciar';
+    $languageText = 'Idioma';
+    $heroTitle = 'Motiv, Alquiler de Autos';
+    $heroText = '¡En Motiv, hacemos que el alquiler de autos sea agradable! Con opciones flexibles de recogida, una variedad de vehículos de calidad y reservas sin problemas, cada viaje se siente sin esfuerzo.';
+    $reserveText = 'Reservar un Vehículo';
+    $pickupLocationText = 'Lugar de recogida';
+    $selectLocationText = 'Selecciona un lugar';
+    $pickupDateTimeText = 'Fecha y hora de recogida';
+    $dropoffDateTimeText = 'Fecha y hora de devolución';
+    $showCarsText = 'Mostrar Autos Disponibles';
+    $whyChooseText = '¿Por qué elegir Motiv?';
+    $vehicleSelectionText = 'Amplia selección de vehículos';
+    $vehicleDescText = 'Elija entre autos económicos, sedanes premium, SUV y vehículos eléctricos que se adapten a sus necesidades.';
+    $locationsText = 'Ubicaciones convenientes';
+    $locationsDescText = 'Múltiples ubicaciones de recogida y devolución en Birmingham para su conveniencia.';
+    $priceGuaranteeText = 'Mejor precio garantizado';
+    $priceDescText = 'Ofrecemos tarifas competitivas sin cargos ocultos y una garantía de mejor precio.';
+    $supportText = 'Soporte 24/7';
+    $supportDescText = 'Nuestro equipo de servicio al cliente está disponible las 24 horas para ayudarlo.';
+    $topCitiesText = 'Principales ciudades para alquiler de autos';
+    $bestSellingText = 'Servicios más vendidos';
+    $viewAllText = 'Ver todos los listados';
+    $popularText = 'Nuestras opciones de alquiler más populares con las mejores calificaciones de los clientes';
+    $popularBadgeText = 'Más popular';
+    $bestValueText = 'Mejor valor';
+    $ecoFriendlyText = 'Ecológico';
+    $suvText = 'SUV Premium';
+    $economyText = 'Auto Económico';
+    $luxuryText = 'Sedán de Lujo';
+    $electricText = 'Vehículo Eléctrico';
+    $suvDescText = 'SUVs espaciosos y cómodos perfectos para viajes familiares o en grupo.';
+    $economyDescText = 'Autos eficientes en combustible y asequibles ideales para conducir en la ciudad y viajes cortos.';
+    $luxuryDescText = 'Vehículos premium para viajes de negocios u ocasiones especiales con comodidad.';
+    $electricDescText = 'Autos eléctricos ecológicos con características y operaciones modernas.';
+    $reviewsText = 'reseñas';
+    $seatsText = 'Asientos:';
+    $luggageText = 'Equipaje:';
+    $bagsText = 'maletas';
+    $fuelTypeText = 'Tipo de combustible:';
+    $footerTaglineText = 'Su socio de confianza para servicios de alquiler de autos en Birmingham y más allá.';
+    $quickLinksText = 'Enlaces rápidos';
+    $ourFleetText = 'Nuestra flota';
+    $locationsText2 = 'Ubicaciones';
+    $offersText = 'Ofertas';
+    $contactUsText = 'Contáctenos';
+    $rightsReservedText = 'Todos los derechos reservados.';
+    $suvTestimonialText = 'El SUV fue perfecto para nuestras vacaciones familiares. ¡Mucho espacio y muy cómodo!';
+    $economyTestimonialText = '¡Excelente relación calidad-precio! El auto estaba limpio, eficiente y perfecto para moverse por la ciudad.';
+    $luxuryTestimonialText = 'El sedán de lujo hizo que nuestro viaje de aniversario fuera aún más especial. ¡Viaje suave y excelente servicio!';
+    $electricTestimonialText = '¡Mi primera experiencia con un vehículo eléctrico fue fantástica! El auto era silencioso, suave y la carga era conveniente.';
+} 
+// French translations
+elseif ($language == 'fr') {
+    $themeText = 'Thème';
+    $lightText = 'Clair';
+    $darkText = 'Sombre';
+    $fontSizeText = 'Taille de police';
+    $resetText = 'Réinitialiser';
+    $languageText = 'Langue';
+    $heroTitle = 'Motiv, Location de Voitures';
+    $heroText = 'Chez Motiv, nous rendons la location de voitures agréable ! Avec des options de prise en charge flexibles, une variété de véhicules de qualité et une réservation fluide, chaque voyage semble sans effort.';
+    $reserveText = 'Réserver un Véhicule';
+    $pickupLocationText = 'Lieu de prise en charge';
+    $selectLocationText = 'Sélectionnez un lieu';
+    $pickupDateTimeText = 'Date et heure de prise en charge';
+    $dropoffDateTimeText = 'Date et heure de restitution';
+    $showCarsText = 'Afficher les Voitures Disponibles';
+    $whyChooseText = 'Pourquoi choisir Motiv?';
+    $vehicleSelectionText = 'Large sélection de véhicules';
+    $vehicleDescText = 'Choisissez parmi les voitures économiques, les berlines premium, les SUV et les véhicules électriques adaptés à vos besoins.';
+    $locationsText = 'Emplacements pratiques';
+    $locationsDescText = 'Plusieurs lieux de prise en charge et de restitution à Birmingham pour votre commodité.';
+    $priceGuaranteeText = 'Meilleur prix garanti';
+    $priceDescText = 'Nous offrons des tarifs compétitifs sans frais cachés et une garantie du meilleur prix.';
+    $supportText = 'Assistance 24/7';
+    $supportDescText = 'Notre équipe de service client est disponible 24h/24 pour vous aider.';
+    $topCitiesText = 'Meilleures villes pour la location de voitures';
+    $bestSellingText = 'Services les plus vendus';
+    $viewAllText = 'Voir toutes les annonces';
+    $popularText = 'Nos options de location les plus populaires avec les meilleures évaluations des clients';
+    $popularBadgeText = 'Le plus populaire';
+    $bestValueText = 'Meilleur rapport qualité-prix';
+    $ecoFriendlyText = 'Écologique';
+    $suvText = 'SUV Premium';
+    $economyText = 'Voiture Économique';
+    $luxuryText = 'Berline de Luxe';
+    $electricText = 'Véhicule Électrique';
+    $suvDescText = 'SUV spacieux et confortables parfaits pour les voyages en famille ou en groupe.';
+    $economyDescText = 'Voitures économes en carburant et abordables idéales pour la conduite en ville et les courts trajets.';
+    $luxuryDescText = 'Véhicules premium pour les voyages d\'affaires ou les occasions spéciales avec confort.';
+    $electricDescText = 'Voitures électriques respectueuses de l\'environnement avec des fonctionnalités et des opérations modernes.';
+    $reviewsText = 'avis';
+    $seatsText = 'Sièges:';
+    $luggageText = 'Bagages:';
+    $bagsText = 'sacs';
+    $fuelTypeText = 'Type de carburant:';
+    $footerTaglineText = 'Votre partenaire de confiance pour les services de location de voitures à Birmingham et au-delà.';
+    $quickLinksText = 'Liens rapides';
+    $ourFleetText = 'Notre flotte';
+    $locationsText2 = 'Emplacements';
+    $offersText = 'Offres';
+    $contactUsText = 'Contactez-nous';
+    $rightsReservedText = 'Tous droits réservés.';
+    $suvTestimonialText = 'Le SUV était parfait pour nos vacances en famille. Beaucoup d\'espace et très confortable !';
+    $economyTestimonialText = 'Excellent rapport qualité-prix ! La voiture était propre, efficace et parfaite pour se déplacer en ville.';
+    $luxuryTestimonialText = 'La berline de luxe a rendu notre voyage d\'anniversaire encore plus spécial. Conduite agréable et excellent service !';
+    $electricTestimonialText = 'Ma première expérience avec un véhicule électrique a été fantastique ! La voiture était silencieuse, confortable et la recharge était pratique.';
+} 
+// German translations
+elseif ($language == 'de') {
+    $themeText = 'Design';
+    $lightText = 'Hell';
+    $darkText = 'Dunkel';
+    $fontSizeText = 'Schriftgröße';
+    $resetText = 'Zurücksetzen';
+    $languageText = 'Sprache';
+    $heroTitle = 'Motiv, Autovermietung';
+    $heroText = 'Bei Motiv machen wir die Autovermietung angenehm! Mit flexiblen Abholmöglichkeiten, einer Vielzahl von Qualitätsfahrzeugen und reibungsloser Buchung fühlt sich jede Reise mühelos an.';
+    $reserveText = 'Fahrzeug reservieren';
+    $pickupLocationText = 'Abholort';
+    $selectLocationText = 'Wählen Sie einen Ort';
+    $pickupDateTimeText = 'Abholdatum und -zeit';
+    $dropoffDateTimeText = 'Rückgabedatum und -zeit';
+    $showCarsText = 'Verfügbare Autos anzeigen';
+    $whyChooseText = 'Warum Motiv wählen?';
+    $vehicleSelectionText = 'Große Fahrzeugauswahl';
+    $vehicleDescText = 'Wählen Sie aus sparsamen Autos, Premium-Limousinen, SUVs und Elektrofahrzeugen, die Ihren Bedürfnissen entsprechen.';
+    $locationsText = 'Praktische Standorte';
+    $locationsDescText = 'Mehrere Abhol- und Rückgabeorte in Birmingham für Ihre Bequemlichkeit.';
+    $priceGuaranteeText = 'Bester Preis garantiert';
+    $priceDescText = 'Wir bieten wettbewerbsfähige Preise ohne versteckte Gebühren und eine Bestpreisgarantie.';
+    $supportText = '24/7 Support';
+    $supportDescText = 'Unser Kundenservice-Team steht Ihnen rund um die Uhr zur Verfügung.';
+    $topCitiesText = 'Top-Städte für die Autovermietung';
+    $bestSellingText = 'Bestseller-Dienstleistungen';
+    $viewAllText = 'Alle Angebote anzeigen';
+    $popularText = 'Unsere beliebtesten Mietoptionen mit den besten Kundenbewertungen';
+    $popularBadgeText = 'Am beliebtesten';
+    $bestValueText = 'Bestes Preis-Leistungs-Verhältnis';
+    $ecoFriendlyText = 'Umweltfreundlich';
+    $suvText = 'Premium SUV';
+    $economyText = 'Sparauto';
+    $luxuryText = 'Luxuslimousine';
+    $electricText = 'Elektrofahrzeug';
+    $suvDescText = 'Geräumige und komfortable SUVs, perfekt für Familienausflüge oder Gruppenreisen.';
+    $economyDescText = 'Kraftstoffeffiziente und erschwingliche Autos, ideal für Stadtfahrten und kurze Reisen.';
+    $luxuryDescText = 'Premium-Fahrzeuge für Geschäftsreisen oder besondere Anlässe mit Komfort.';
+    $electricDescText = 'Umweltfreundliche Elektroautos mit modernen Funktionen und Betrieb.';
+    $reviewsText = 'Bewertungen';
+    $seatsText = 'Sitze:';
+    $luggageText = 'Gepäck:';
+    $bagsText = 'Taschen';
+    $fuelTypeText = 'Kraftstofftyp:';
+    $footerTaglineText = 'Ihr vertrauenswürdiger Partner für Autovermietungen in Birmingham und darüber hinaus.';
+    $quickLinksText = 'Schnelllinks';
+    $ourFleetText = 'Unsere Flotte';
+    $locationsText2 = 'Standorte';
+    $offersText = 'Angebote';
+    $contactUsText = 'Kontaktieren Sie uns';
+    $rightsReservedText = 'Alle Rechte vorbehalten.';
+    $suvTestimonialText = 'Der SUV war perfekt für unseren Familienurlaub. Viel Platz und sehr komfortabel!';
+    $economyTestimonialText = 'Großartiges Preis-Leistungs-Verhältnis! Das Auto war sauber, effizient und perfekt, um in der Stadt herumzukommen.';
+    $luxuryTestimonialText = 'Die Luxuslimousine machte unsere Jubiläumsreise noch besonderer. Ruhige Fahrt und ausgezeichneter Service!';
+    $electricTestimonialText = 'Meine erste Erfahrung mit einem Elektrofahrzeug war fantastisch! Das Auto war leise, ruhig und das Aufladen war bequem.';
+}
+
+// Include chatbot response function
+function getBotResponse($message) {
+    $msg = strtolower($message);
+    
+    // Define responses array
+    $responses = [
+        // Vehicles available
+        'view available cars' => 'We have a wide selection of vehicles including Economy Cars, Premium SUVs, Luxury Sedans, and Electric Vehicles. Visit our <a href="cars.php">Cars page</a> to see all available listings!',
+        'suv' => 'Our Premium SUVs are perfect for families or groups — seating 5-7 with space for 4-6 bags! Petrol or Diesel. Rated highly by many customers.',
+        'luxury' => 'Our Luxury Sedans are ideal for business trips or special occasions — seating 4-5 with Petrol/Hybrid engines. Rated 4.8/5 by our buyers. Starting prices available on our <a href="cars.php">Cars page</a>.',
+        'economy' => 'Our Economy Cars are fuel-efficient and budget-friendly — seating 4-5 with 2-3 bags of luggage. Rated 4.7/5 by our buyers. Great for city driving and short trips!',
+        'electric' => 'We offer Electric Vehicles with modern features and zero emissions — seating 4-5, 2-3 bags. Rated 4.6/5 by our buyers. Eco-friendly and smooth to drive!',
+        'sedan' => 'Our Luxury Sedans seat 4-5 passengers and are perfect for business or special occasions. Check our <a href="cars.php">Cars page</a> for current availability and pricing.',
+        'van' => 'Please contact our team for van availability at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong>.',
+
+        // our pricing
+        'rental rates' => 'Our rates vary by vehicle — visit our <a href="cars.php">Cars page</a> to see current pricing for all categories. We offer a <strong>Best Price Guarantee</strong> with no hidden fees!',
+        'price' => 'We offer a Best Price Guarantee with no hidden fees! Check our <a href="cars.php">Cars page</a> for exact pricing on each vehicle.',
+        'how much' => 'Pricing depends on the vehicle and rental period. Visit our <a href="cars.php">Cars page</a> for up-to-date rates, or contact us at <strong>info@motivcarrental.com</strong>.',
+
+        // location
+        'located' => 'Motiv serves multiple cities including <strong>Birmingham, London, Liverpool, Manchester, and Sheffield</strong>. Our main office is at <strong>New Street Station, Birmingham</strong>.',
+        'location' => 'Motiv serves multiple cities including <strong>Birmingham, London, Liverpool, Manchester, and Sheffield</strong>. Our main office is at <strong>New Street Station, Birmingham</strong>.',
+        'locations' => 'We have pick-up and drop-off locations across Birmingham and other major UK cities. Use the booking form on our <a href="landing.php">homepage</a> to select your preferred location.',
+        'birmingham' => 'Birmingham is our home city! Our main location is at <strong>New Street Station, Birmingham</strong>. We offer multiple pick-up and drop-off points across the city.',
+        'london' => 'We serve London! Use the booking form on our <a href="landing.php">homepage</a> to search for available vehicles in London.',
+        'liverpool' => 'We serve Liverpool! Use the booking form on our <a href="landing.php">homepage</a> to search for available vehicles in Liverpool.',
+        'manchester' => 'We serve Manchester! Use the booking form on our <a href="landing.php">homepage</a> to search for available vehicles in Manchester.',
+        'sheffield' => 'We serve Sheffield! Use the booking form on our <a href="landing.php">homepage</a> to search for available vehicles in Sheffield.',
+
+        // support 
+        'contact support' => 'You can reach us at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong>. Our customer service team is available <strong>24/7</strong>!',
+        'contact' => 'Get in touch via our <a href="contact.php">Contact page</a>, email us at <strong>info@motivcarrental.com</strong>, or call <strong>07123456789</strong>.',
+        'phone' => 'You can call us on <strong>0712345678</strong> — our team is available 24/7!',
+        'email' => 'Send us an email at <strong>info@motivcarrental.com</strong> and we\'ll get back to you promptly!',
+        'hours' => 'Our store is open <strong>Monday to Saturday, 9:00 AM - 5:00 PM</strong>, and all vehicles are available for collection during these hours. If you have any questions outside of opening hours, you can still reach us at <strong>info@motivcarrental.com</strong> or <strong>07123456789</strong>.',
+        'support' => 'We offer <strong>24/7 customer support</strong>! Contact us at <strong>info@motivcarrental.com</strong> or <strong>07123456789</strong>.',
+
+        // book
+        'book' => 'Booking is easy! Use the reservation form on our <a href="landing.php">homepage</a> — just select your pick-up location, dates, and times to see available cars.',
+        'reserve' => 'To reserve a vehicle, use our booking form on the <a href="landing.php">homepage</a>. Choose your location, pick-up date/time, and drop-off date/time.',
+        'how to book' => 'Simply go to our <a href="landing.php">homepage</a>, fill in your pick-up location, dates, and times, then click "Show Available Cars" to browse and book!',
+
+        // Insurance
+        'insurance' => 'We offer insurance coverage to give you peace of mind on the road! Our options include:<br><br>• <strong>Collision Damage Waiver (CDW)</strong> — reduces your liability if the vehicle is damaged<br>• <strong>Theft Protection</strong> — covers you in the event of vehicle theft<br>• <strong>Personal Accident Insurance</strong> — covers medical expenses for you and your passengers<br>• <strong>Third Party Liability</strong> — included as standard with all rentals<br><br>For full details or to add coverage to your booking, contact us at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong>.',
+
+        // about
+        'about' => 'Motiv is a Birmingham-based car rental company offering flexible pick-up options, a variety of quality vehicles, and smooth booking. We\'re your trusted partner for car hire across the UK!',
+        'who are you' => 'I\'m the Motiv virtual assistant! Motiv is a car rental company based in Birmingham offering Premium SUVs, Economy Cars, Luxury Sedans, Electric Vehicles, and more. How can I help?',
+
+        // hello stuff 
+        'hello' => 'Hello! Welcome to Motiv Car Rental 🚗 How can I help you today?',
+        'hi' => 'Hi there! Welcome to Motiv Car Rental 🚗 How can I help you today?',
+        'hey' => 'Hey! Welcome to Motiv Car Rental 🚗 What can I do for you?',
+        'thank' => 'You\'re welcome! Is there anything else I can help you with today? 😊',
+        'thanks' => 'You\'re welcome! Is there anything else I can help you with today? 😊',
+        'bye' => 'Thank you for chatting with Motiv! Have a great day and safe travels! 🚗',
+        'goodbye' => 'Thank you for chatting with Motiv! Have a great day and safe travels! 🚗',
+
+        'default' => 'Thanks for your question! For detailed information, please visit our <a href="contact.php">Contact page</a>, email us at <strong>info@motivcarrental.com</strong>, or call <strong>0712345678</strong>. Is there anything else I can help with?'
+    ];
+
+    // Check for exact matches in responses array
+    foreach ($responses as $key => $response) {
+        if (strpos($msg, $key) !== false) {
+            return $response;
+        }
+    }
+
+    // Extended response logic
+    // Greetings
+    if (preg_match('/(hello|hi|hey|good morning|good afternoon)/', $msg)) {
+        return 'Hello! Welcome to Motiv Car Rental 🚗 How can I help you today?';
+    }
+    // Booking
+    if (preg_match('/(book|reserve|rent|hire)/', $msg)) {
+        return $responses['book'];
+    }
+    // Pricing
+    if (preg_match('/(price|cost|cheap|expensive|how much)/', $msg)) {
+        return $responses['rental rates'];
+    }
+    // Vehicle types
+    if (preg_match('/(4x4|off road|family car)/', $msg)) {
+        return $responses['suv'];
+    }
+    if (preg_match('/(executive|premium|high end)/', $msg)) {
+        return $responses['luxury'];
+    }
+    if (preg_match('/(small|compact|budget)/', $msg)) {
+        return $responses['economy'];
+    }
+    if (preg_match('/(people carrier|moving|cargo)/', $msg)) {
+        return $responses['van'];
+    }
+    // Electric
+    if (preg_match('/(electric|ev|eco|green)/', $msg)) {
+        return $responses['electric'];
+    }
+    // Cities
+    if (strpos($msg, 'birmingham') !== false) { return $responses['birmingham']; }
+    if (strpos($msg, 'london') !== false) { return $responses['london']; }
+    if (strpos($msg, 'liverpool') !== false) { return $responses['liverpool']; }
+    if (strpos($msg, 'manchester') !== false) { return $responses['manchester']; }
+    if (strpos($msg, 'sheffield') !== false) { return $responses['sheffield']; }
+    // Locations
+    if (preg_match('/(where|location|located|branch|pick up|pickup)/', $msg)) {
+        return $responses['locations'];
+    }
+    // Hours
+    if (preg_match('/(open|hours|opening|when|collect|collection)/', $msg)) {
+        return $responses['hours'];
+    }
+    // Insurance
+    if (preg_match('/(insurance|insured|cover|coverage|damage|accident)/', $msg)) {
+        return $responses['insurance'];
+    }
+    // Contact
+    if (preg_match('/(contact|support|help|speak|call|email)/', $msg)) {
+        return $responses['contact support'];
+    }
+    // Phone
+    if (preg_match('/(phone|number|ring)/', $msg)) {
+        return $responses['phone'];
+    }
+    // Age/License
+    if (preg_match('/(age|old|young|license|licence)/', $msg)) {
+        return 'For age requirements and licence queries, please contact us at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong> and our team will be happy to help!';
+    }
+    // Payment
+    if (preg_match('/(payment|pay|credit card|debit card|cash)/', $msg)) {
+        return 'We accept all major credit and debit cards. For specific payment queries, please contact us at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong>.';
+    }
+    // Fuel
+    if (preg_match('/(fuel|petrol|diesel|gas)/', $msg)) {
+        return 'Our vehicles are available in Petrol, Diesel, Petrol/Hybrid, and fully Electric. The fuel type is listed for each car on our <a href="cars.php">Cars page</a>.';
+    }
+    // Mileage
+    if (preg_match('/(mileage|miles|distance|km)/', $msg)) {
+        return 'For mileage terms and limits, please contact us at <strong>info@motivcarrental.com</strong> or call <strong>0712345678</strong> and our team will be happy to help!';
+    }
+    // Thank you
+    if (preg_match('/(thanks|thank you|cheers)/', $msg)) {
+        return $responses['thank'];
+    }
+    // Goodbye
+    if (preg_match('/(bye|goodbye|see you|cya)/', $msg)) {
+        return $responses['bye'];
+    }
+
+    return $responses['default'];
+}
+
+// Handle AJAX request for chatbot
+if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
+    $userMessage = $_POST['chat_message'];
+    $botResponse = getBotResponse($userMessage);
+    
+    // Return JSON response for AJAX calls
+    header('Content-Type: application/json');
+    echo json_encode([
+        'response' => $botResponse,
+        'time' => date('H:i')
+    ]);
+    exit;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motiv Car Hire - Birmingham</title>
@@ -82,12 +478,11 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             --card-bg: #ffffff;
             --border-color: #e0e0e0;
             --shadow-color: rgba(0, 0, 0, 0.1);
-            --vivid-indigo: #4b2e9b;
-            --cobalt-blue: #0047ab;
-            --coral-red: #ff7f50;
-            --dark-magenta: #8b008b;
-            --footer-bg: #2c3e50;
             --footer-text: #ecf0f1;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
         }
 
         [data-theme="dark"] {
@@ -98,8 +493,47 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             --card-bg: #333333;
             --border-color: #404040;
             --shadow-color: rgba(0, 0, 0, 0.3);
-            --footer-bg: #000000;
             --footer-text: #ffffff;
+        }
+
+        /* Dark theme heading styles */
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4,
+        [data-theme="dark"] h5,
+        [data-theme="dark"] h6,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .best-selling-section .section-title,
+        [data-theme="dark"] .cities-section .section-title,
+        [data-theme="dark"] .features .section-title,
+        [data-theme="dark"] .feature-card h3,
+        [data-theme="dark"] .service-content h3,
+        [data-theme="dark"] .footer-column h3,
+        [data-theme="dark"] .hero-text h1,
+        [data-theme="dark"] .booking-form h2,
+        [data-theme="dark"] .form-group label,
+        [data-theme="dark"] .detail-value,
+        [data-theme="dark"] .city-name,
+        [data-theme="dark"] .testimonial-author {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] .service-description,
+        [data-theme="dark"] .rating-text,
+        [data-theme="dark"] .testimonial p,
+        [data-theme="dark"] .detail-label,
+        [data-theme="dark"] .section-subtitle,
+        [data-theme="dark"] .hero-text p {
+            color: #cccccc;
+        }
+
+        [data-theme="dark"] .service-card,
+        [data-theme="dark"] .feature-card,
+        [data-theme="dark"] .city-card,
+        [data-theme="dark"] .booking-form {
+            background-color: #2d2d2d;
+            color: #ffffff;
         }
 
         body {
@@ -119,6 +553,99 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             color: var(--footer-text);
         }
 
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            margin: 0;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        nav ul li a:hover,
+        nav ul li a.active {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        nav ul li.dropdown {
+            position: relative;
+        }
+
+        nav ul li.dropdown .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 120px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1001;
+            border-radius: 5px;
+            overflow: hidden;
+            top: 100%;
+            left: 0;
+        }
+
+        nav ul li.dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        nav ul li.dropdown .dropdown-content a {
+            color: #333;
+            padding: 10px 14px;
+            display: block;
+            transition: background-color 0.3s;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 0.9rem;
+        }
+
+        nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #f8f9fa;
+            color: var(--vivid-indigo);
+        }
+
+        .basket-indicator {
+            position: relative;
+            display: inline-block;
+        }
+
+        .basket-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--coral-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
         .language-selector {
             position: relative;
             display: flex;
@@ -134,7 +661,7 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             transition: background-color 0.3s;
             font-size: 18px;
             line-height: 0;
-            color: var(--text-primary);
+            color: white;
         }
 
         .language-selector:hover > a {
@@ -146,10 +673,10 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             position: absolute;
             right: 0;
             top: 100%;
-            min-width: 240px;
+            min-width: 200px;
             background-color: white;
             border: 1px solid #e0e0e0;
-            border-radius: 8px;
+            border-radius: 6px;
             overflow: hidden;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             z-index: 1000;
@@ -166,7 +693,7 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         }
 
         .settings-section {
-            padding: 15px 18px;
+            padding: 12px 15px;
             border-bottom: 1px solid #e0e0e0;
         }
 
@@ -179,11 +706,11 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         }
 
         .settings-section h4 {
-            margin: 0 0 12px 0;
+            margin: 0 0 8px 0;
             color: #333;
-            font-size: 14px;
+            font-size: 13px;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
             font-weight: 600;
         }
 
@@ -194,13 +721,13 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         .theme-option, .language-option {
             display: flex;
             align-items: center;
-            padding: 10px 14px;
+            padding: 8px 12px;
             color: #333;
             text-decoration: none;
             transition: background-color 0.2s;
-            border-radius: 6px;
-            margin-bottom: 4px;
-            font-size: 15px;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
         }
 
         [data-theme="dark"] .theme-option, 
@@ -218,32 +745,27 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         }
 
         .theme-option i, .language-option i {
-            width: 20px;
-            margin-right: 12px;
-            color: #4b2e9b;
-            font-size: 16px;
-        }
-
-        [data-theme="dark"] .theme-option i, 
-        [data-theme="dark"] .language-option i {
-            color: #9b7bff;
+            width: 18px;
+            margin-right: 10px;
+            color: var(--vivid-indigo);
+            font-size: 14px;
         }
 
         .font-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .font-btn {
-            background: #4b2e9b;
+            background: var(--vivid-indigo);
             color: white;
             border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             transition: background 0.2s;
             display: flex;
@@ -252,13 +774,13 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         }
 
         .font-btn:hover {
-            background: #8b008b;
+            background: var(--dark-magenta);
         }
 
         .font-size-display {
-            font-size: 15px;
+            font-size: 14px;
             color: #333;
-            min-width: 60px;
+            min-width: 50px;
             text-align: center;
             font-weight: 600;
         }
@@ -269,13 +791,460 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
 
         .active-indicator {
             margin-left: auto;
-            color: #4b2e9b;
+            color: var(--vivid-indigo);
+            font-size: 12px;
         }
 
-        [data-theme="dark"] .active-indicator {
-            color: #9b7bff;
+        /* Features Section Styles */
+        .features {
+            padding: 25px 0;
+            background-color: #f5f5f5;
         }
 
+        [data-theme="dark"] .features {
+            background-color: #2d2d2d;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        [data-theme="dark"] .feature-card {
+            background: #3d3d3d;
+        }
+
+        /* Cities Section Styles */
+        .cities-section {
+            background-color: #f5f5f5;
+            padding: 70px 0;
+            text-align: center;
+            margin-top: -50px;
+            margin-bottom: 10px;
+        }
+
+        [data-theme="dark"] .cities-section {
+            background-color: #2d2d2d;
+        }
+
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            width: 90%;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .city-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: #fafafa;
+        }
+
+        [data-theme="dark"] .city-card {
+            background: #3d3d3d;
+        }
+
+        .city-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .city-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            opacity: 0.8;
+            transition: opacity 0.3s ease;
+        }
+
+        .city-card:hover img {
+            opacity: 1;
+        }
+
+        .city-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            padding: 8px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Chatbot Styles */
+        .chat-toggle {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background: var(--vivid-indigo);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(140, 0, 80, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .chat-toggle:hover {
+            transform: scale(1.1);
+            background: var(--dark-magenta);
+        }
+
+        .chat-toggle svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .chat-container {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 320px;
+            height: 480px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 999;
+        }
+
+        [data-theme="dark"] .chat-container {
+            background: #333333;
+            color: white;
+        }
+
+        .chat-container.active {
+            display: flex;
+        }
+
+        .chat-header {
+            background: var(--vivid-indigo);
+            color: white;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--vivid-indigo);
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 5px;
+        }
+
+        .chat-title h3 {
+            font-size: 16px;
+            margin-bottom: 2px;
+            color: white;
+        }
+
+        .chat-status {
+            font-size: 12px;
+            opacity: 0.9;
+            font-weight: 400;
+            color: #50ff84;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        [data-theme="dark"] .chat-messages {
+            background: #2d2d2d;
+        }
+
+        .message {
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.bot {
+            flex-direction: row;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            line-height: 1.4;
+            font-size: 13px;
+        }
+
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: bold;
+            flex-shrink: 0;
+            overflow: hidden;
+            align-self: flex-start;
+        }
+
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: white;
+            padding: 4px;
+        }
+
+        .message.user .message-avatar {
+            background: var(--coral-red);
+            color: white;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .message-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 3px;
+            opacity: 0.7;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: var(--coral-red);
+            color: white;
+            border-top-right-radius: 4px;
+        }
+
+        .quick-replies {
+            padding: 10px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            background: #f3f3f3;
+            border-top: 1px solid #eee;
+        }
+
+        [data-theme="dark"] .quick-replies {
+            background: #404040;
+            border-color: #505050;
+        }
+
+        .quick-reply-btn {
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid var(--vivid-indigo);
+            color: var(--vivid-indigo);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-reply-btn:hover {
+            background: var(--vivid-indigo);
+            color: white;
+        }
+
+        .chat-input-area {
+            padding: 12px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        [data-theme="dark"] .chat-input-area {
+            background: #333;
+            border-color: #404040;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        [data-theme="dark"] .chat-input {
+            background: #404040;
+            border-color: #505050;
+            color: white;
+        }
+
+        .chat-input:focus {
+            border-color: var(--vivid-indigo);
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--vivid-indigo);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.1);
+            background: var(--dark-magenta);
+        }
+
+        .send-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 14px;
+            background: white;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            max-width: 60px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            background: var(--vivid-indigo);
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-6px);
+                opacity: 1;
+            }
+        }
+
+        /* Best Selling Section Styles */
         .best-selling-section {
             padding: 15px 0;
             background-color: var(--bg-secondary);
@@ -540,6 +1509,20 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             .services-scroll {
                 padding-bottom: 20px;
             }
+            
+            .chat-container {
+                width: 280px;
+                height: 420px;
+                bottom: 80px;
+                right: 15px;
+            }
+            
+            .chat-toggle {
+                bottom: 20px;
+                right: 20px;
+                width: 55px;
+                height: 55px;
+            }
         }
 
         @media (max-width: 992px) {
@@ -549,23 +1532,27 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             }
     
             .hero-text {
-            margin-bottom: 40px;
-                }
+                margin-bottom: 40px;
+            }
     
             .booking-form {
-            width: 100%;
-            max-width: 500px;
-                }
+                width: 100%;
+                max-width: 500px;
+            }
         }
 
+        @media (max-width: 480px) {
+            .chat-container {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+        }
     </style>
 </head>
 <body data-theme="<?php echo $darkMode; ?>">
-<iframe
-    src="chatbot.html"
-    id="chatbot-frame"
-    title="Motiv Chatbot">
-</iframe>
 
 <header>
     <div class="container header-content">
@@ -576,93 +1563,39 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
         <nav>
             <ul>
                 <li class="dropdown">
-                    <a href="landing.php" class="dropbtn"><?php 
-                        $homeText = 'Home';
-                        $aboutText = 'About';
-                        if ($language == 'es') { $homeText = 'Inicio'; $aboutText = 'Acerca de'; }
-                        elseif ($language == 'fr') { $homeText = 'Accueil'; $aboutText = 'À propos'; }
-                        elseif ($language == 'de') { $homeText = 'Startseite'; $aboutText = 'Über uns'; }
-                        echo $homeText; ?> <i class="fas fa-caret-down"></i></a>
+                    <a href="landing.php" class="dropbtn">Home <i class="fas fa-caret-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="landing.php"><?php echo $homeText; ?></a>
-                        <a href="about.php"><?php echo $aboutText; ?></a>
+                        <a href="landing.php">Home</a>
+                        <a href="about.php">About</a>
                     </div>
                 </li>
-                <li><a href="cars.php" class="active"><?php 
-                    $carsText = 'Cars';
-                    if ($language == 'es') { $carsText = 'Autos'; }
-                    elseif ($language == 'fr') { $carsText = 'Voitures'; }
-                    elseif ($language == 'de') { $carsText = 'Autos'; }
-                    echo $carsText;
-                ?></a></li>
-                <li><a href="contact.php"><?php 
-                    $contactText = 'Contact';
-                    if ($language == 'es') { $contactText = 'Contacto'; }
-                    elseif ($language == 'fr') { $contactText = 'Contact'; }
-                    elseif ($language == 'de') { $contactText = 'Kontakt'; }
-                    echo $contactText;
-                ?></a></li>
+                <li><a href="cars.php">Cars</a></li>
+                <li><a href="contact.php">Contact</a></li>
 
                 <?php if (!isset($_SESSION['user'])): ?>
-                    <li><a href="loginPage.php"><?php 
-                        $loginText = 'Login';
-                        if ($language == 'es') { $loginText = 'Iniciar sesión'; }
-                        elseif ($language == 'fr') { $loginText = 'Connexion'; }
-                        elseif ($language == 'de') { $loginText = 'Anmelden'; }
-                        echo $loginText;
-                    ?></a></li>
+                    <li><a href="loginPage.php">Login</a></li>
                 <?php else: ?>
-                    <li><a href="customer-dashboard.php"><?php 
-                        $dashboardText = 'Dashboard';
-                        if ($language == 'es') { $dashboardText = 'Panel'; }
-                        elseif ($language == 'fr') { $dashboardText = 'Tableau de bord'; }
-                        elseif ($language == 'de') { $dashboardText = 'Dashboard'; }
-                        echo $dashboardText;
-                    ?></a></li>
+                    <li><a href="customer-dashboard.php">Dashboard</a></li>
                     <li>
                         <a href="logout.php" style="color: #ff7f50;">
-                            <i class="fas fa-sign-out-alt"></i> <?php 
-                                $logoutText = 'Logout';
-                                if ($language == 'es') { $logoutText = 'Cerrar sesión'; }
-                                elseif ($language == 'fr') { $logoutText = 'Déconnexion'; }
-                                elseif ($language == 'de') { $logoutText = 'Abmelden'; }
-                                echo $logoutText;
-                            ?>
+                            <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </li>
                 <?php endif; ?>
 
                 <li class="language-selector">
-                    <a href="#"><i class="fas fa-globe"></i></a>
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
                     <div class="language-settings-dropdown">
                         <div class="settings-section">
-                            <h4><?php 
-                                $themeText = 'Theme';
-                                if ($language == 'es') { $themeText = 'Tema'; }
-                                elseif ($language == 'fr') { $themeText = 'Thème'; }
-                                elseif ($language == 'de') { $themeText = 'Design'; }
-                                echo $themeText;
-                            ?></h4>
+                            <h4><?php echo $themeText; ?></h4>
                             <a href="#" class="theme-option" data-theme="light">
-                                <i class="fas fa-sun"></i> <?php 
-                                    $lightText = 'Light';
-                                    if ($language == 'es') { $lightText = 'Claro'; }
-                                    elseif ($language == 'fr') { $lightText = 'Clair'; }
-                                    elseif ($language == 'de') { $lightText = 'Hell'; }
-                                    echo $lightText;
-                                ?>
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
                                 <?php if ($darkMode == 'light'): ?>
                                     <i class="fas fa-check active-indicator"></i>
                                 <?php endif; ?>
                             </a>
                             <a href="#" class="theme-option" data-theme="dark">
-                                <i class="fas fa-moon"></i> <?php 
-                                    $darkText = 'Dark';
-                                    if ($language == 'es') { $darkText = 'Oscuro'; }
-                                    elseif ($language == 'fr') { $darkText = 'Sombre'; }
-                                    elseif ($language == 'de') { $darkText = 'Dunkel'; }
-                                    echo $darkText;
-                                ?>
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
                                 <?php if ($darkMode == 'dark'): ?>
                                     <i class="fas fa-check active-indicator"></i>
                                 <?php endif; ?>
@@ -670,35 +1603,17 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                         </div>
 
                         <div class="settings-section">
-                            <h4><?php 
-                                $fontSizeText = 'Font Size';
-                                if ($language == 'es') { $fontSizeText = 'Tamaño de fuente'; }
-                                elseif ($language == 'fr') { $fontSizeText = 'Taille de police'; }
-                                elseif ($language == 'de') { $fontSizeText = 'Schriftgröße'; }
-                                echo $fontSizeText;
-                            ?></h4>
+                            <h4><?php echo $fontSizeText; ?></h4>
                             <div class="font-controls">
                                 <button class="font-btn" id="font-decrease">A-</button>
                                 <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
                                 <button class="font-btn" id="font-increase">A+</button>
-                                <button class="font-btn" id="font-reset"><?php 
-                                    $resetText = 'Reset';
-                                    if ($language == 'es') { $resetText = 'Reiniciar'; }
-                                    elseif ($language == 'fr') { $resetText = 'Réinitialiser'; }
-                                    elseif ($language == 'de') { $resetText = 'Zurücksetzen'; }
-                                    echo $resetText;
-                                ?></button>
+                                <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
                             </div>
                         </div>
 
                         <div class="settings-section">
-                            <h4><?php 
-                                $languageText = 'Language';
-                                if ($language == 'es') { $languageText = 'Idioma'; }
-                                elseif ($language == 'fr') { $languageText = 'Langue'; }
-                                elseif ($language == 'de') { $languageText = 'Sprache'; }
-                                echo $languageText;
-                            ?></h4>
+                            <h4><?php echo $languageText; ?></h4>
                             <a href="#" class="language-option" data-lang="en">
                                 <i class="fas fa-language"></i> English
                                 <?php if ($language == 'en'): ?>
@@ -743,48 +1658,18 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
     <section class="hero">
         <div class="container hero-content">
             <div class="hero-text">
-                <h1><?php 
-                    $heroTitle = 'Motiv, Car Rental';
-                    if ($language == 'es') { $heroTitle = 'Motiv, Alquiler de Autos'; }
-                    elseif ($language == 'fr') { $heroTitle = 'Motiv, Location de Voitures'; }
-                    elseif ($language == 'de') { $heroTitle = 'Motiv, Autovermietung'; }
-                    echo $heroTitle;
-                ?></h1>
-                <p><?php 
-                    $heroText = 'At Motiv, we make car hire enjoyable! With flexible pick-up options, a variety of quality vehicles, and smooth booking, every journey feels effortless.';
-                    if ($language == 'es') { $heroText = '¡En Motiv, hacemos que el alquiler de autos sea agradable! Con opciones flexibles de recogida, una variedad de vehículos de calidad y reservas sin problemas, cada viaje se siente sin esfuerzo.'; }
-                    elseif ($language == 'fr') { $heroText = 'Chez Motiv, nous rendons la location de voitures agréable ! Avec des options de prise en charge flexibles, une variété de véhicules de qualité et une réservation fluide, chaque voyage semble sans effort.'; }
-                    elseif ($language == 'de') { $heroText = 'Bei Motiv machen wir die Autovermietung angenehm! Mit flexiblen Abholmöglichkeiten, einer Vielzahl von Qualitätsfahrzeugen und reibungsloser Buchung fühlt sich jede Reise mühelos an.'; }
-                    echo $heroText;
-                ?></p>
+                <h1><?php echo $heroTitle; ?></h1>
+                <p><?php echo $heroText; ?></p>
             </div>
             <div class="booking-form">
-                <h2><?php 
-                    $reserveText = 'Reserve a Vehicle';
-                    if ($language == 'es') { $reserveText = 'Reservar un Vehículo'; }
-                    elseif ($language == 'fr') { $reserveText = 'Réserver un Véhicule'; }
-                    elseif ($language == 'de') { $reserveText = 'Fahrzeug reservieren'; }
-                    echo $reserveText;
-                ?></h2>
+                <h2><?php echo $reserveText; ?></h2>
                 <form id="bookingForm" method="POST">
                     <input type="hidden" name="search_cars" value="1">
                     
                     <div class="form-group">
-                        <label for="pickup-location"><?php 
-                            $pickupLocationText = 'Pick-up Location';
-                            if ($language == 'es') { $pickupLocationText = 'Lugar de recogida'; }
-                            elseif ($language == 'fr') { $pickupLocationText = 'Lieu de prise en charge'; }
-                            elseif ($language == 'de') { $pickupLocationText = 'Abholort'; }
-                            echo $pickupLocationText;
-                        ?></label>
+                        <label for="pickup-location"><?php echo $pickupLocationText; ?></label>
                         <select id="pickup-location" name="pickup_location" required>
-                            <option value=""><?php 
-                                $selectLocationText = 'Select a location';
-                                if ($language == 'es') { $selectLocationText = 'Selecciona un lugar'; }
-                                elseif ($language == 'fr') { $selectLocationText = 'Sélectionnez un lieu'; }
-                                elseif ($language == 'de') { $selectLocationText = 'Wählen Sie einen Ort'; }
-                                echo $selectLocationText;
-                            ?></option>
+                            <option value=""><?php echo $selectLocationText; ?></option>
                             <?php foreach ($cities as $city): ?>
                                 <option value="<?php echo $city['city_id']; ?>">
                                     <?php echo htmlspecialchars($city['city_name']); ?>
@@ -794,13 +1679,7 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                     </div>
                     
                     <div class="form-group">
-                        <label><?php 
-                            $pickupDateTimeText = 'Pick-up Date & Time';
-                            if ($language == 'es') { $pickupDateTimeText = 'Fecha y hora de recogida'; }
-                            elseif ($language == 'fr') { $pickupDateTimeText = 'Date et heure de prise en charge'; }
-                            elseif ($language == 'de') { $pickupDateTimeText = 'Abholdatum und -zeit'; }
-                            echo $pickupDateTimeText;
-                        ?></label>
+                        <label><?php echo $pickupDateTimeText; ?></label>
                         <div class="date-time-group">
                             <div>
                                 <input type="date" id="pickup-date" name="pickup_date" required>
@@ -812,13 +1691,7 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                     </div>
                     
                     <div class="form-group">
-                        <label><?php 
-                            $dropoffDateTimeText = 'Drop-off Date & Time';
-                            if ($language == 'es') { $dropoffDateTimeText = 'Fecha y hora de devolución'; }
-                            elseif ($language == 'fr') { $dropoffDateTimeText = 'Date et heure de restitution'; }
-                            elseif ($language == 'de') { $dropoffDateTimeText = 'Rückgabedatum und -zeit'; }
-                            echo $dropoffDateTimeText;
-                        ?></label>
+                        <label><?php echo $dropoffDateTimeText; ?></label>
                         <div class="date-time-group">
                             <div>
                                 <input type="date" id="dropoff-date" name="dropoff_date" required>
@@ -829,505 +1702,313 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                         </div>
                     </div>
                     
-                    <button type="submit" class="book-btn"><?php 
-                        $showCarsText = 'Show Available Cars';
-                        if ($language == 'es') { $showCarsText = 'Mostrar Autos Disponibles'; }
-                        elseif ($language == 'fr') { $showCarsText = 'Afficher les Voitures Disponibles'; }
-                        elseif ($language == 'de') { $showCarsText = 'Verfügbare Autos anzeigen'; }
-                        echo $showCarsText;
-                    ?></button>
+                    <button type="submit" class="book-btn"><?php echo $showCarsText; ?></button>
                 </form>
             </div>
         </div>
     </section>
 
-<section class="features">
-    <div class="container">
-        <h2 class="section-title"><?php 
-            $whyChooseText = 'Why Choose Motiv?';
-            if ($language == 'es') { $whyChooseText = '¿Por qué elegir Motiv?'; }
-            elseif ($language == 'fr') { $whyChooseText = 'Pourquoi choisir Motiv?'; }
-            elseif ($language == 'de') { $whyChooseText = 'Warum Motiv wählen?'; }
-            echo $whyChooseText;
-        ?></h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <img src="cars1.png" alt="Vehicle Selection">
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title"><?php echo $whyChooseText; ?></h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="cars1.png" alt="Vehicle Selection">
+                    </div>
+                    <h3><?php echo $vehicleSelectionText; ?></h3>
+                    <p><?php echo $vehicleDescText; ?></p>
                 </div>
-                <h3><?php 
-                    $vehicleSelectionText = 'Wide Vehicle Selection';
-                    if ($language == 'es') { $vehicleSelectionText = 'Amplia selección de vehículos'; }
-                    elseif ($language == 'fr') { $vehicleSelectionText = 'Large sélection de véhicules'; }
-                    elseif ($language == 'de') { $vehicleSelectionText = 'Große Fahrzeugauswahl'; }
-                    echo $vehicleSelectionText;
-                ?></h3>
-                <p><?php 
-                    $vehicleDescText = 'Choose from economy cars, premium sedans, SUVs, and electric vehicles to suit your needs.';
-                    if ($language == 'es') { $vehicleDescText = 'Elija entre autos económicos, sedanes premium, SUV y vehículos eléctricos que se adapten a sus necesidades.'; }
-                    elseif ($language == 'fr') { $vehicleDescText = 'Choisissez parmi les voitures économiques, les berlines premium, les SUV et les véhicules électriques adaptés à vos besoins.'; }
-                    elseif ($language == 'de') { $vehicleDescText = 'Wählen Sie aus sparsamen Autos, Premium-Limousinen, SUVs und Elektrofahrzeugen, die Ihren Bedürfnissen entsprechen.'; }
-                    echo $vehicleDescText;
-                ?></p>
-            </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <img src="location1.png" alt="Convenient Locations">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="location1.png" alt="Convenient Locations">
+                    </div>
+                    <h3><?php echo $locationsText; ?></h3>
+                    <p><?php echo $locationsDescText; ?></p>
                 </div>
-                <h3><?php 
-                    $locationsText = 'Convenient Locations';
-                    if ($language == 'es') { $locationsText = 'Ubicaciones convenientes'; }
-                    elseif ($language == 'fr') { $locationsText = 'Emplacements pratiques'; }
-                    elseif ($language == 'de') { $locationsText = 'Praktische Standorte'; }
-                    echo $locationsText;
-                ?></h3>
-                <p><?php 
-                    $locationsDescText = 'Multiple pickup and drop-off locations across Birmingham for your convenience.';
-                    if ($language == 'es') { $locationsDescText = 'Múltiples ubicaciones de recogida y devolución en Birmingham para su conveniencia.'; }
-                    elseif ($language == 'fr') { $locationsDescText = 'Plusieurs lieux de prise en charge et de restitution à Birmingham pour votre commodité.'; }
-                    elseif ($language == 'de') { $locationsDescText = 'Mehrere Abhol- und Rückgabeorte in Birmingham für Ihre Bequemlichkeit.'; }
-                    echo $locationsDescText;
-                ?></p>
-            </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <img src="money1.png" alt="Best Price Guarantee">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="money1.png" alt="Best Price Guarantee">
+                    </div>
+                    <h3><?php echo $priceGuaranteeText; ?></h3>
+                    <p><?php echo $priceDescText; ?></p>
                 </div>
-                <h3><?php 
-                    $priceGuaranteeText = 'Best Price Guarantee';
-                    if ($language == 'es') { $priceGuaranteeText = 'Mejor precio garantizado'; }
-                    elseif ($language == 'fr') { $priceGuaranteeText = 'Meilleur prix garanti'; }
-                    elseif ($language == 'de') { $priceGuaranteeText = 'Bester Preis garantiert'; }
-                    echo $priceGuaranteeText;
-                ?></h3>
-                <p><?php 
-                    $priceDescText = 'We offer competitive rates with no hidden fees and a best price guarantee.';
-                    if ($language == 'es') { $priceDescText = 'Ofrecemos tarifas competitivas sin cargos ocultos y una garantía de mejor precio.'; }
-                    elseif ($language == 'fr') { $priceDescText = 'Nous offrons des tarifs compétitifs sans frais cachés et une garantie du meilleur prix.'; }
-                    elseif ($language == 'de') { $priceDescText = 'Wir bieten wettbewerbsfähige Preise ohne versteckte Gebühren und eine Bestpreisgarantie.'; }
-                    echo $priceDescText;
-                ?></p>
-            </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <img src="cust1.png" alt="Customer Support">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <img src="cust1.png" alt="Customer Support">
+                    </div>
+                    <h3><?php echo $supportText; ?></h3>
+                    <p><?php echo $supportDescText; ?></p>
                 </div>
-                <h3><?php 
-                    $supportText = '24/7 Support';
-                    if ($language == 'es') { $supportText = 'Soporte 24/7'; }
-                    elseif ($language == 'fr') { $supportText = 'Assistance 24/7'; }
-                    elseif ($language == 'de') { $supportText = '24/7 Support'; }
-                    echo $supportText;
-                ?></h3>
-                <p><?php 
-                    $supportDescText = 'Our customer service team is available around the clock to assist you.';
-                    if ($language == 'es') { $supportDescText = 'Nuestro equipo de servicio al cliente está disponible las 24 horas para ayudarlo.'; }
-                    elseif ($language == 'fr') { $supportDescText = 'Notre équipe de service client est disponible 24h/24 pour vous aider.'; }
-                    elseif ($language == 'de') { $supportDescText = 'Unser Kundenservice-Team steht Ihnen rund um die Uhr zur Verfügung.'; }
-                    echo $supportDescText;
-                ?></p>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="cities-section">
-    <h2 class="section-title"><?php 
-        $topCitiesText = 'Top Cities for Car Hire';
-        if ($language == 'es') { $topCitiesText = 'Principales ciudades para alquiler de autos'; }
-        elseif ($language == 'fr') { $topCitiesText = 'Meilleures villes pour la location de voitures'; }
-        elseif ($language == 'de') { $topCitiesText = 'Top-Städte für die Autovermietung'; }
-        echo $topCitiesText;
-    ?></h2>
+    <section class="cities-section">
+        <h2 class="section-title"><?php echo $topCitiesText; ?></h2>
 
-    <div class="city-grid">
-        <?php
-        $cities = [
-            ['name' => 'Birmingham', 'image' => 'city1.jpg'],
-            ['name' => 'London', 'image' => 'city2.png'],
-            ['name' => 'Liverpool', 'image' => 'city3.jpeg'],
-            ['name' => 'Manchester', 'image' => 'city4.jpg'],
-            ['name' => 'Sheffield', 'image' => 'city5.jpg']
-        ];
-        
-        foreach ($cities as $city) {
-            $imagePath = $city['image'];
+        <div class="city-grid">
+            <?php
+            $cities = [
+                ['name' => 'Birmingham', 'image' => 'city1.jpg'],
+                ['name' => 'London', 'image' => 'city2.png'],
+                ['name' => 'Liverpool', 'image' => 'city3.jpeg'],
+                ['name' => 'Manchester', 'image' => 'city4.jpg'],
+                ['name' => 'Sheffield', 'image' => 'city5.jpg']
+            ];
             
-            if (!file_exists($imagePath)) {
-                $imagePath = 'city_default.jpg';
+            foreach ($cities as $city) {
+                $imagePath = $city['image'];
+                
+                if (!file_exists($imagePath)) {
+                    $imagePath = 'city_default.jpg';
+                }
+                
+                echo '
+                <div class="city-card">
+                    <img src="' . $imagePath . '" alt="' . $city['name'] . '">
+                    <div class="city-name">' . $city['name'] . '</div>
+                </div>';
             }
-            
-            echo '
-            <div class="city-card">
-                <img src="' . $imagePath . '" alt="' . $city['name'] . '">
-                <div class="city-name">' . $city['name'] . '</div>
-            </div>';
-        }
-        ?>
-    </div>
-</section>
+            ?>
+        </div>
+    </section>
 
-<section class="best-selling-section">
-    <div class="container">
-        <div class="section-header">
-            <h2 class="section-title"><?php 
-                $bestSellingText = 'Best Selling Services';
-                if ($language == 'es') { $bestSellingText = 'Servicios más vendidos'; }
-                elseif ($language == 'fr') { $bestSellingText = 'Services les plus vendus'; }
-                elseif ($language == 'de') { $bestSellingText = 'Bestseller-Dienstleistungen'; }
-                echo $bestSellingText;
-            ?></h2>
-            <a href="cars.php" class="view-all-btn"><?php 
-                $viewAllText = 'View All Listings';
-                if ($language == 'es') { $viewAllText = 'Ver todos los listados'; }
-                elseif ($language == 'fr') { $viewAllText = 'Voir toutes les annonces'; }
-                elseif ($language == 'de') { $viewAllText = 'Alle Angebote anzeigen'; }
-                echo $viewAllText;
-            ?></a>
-        </div>
-        <p class="section-subtitle"><?php 
-            $popularText = 'Our most popular rental options with top customer ratings';
-            if ($language == 'es') { $popularText = 'Nuestras opciones de alquiler más populares con las mejores calificaciones de los clientes'; }
-            elseif ($language == 'fr') { $popularText = 'Nos options de location les plus populaires avec les meilleures évaluations des clients'; }
-            elseif ($language == 'de') { $popularText = 'Unsere beliebtesten Mietoptionen mit den besten Kundenbewertungen'; }
-            echo $popularText;
-        ?></p>
-        
-        <div class="services-scroll-container">
-            <div class="services-scroll">
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="car_pics/car1.png" alt="Premium SUV">
-                        <div class="service-badge"><?php 
-                            $popularBadgeText = 'Most Popular';
-                            if ($language == 'es') { $popularBadgeText = 'Más popular'; }
-                            elseif ($language == 'fr') { $popularBadgeText = 'Le plus populaire'; }
-                            elseif ($language == 'de') { $popularBadgeText = 'Am beliebtesten'; }
-                            echo $popularBadgeText;
-                        ?></div>
-                    </div>
-                    <div class="service-content">
-                        <h3><?php 
-                            $suvText = 'Premium SUV';
-                            if ($language == 'es') { $suvText = 'SUV Premium'; }
-                            elseif ($language == 'fr') { $suvText = 'SUV Premium'; }
-                            elseif ($language == 'de') { $suvText = 'Premium SUV'; }
-                            echo $suvText;
-                        ?></h3>
-                        <div class="service-rating">
-                            <span class="stars">★★★★★</span>
-                            <span class="rating-text">5/5 (128 <?php 
-                                $reviewsText = 'reviews';
-                                if ($language == 'es') { $reviewsText = 'reseñas'; }
-                                elseif ($language == 'fr') { $reviewsText = 'avis'; }
-                                elseif ($language == 'de') { $reviewsText = 'Bewertungen'; }
-                                echo $reviewsText;
-                            ?>)</span>
-                        </div>
-                        <p class="service-description"><?php 
-                            $suvDescText = 'Spacious and comfortable SUVs perfect for family trips or group travel.';
-                            if ($language == 'es') { $suvDescText = 'SUVs espaciosos y cómodos perfectos para viajes familiares o en grupo.'; }
-                            elseif ($language == 'fr') { $suvDescText = 'SUV spacieux et confortables parfaits pour les voyages en famille ou en groupe.'; }
-                            elseif ($language == 'de') { $suvDescText = 'Geräumige und komfortable SUVs, perfekt für Familienausflüge oder Gruppenreisen.'; }
-                            echo $suvDescText;
-                        ?></p>
-                        <div class="service-details">
-                            <div class="detail-item">
-                                <span class="detail-label"><?php 
-                                    $seatsText = 'Seats:';
-                                    if ($language == 'es') { $seatsText = 'Asientos:'; }
-                                    elseif ($language == 'fr') { $seatsText = 'Sièges:'; }
-                                    elseif ($language == 'de') { $seatsText = 'Sitze:'; }
-                                    echo $seatsText;
-                                ?></span>
-                                <span class="detail-value">5-7</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php 
-                                    $luggageText = 'Luggage:';
-                                    if ($language == 'es') { $luggageText = 'Equipaje:'; }
-                                    elseif ($language == 'fr') { $luggageText = 'Bagages:'; }
-                                    elseif ($language == 'de') { $luggageText = 'Gepäck:'; }
-                                    echo $luggageText;
-                                ?></span>
-                                <span class="detail-value">4-6 <?php 
-                                    $bagsText = 'bags';
-                                    if ($language == 'es') { $bagsText = 'maletas'; }
-                                    elseif ($language == 'fr') { $bagsText = 'sacs'; }
-                                    elseif ($language == 'de') { $bagsText = 'Taschen'; }
-                                    echo $bagsText;
-                                ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php 
-                                    $fuelTypeText = 'Fuel Type:';
-                                    if ($language == 'es') { $fuelTypeText = 'Tipo de combustible:'; }
-                                    elseif ($language == 'fr') { $fuelTypeText = 'Type de carburant:'; }
-                                    elseif ($language == 'de') { $fuelTypeText = 'Kraftstofftyp:'; }
-                                    echo $fuelTypeText;
-                                ?></span>
-                                <span class="detail-value">Petrol/Diesel</span>
-                            </div>
-                        </div>
-                        <div class="testimonial">
-                            <p>"<?php 
-                                $suvTestimonialText = 'The SUV was perfect for our family vacation. Plenty of space and very comfortable!';
-                                if ($language == 'es') { $suvTestimonialText = 'El SUV fue perfecto para nuestras vacaciones familiares. ¡Mucho espacio y muy cómodo!'; }
-                                elseif ($language == 'fr') { $suvTestimonialText = 'Le SUV était parfait pour nos vacances en famille. Beaucoup d\'espace et très confortable !'; }
-                                elseif ($language == 'de') { $suvTestimonialText = 'Der SUV war perfekt für unseren Familienurlaub. Viel Platz und sehr komfortabel!'; }
-                                echo $suvTestimonialText;
-                            ?>"</p>
-                            <div class="testimonial-author">- Zahra A.</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="car_pics/car2.png" alt="Economy Car">
-                        <div class="service-badge"><?php 
-                            $bestValueText = 'Best Value';
-                            if ($language == 'es') { $bestValueText = 'Mejor valor'; }
-                            elseif ($language == 'fr') { $bestValueText = 'Meilleur rapport qualité-prix'; }
-                            elseif ($language == 'de') { $bestValueText = 'Bestes Preis-Leistungs-Verhältnis'; }
-                            echo $bestValueText;
-                        ?></div>
-                    </div>
-                    <div class="service-content">
-                        <h3><?php 
-                            $economyText = 'Economy Car';
-                            if ($language == 'es') { $economyText = 'Auto Económico'; }
-                            elseif ($language == 'fr') { $economyText = 'Voiture Économique'; }
-                            elseif ($language == 'de') { $economyText = 'Sparauto'; }
-                            echo $economyText;
-                        ?></h3>
-                        <div class="service-rating">
-                            <span class="stars">★★★★☆</span>
-                            <span class="rating-text">4.7/5 (95 <?php echo $reviewsText; ?>)</span>
-                        </div>
-                        <p class="service-description"><?php 
-                            $economyDescText = 'Fuel-efficient and affordable cars ideal for city driving and short trips.';
-                            if ($language == 'es') { $economyDescText = 'Autos eficientes en combustible y asequibles ideales para conducir en la ciudad y viajes cortos.'; }
-                            elseif ($language == 'fr') { $economyDescText = 'Voitures économes en carburant et abordables idéales pour la conduite en ville et les courts trajets.'; }
-                            elseif ($language == 'de') { $economyDescText = 'Kraftstoffeffiziente und erschwingliche Autos, ideal für Stadtfahrten und kurze Reisen.'; }
-                            echo $economyDescText;
-                        ?></p>
-                        <div class="service-details">
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $seatsText; ?></span>
-                                <span class="detail-value">4-5</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $luggageText; ?></span>
-                                <span class="detail-value">2-3 <?php echo $bagsText; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $fuelTypeText; ?></span>
-                                <span class="detail-value">Petrol</span>
-                            </div>
-                        </div>
-                        <div class="testimonial">
-                            <p>"<?php 
-                                $economyTestimonialText = 'Great value for money! The car was clean, efficient, and perfect for getting around the city.';
-                                if ($language == 'es') { $economyTestimonialText = '¡Excelente relación calidad-precio! El auto estaba limpio, eficiente y perfecto para moverse por la ciudad.'; }
-                                elseif ($language == 'fr') { $economyTestimonialText = 'Excellent rapport qualité-prix ! La voiture était propre, efficace et parfaite pour se déplacer en ville.'; }
-                                elseif ($language == 'de') { $economyTestimonialText = 'Großartiges Preis-Leistungs-Verhältnis! Das Auto war sauber, effizient und perfekt, um in der Stadt herumzukommen.'; }
-                                echo $economyTestimonialText;
-                            ?>"</p>
-                            <div class="testimonial-author">- Olivia E.S.</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="car_pics/car3.jpg" alt="Luxury Sedan">
-                    </div>
-                    <div class="service-content">
-                        <h3><?php 
-                            $luxuryText = 'Luxury Sedan';
-                            if ($language == 'es') { $luxuryText = 'Sedán de Lujo'; }
-                            elseif ($language == 'fr') { $luxuryText = 'Berline de Luxe'; }
-                            elseif ($language == 'de') { $luxuryText = 'Luxuslimousine'; }
-                            echo $luxuryText;
-                        ?></h3>
-                        <div class="service-rating">
-                            <span class="stars">★★★★☆</span>
-                            <span class="rating-text">4.8/5 (67 <?php echo $reviewsText; ?>)</span>
-                        </div>
-                        <p class="service-description"><?php 
-                            $luxuryDescText = 'Premium vehicles for business trips or special occasions with comfort.';
-                            if ($language == 'es') { $luxuryDescText = 'Vehículos premium para viajes de negocios u ocasiones especiales con comodidad.'; }
-                            elseif ($language == 'fr') { $luxuryDescText = 'Véhicules premium pour les voyages d\'affaires ou les occasions spéciales avec confort.'; }
-                            elseif ($language == 'de') { $luxuryDescText = 'Premium-Fahrzeuge für Geschäftsreisen oder besondere Anlässe mit Komfort.'; }
-                            echo $luxuryDescText;
-                        ?></p>
-                        <div class="service-details">
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $seatsText; ?></span>
-                                <span class="detail-value">4-5</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $luggageText; ?></span>
-                                <span class="detail-value">3-4 <?php echo $bagsText; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $fuelTypeText; ?></span>
-                                <span class="detail-value">Petrol/Hybrid</span>
-                            </div>
-                        </div>
-                        <div class="testimonial">
-                            <p>"<?php 
-                                $luxuryTestimonialText = 'The luxury sedan made our anniversary trip extra special. Smooth ride and excellent service!';
-                                if ($language == 'es') { $luxuryTestimonialText = 'El sedán de lujo hizo que nuestro viaje de aniversario fuera aún más especial. ¡Viaje suave y excelente servicio!'; }
-                                elseif ($language == 'fr') { $luxuryTestimonialText = 'La berline de luxe a rendu notre voyage d\'anniversaire encore plus spécial. Conduite agréable et excellent service !'; }
-                                elseif ($language == 'de') { $luxuryTestimonialText = 'Die Luxuslimousine machte unsere Jubiläumsreise noch besonderer. Ruhige Fahrt und ausgezeichneter Service!'; }
-                                echo $luxuryTestimonialText;
-                            ?>"</p>
-                            <div class="testimonial-author">- Will</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="service-card">
-                    <div class="service-image">
-                        <img src="car_pics/car4.png" alt="Electric">
-                        <div class="service-badge"><?php 
-                            $ecoFriendlyText = 'Eco-Friendly';
-                            if ($language == 'es') { $ecoFriendlyText = 'Ecológico'; }
-                            elseif ($language == 'fr') { $ecoFriendlyText = 'Écologique'; }
-                            elseif ($language == 'de') { $ecoFriendlyText = 'Umweltfreundlich'; }
-                            echo $ecoFriendlyText;
-                        ?></div>
-                    </div>
-                    <div class="service-content">
-                        <h3><?php 
-                            $electricText = 'Electric Vehicle';
-                            if ($language == 'es') { $electricText = 'Vehículo Eléctrico'; }
-                            elseif ($language == 'fr') { $electricText = 'Véhicule Électrique'; }
-                            elseif ($language == 'de') { $electricText = 'Elektrofahrzeug'; }
-                            echo $electricText;
-                        ?></h3>
-                        <div class="service-rating">
-                            <span class="stars">★★★★☆</span>
-                            <span class="rating-text">4.6/5 (52 <?php echo $reviewsText; ?>)</span>
-                        </div>
-                        <p class="service-description"><?php 
-                            $electricDescText = 'Environmentally friendly electric cars with modern features and operations.';
-                            if ($language == 'es') { $electricDescText = 'Autos eléctricos ecológicos con características y operaciones modernas.'; }
-                            elseif ($language == 'fr') { $electricDescText = 'Voitures électriques respectueuses de l\'environnement avec des fonctionnalités et des opérations modernes.'; }
-                            elseif ($language == 'de') { $electricDescText = 'Umweltfreundliche Elektroautos mit modernen Funktionen und Betrieb.'; }
-                            echo $electricDescText;
-                        ?></p>
-                        <div class="service-details">
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $seatsText; ?></span>
-                                <span class="detail-value">4-5</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $luggageText; ?></span>
-                                <span class="detail-value">2-3 <?php echo $bagsText; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="detail-label"><?php echo $fuelTypeText; ?></span>
-                                <span class="detail-value">Electric</span>
-                            </div>
-                        </div>
-                        <div class="testimonial">
-                            <p>"<?php 
-                                $electricTestimonialText = 'My first EV experience was fantastic! The car was quiet, smooth, and charging was convenient.';
-                                if ($language == 'es') { $electricTestimonialText = '¡Mi primera experiencia con un vehículo eléctrico fue fantástica! El auto era silencioso, suave y la carga era conveniente.'; }
-                                elseif ($language == 'fr') { $electricTestimonialText = 'Ma première expérience avec un véhicule électrique a été fantastique ! La voiture était silencieuse, confortable et la recharge était pratique.'; }
-                                elseif ($language == 'de') { $electricTestimonialText = 'Meine erste Erfahrung mit einem Elektrofahrzeug war fantastisch! Das Auto war leise, ruhig und das Aufladen war bequem.'; }
-                                echo $electricTestimonialText;
-                            ?>"</p>
-                            <div class="testimonial-author">- Aaron</div>
-                        </div>
-                    </div>
-                </div>
+    <section class="best-selling-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title"><?php echo $bestSellingText; ?></h2>
+                <a href="cars.php" class="view-all-btn"><?php echo $viewAllText; ?></a>
             </div>
+            <p class="section-subtitle"><?php echo $popularText; ?></p>
             
-            <button class="scroll-btn scroll-left" aria-label="Scroll left">&#8249;</button>
-            <button class="scroll-btn scroll-right" aria-label="Scroll right">&#8250;</button>
+            <div class="services-scroll-container">
+                <div class="services-scroll">
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="car_pics/car1.png" alt="Premium SUV">
+                            <div class="service-badge"><?php echo $popularBadgeText; ?></div>
+                        </div>
+                        <div class="service-content">
+                            <h3><?php echo $suvText; ?></h3>
+                            <div class="service-rating">
+                                <span class="stars">★★★★★</span>
+                                <span class="rating-text">5/5 (128 <?php echo $reviewsText; ?>)</span>
+                            </div>
+                            <p class="service-description"><?php echo $suvDescText; ?></p>
+                            <div class="service-details">
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $seatsText; ?></span>
+                                    <span class="detail-value">5-7</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $luggageText; ?></span>
+                                    <span class="detail-value">4-6 <?php echo $bagsText; ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $fuelTypeText; ?></span>
+                                    <span class="detail-value">Petrol/Diesel</span>
+                                </div>
+                            </div>
+                            <div class="testimonial">
+                                <p>"<?php echo $suvTestimonialText; ?>"</p>
+                                <div class="testimonial-author">- Zahra A.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="car_pics/car2.png" alt="Economy Car">
+                            <div class="service-badge"><?php echo $bestValueText; ?></div>
+                        </div>
+                        <div class="service-content">
+                            <h3><?php echo $economyText; ?></h3>
+                            <div class="service-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.7/5 (95 <?php echo $reviewsText; ?>)</span>
+                            </div>
+                            <p class="service-description"><?php echo $economyDescText; ?></p>
+                            <div class="service-details">
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $seatsText; ?></span>
+                                    <span class="detail-value">4-5</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $luggageText; ?></span>
+                                    <span class="detail-value">2-3 <?php echo $bagsText; ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $fuelTypeText; ?></span>
+                                    <span class="detail-value">Petrol</span>
+                                </div>
+                            </div>
+                            <div class="testimonial">
+                                <p>"<?php echo $economyTestimonialText; ?>"</p>
+                                <div class="testimonial-author">- Olivia E.S.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="car_pics/car3.jpg" alt="Luxury Sedan">
+                        </div>
+                        <div class="service-content">
+                            <h3><?php echo $luxuryText; ?></h3>
+                            <div class="service-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.8/5 (67 <?php echo $reviewsText; ?>)</span>
+                            </div>
+                            <p class="service-description"><?php echo $luxuryDescText; ?></p>
+                            <div class="service-details">
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $seatsText; ?></span>
+                                    <span class="detail-value">4-5</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $luggageText; ?></span>
+                                    <span class="detail-value">3-4 <?php echo $bagsText; ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $fuelTypeText; ?></span>
+                                    <span class="detail-value">Petrol/Hybrid</span>
+                                </div>
+                            </div>
+                            <div class="testimonial">
+                                <p>"<?php echo $luxuryTestimonialText; ?>"</p>
+                                <div class="testimonial-author">- Will</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="service-card">
+                        <div class="service-image">
+                            <img src="car_pics/car4.png" alt="Electric">
+                            <div class="service-badge"><?php echo $ecoFriendlyText; ?></div>
+                        </div>
+                        <div class="service-content">
+                            <h3><?php echo $electricText; ?></h3>
+                            <div class="service-rating">
+                                <span class="stars">★★★★☆</span>
+                                <span class="rating-text">4.6/5 (52 <?php echo $reviewsText; ?>)</span>
+                            </div>
+                            <p class="service-description"><?php echo $electricDescText; ?></p>
+                            <div class="service-details">
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $seatsText; ?></span>
+                                    <span class="detail-value">4-5</span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $luggageText; ?></span>
+                                    <span class="detail-value">2-3 <?php echo $bagsText; ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <span class="detail-label"><?php echo $fuelTypeText; ?></span>
+                                    <span class="detail-value">Electric</span>
+                                </div>
+                            </div>
+                            <div class="testimonial">
+                                <p>"<?php echo $electricTestimonialText; ?>"</p>
+                                <div class="testimonial-author">- Aaron</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="scroll-btn scroll-left" aria-label="Scroll left">&#8249;</button>
+                <button class="scroll-btn scroll-right" aria-label="Scroll right">&#8250;</button>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
-<footer>
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-column">
-                <h3>Motiv, Car Rental</h3>
-                <p><?php 
-                    $footerTaglineText = 'Your trusted partner for car rental services in Birmingham and beyond.';
-                    if ($language == 'es') { $footerTaglineText = 'Su socio de confianza para servicios de alquiler de autos en Birmingham y más allá.'; }
-                    elseif ($language == 'fr') { $footerTaglineText = 'Votre partenaire de confiance pour les services de location de voitures à Birmingham et au-delà.'; }
-                    elseif ($language == 'de') { $footerTaglineText = 'Ihr vertrauenswürdiger Partner für Autovermietungen in Birmingham und darüber hinaus.'; }
-                    echo $footerTaglineText;
-                ?></p>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Motiv, Car Rental</h3>
+                    <p><?php echo $footerTaglineText; ?></p>
+                </div>
+                <div class="footer-column">
+                    <h3><?php echo $quickLinksText; ?></h3>
+                    <ul>
+                        <li><a href="landing.php">Home</a></li>
+                        <li><a href="cars.php"><?php echo $ourFleetText; ?></a></li>
+                        <li><a href="contact.php"><?php echo $locationsText2; ?></a></li>
+                        <li><a href="#"><?php echo $offersText; ?></a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3><?php echo $contactUsText; ?></h3>
+                    <ul>
+                        <li>New Street Station, Birmingham</li>
+                        <li>0712345678</li>
+                        <li>info@motivcarrental.com</li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-column">
-                <h3><?php 
-                    $quickLinksText = 'Quick Links';
-                    if ($language == 'es') { $quickLinksText = 'Enlaces rápidos'; }
-                    elseif ($language == 'fr') { $quickLinksText = 'Liens rapides'; }
-                    elseif ($language == 'de') { $quickLinksText = 'Schnelllinks'; }
-                    echo $quickLinksText;
-                ?></h3>
-                <ul>
-                    <li><a href="landing.php"><?php echo $homeText; ?></a></li>
-                    <li><a href="cars.php"><?php 
-                        $ourFleetText = 'Our Fleet';
-                        if ($language == 'es') { $ourFleetText = 'Nuestra flota'; }
-                        elseif ($language == 'fr') { $ourFleetText = 'Notre flotte'; }
-                        elseif ($language == 'de') { $ourFleetText = 'Unsere Flotte'; }
-                        echo $ourFleetText;
-                    ?></a></li>
-                    <li><a href="contact.php"><?php 
-                        $locationsText2 = 'Locations';
-                        if ($language == 'es') { $locationsText2 = 'Ubicaciones'; }
-                        elseif ($language == 'fr') { $locationsText2 = 'Emplacements'; }
-                        elseif ($language == 'de') { $locationsText2 = 'Standorte'; }
-                        echo $locationsText2;
-                    ?></a></li>
-                    <li><a href="#"><?php 
-                        $offersText = 'Offers';
-                        if ($language == 'es') { $offersText = 'Ofertas'; }
-                        elseif ($language == 'fr') { $offersText = 'Offres'; }
-                        elseif ($language == 'de') { $offersText = 'Angebote'; }
-                        echo $offersText;
-                    ?></a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3><?php 
-                    $contactUsText = 'Contact Us';
-                    if ($language == 'es') { $contactUsText = 'Contáctenos'; }
-                    elseif ($language == 'fr') { $contactUsText = 'Contactez-nous'; }
-                    elseif ($language == 'de') { $contactUsText = 'Kontaktieren Sie uns'; }
-                    echo $contactUsText;
-                ?></h3>
-                <ul>
-                    <li>New Street Station, Birmingham</li>
-                    <li>0712345678</li>
-                    <li>info@motivcarrental.com</li>
-                </ul>
+            <div class="copyright">
+                <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReservedText; ?></p>
             </div>
         </div>
-        <div class="copyright">
-            <p>&copy; 2025 Motiv Car Rental. <?php 
-                $rightsReservedText = 'All rights reserved.';
-                if ($language == 'es') { $rightsReservedText = 'Todos los derechos reservados.'; }
-                elseif ($language == 'fr') { $rightsReservedText = 'Tous droits réservés.'; }
-                elseif ($language == 'de') { $rightsReservedText = 'Alle Rechte vorbehalten.'; }
-                echo $rightsReservedText;
-            ?></p>
+    </footer>
+
+<!-- Chatbot HTML -->
+<button class="chat-toggle" id="chatToggle">
+    <svg viewBox="0 0 24 24">
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z" />
+    </svg>
+</button>
+
+<div class="chat-container" id="chatContainer">
+    <div class="chat-header">
+        <div class="chat-header-info">
+            <div class="chat-avatar">
+                <img src="logo.png" alt="Logo">
+            </div>
+            <div class="chat-title">
+                <h3>Motiv Assistant</h3>
+                <div class="chat-status">Online</div>
+            </div>
+        </div>
+        <button class="close-btn" id="closeChat">&times;</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <div class="message bot">
+            <div class="message-avatar">
+                <img src="logo.png" alt="Logo">
+            </div>
+            <div class="message-content">
+                Welcome to Motiv! How can I help you today? 🚗🚗🚗
+                <div class="message-time"><?php echo date('H:i'); ?></div>
+            </div>
         </div>
     </div>
-</footer>
+
+    <div class="quick-replies" id="quickReplies">
+        <button class="quick-reply-btn" data-reply="View available cars">View Cars</button>
+        <button class="quick-reply-btn" data-reply="What are your rental rates?">Rental Rates</button>
+        <button class="quick-reply-btn" data-reply="Where are you located?">Locations</button>
+        <button class="quick-reply-btn" data-reply="Contact support">Contact Us</button>
+        <button class="quick-reply-btn" data-reply="Hours">Our Hours</button>
+        <button class="quick-reply-btn" data-reply="Insurance">Insurance</button>
+    </div>
+
+    <div class="chat-input-area">
+        <div class="input-wrapper">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+            <button class="send-btn" id="sendBtn">
+                <svg viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
 
 <script>
     let currentFontSize = <?php echo $fontSize; ?>;
@@ -1495,6 +2176,147 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
             servicesScroll.addEventListener('scroll', updateScrollButtons);
             updateScrollButtons();
         }
+
+        // Chatbot functionality
+        const chatToggle = document.getElementById('chatToggle');
+        const chatContainer = document.getElementById('chatContainer');
+        const closeChat = document.getElementById('closeChat');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatInput = document.getElementById('chatInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const quickReplies = document.querySelectorAll('.quick-reply-btn');
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.getHours().toString().padStart(2, '0') + ':' + 
+                   now.getMinutes().toString().padStart(2, '0');
+        }
+
+        function openChat() {
+            chatContainer.classList.add('active');
+            chatInput.focus();
+        }
+
+        function closeChatFunc() {
+            chatContainer.classList.remove('active');
+        }
+
+        if (chatToggle) chatToggle.addEventListener('click', openChat);
+        if (closeChat) closeChat.addEventListener('click', closeChatFunc);
+
+        function addMessage(text, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+
+            if (!isUser) {
+                const img = document.createElement('img');
+                img.src = 'logo.png';
+                img.alt = 'Logo';
+                avatar.appendChild(img);
+            } else {
+                avatar.innerHTML = '<i class="fas fa-user"></i>';
+            }
+
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = `${text}<div class="message-time">${getCurrentTime()}</div>`;
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatMessages.appendChild(messageDiv);
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.className = 'message bot';
+            indicator.id = 'typingIndicator';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            const img = document.createElement('img');
+            img.src = 'logo.png';
+            img.alt = 'Logo';
+            avatar.appendChild(img);
+
+            const typing = document.createElement('div');
+            typing.className = 'typing-indicator active';
+            typing.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+
+            indicator.appendChild(avatar);
+            indicator.appendChild(typing);
+            chatMessages.appendChild(indicator);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function removeTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+
+            if (message === '') return;
+
+            addMessage(message, true);
+            chatInput.value = '';
+
+            showTypingIndicator();
+
+            // Use fetch API to get response from PHP
+            fetch(window.location.href, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'chat_message=' + encodeURIComponent(message)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                removeTypingIndicator();
+                if (data && data.response) {
+                    addMessage(data.response);
+                } else {
+                    addMessage('Sorry, I received an invalid response. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                removeTypingIndicator();
+                // Fallback response
+                addMessage('Thanks for your question! For detailed information, please visit our <a href="contact.php">Contact page</a>, email us at <strong>info@motivcarrental.com</strong>, or call <strong>0712345678</strong>.');
+            });
+        }
+
+        if (sendBtn) sendBtn.addEventListener('click', sendMessage);
+
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+
+        quickReplies.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const reply = btn.getAttribute('data-reply');
+                chatInput.value = reply;
+                sendMessage();
+            });
+        });
     });
 </script>
 </body>
