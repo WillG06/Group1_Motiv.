@@ -548,25 +548,14 @@ $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
                 text-align: center;
             }
     
-        .hero-text {
+            .hero-text {
             margin-bottom: 40px;
-            }
+                }
     
-        .booking-form {
+            .booking-form {
             width: 100%;
             max-width: 500px;
-            }
-        }
-
-        #chatbot-frame {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 360px;
-            height: 520px;
-            border: none;
-            z-index: 9999;
-            background: transparent;
+                }
         }
 
     </style>

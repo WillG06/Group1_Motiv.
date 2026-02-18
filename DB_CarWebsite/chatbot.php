@@ -1,4 +1,5 @@
 <!--WillG06 edited on 18/02/26-->
+<?php // chatbot.php - no database needed ?>
 <!DOCTYPE html>
 <html lang="en">
 
