@@ -362,7 +362,6 @@ function getBotResponse($message) {
         }
     }
 
-    // Extended response logic
     // Greetings
     if (preg_match('/(hello|hi|hey|good morning|good afternoon)/', $msg)) {
         return 'Hello! Welcome to Motiv Car Rental 🚗 How can I help you today?';
@@ -2324,3 +2323,4 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
 <?php
 $conn->close();
 ?>
+
