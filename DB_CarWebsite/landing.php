@@ -2323,4 +2323,3 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
 <?php
 $conn->close();
 ?>
-
