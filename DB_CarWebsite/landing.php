@@ -1924,19 +1924,20 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
         </div>
     </section>
 
-    <footer>
+    
+        <footer>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
-                    <h3>Motiv, Car Rental</h3>
+                    <h3>Motiv Car Rental</h3>
                     <p><?php echo $footerTaglineText; ?></p>
                 </div>
                 <div class="footer-column">
                     <h3><?php echo $quickLinksText; ?></h3>
                     <ul>
-                        <li><a href="landing.php">Home</a></li>
+                        <li><a href="landing.php"><?php echo $home ?? 'Home'; ?></a></li>
                         <li><a href="cars.php"><?php echo $ourFleetText; ?></a></li>
-                        <li><a href="contact.php"><?php echo $locationsText2; ?></a></li>
+                        <li><a href="contact.php"><?php echo $contact ?? 'Contact'; ?></a></li>
                         <li><a href="#"><?php echo $offersText; ?></a></li>
                     </ul>
                 </div>
@@ -1944,7 +1945,7 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
                     <h3><?php echo $contactUsText; ?></h3>
                     <ul>
                         <li>New Street Station, Birmingham</li>
-                        <li>0712345678</li>
+                        <li>+44 (0) 7123 456 789</li>
                         <li>info@motivcarrental.com</li>
                     </ul>
                 </div>
@@ -2323,3 +2324,4 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
 <?php
 $conn->close();
 ?>
+
