@@ -8,6 +8,250 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'customer') {
 
 require_once 'db.php';
 
+// Get user preferences from cookies
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+// Language variables for dashboard
+if ($language == 'en') {
+    $themeText = 'Theme';
+    $lightText = 'Light';
+    $darkText = 'Dark';
+    $fontSizeText = 'Font Size';
+    $resetText = 'Reset';
+    $languageText = 'Language';
+    $welcomeBack = 'Welcome back';
+    $memberId = 'Member ID';
+    $overview = 'Overview';
+    $myFavorites = 'My Favorites';
+    $myBasket = 'My Basket';
+    $rentalHistory = 'Rental History';
+    $dashboardSubtitle = 'Manage your rentals, favourites, and account settings';
+    $profileSettings = 'Profile Settings'; 
+    $favoriteCars = 'Favorite Cars';
+    $itemsInBasket = 'Items in Basket';
+    $totalRentals = 'Total Rentals';
+    $loyaltyPoints = 'Loyalty Points';
+    $recentFavorites = 'Recent Favorites';
+    $viewAll = 'View All';
+    $upcomingRentals = 'Upcoming Rentals';
+    $noFavorites = 'No favorites yet';
+    $startBrowsing = 'Start browsing our car collection and add your favorites!';
+    $browseCars = 'Browse Cars';
+    $noUpcoming = 'No upcoming rentals';
+    $remove = 'Remove';
+    $checkout = 'Checkout';
+    $details = 'Details';
+    $bookNow = 'Book Now';
+    $modifyBooking = 'Modify Booking';
+    $viewDetails = 'View Details';
+    $basketSummary = 'Basket Summary';
+    $total = 'Total';
+    $proceedToCheckout = 'Proceed to Checkout';
+    $emptyBasket = 'Your basket is empty';
+    $addCarsToBasket = 'Add some cars to your basket to get started!';
+    $noRentalHistory = 'No rental history';
+    $bookFirstCar = 'Book Your First Car';
+    $profileInfo = 'Profile Information';
+    $editProfile = 'Edit Profile';
+    $fullName = 'Full Name';
+    $emailAddress = 'Email Address';
+    $phoneNumber = 'Phone Number';
+    $memberSince = 'Member Since';
+    $city = 'City';
+    $accountSettings = 'Account Settings';
+    $changePassword = 'Change Password';
+    $notificationPrefs = 'Notification Preferences';
+    $deleteAccount = 'Delete Account';
+    $notProvided = 'Not provided';
+    $logout = 'Logout';
+    $home = 'Home';
+    $cars = 'Cars';
+    $contact = 'Contact';
+    $dashboard = 'Dashboard';
+    $quickLinks = 'Quick Links';
+    $contactUs = 'Contact Us';
+    $rightsReserved = 'All rights reserved.';
+} elseif ($language == 'es') {
+    $themeText = 'Tema';
+    $lightText = 'Claro';
+    $darkText = 'Oscuro';
+    $fontSizeText = 'Tamaño de fuente';
+    $resetText = 'Reiniciar';
+    $languageText = 'Idioma';
+    $welcomeBack = 'Bienvenido de nuevo';
+    $memberId = 'ID de miembro';
+    $overview = 'Resumen';
+    $myFavorites = 'Mis favoritos';
+    $myBasket = 'Mi cesta';
+    $rentalHistory = 'Historial de alquileres';
+    $profileSettings = 'Configuración de perfil';
+    $dashboardSubtitle = 'Gestiona tus alquileres, favoritos y configuración de cuenta'; 
+    $favoriteCars = 'Autos favoritos';
+    $itemsInBasket = 'Artículos en cesta';
+    $totalRentals = 'Total alquileres';
+    $loyaltyPoints = 'Puntos de fidelidad';
+    $recentFavorites = 'Favoritos recientes';
+    $viewAll = 'Ver todo';
+    $upcomingRentals = 'Próximos alquileres';
+    $noFavorites = 'Aún no hay favoritos';
+    $startBrowsing = '¡Empiece a explorar nuestra colección de autos y agregue sus favoritos!';
+    $browseCars = 'Buscar autos';
+    $noUpcoming = 'No hay próximos alquileres';
+    $remove = 'Eliminar';
+    $checkout = 'Pagar';
+    $details = 'Detalles';
+    $bookNow = 'Reservar ahora';
+    $modifyBooking = 'Modificar reserva';
+    $viewDetails = 'Ver detalles';
+    $basketSummary = 'Resumen de cesta';
+    $total = 'Total';
+    $proceedToCheckout = 'Proceder al pago';
+    $emptyBasket = 'Tu cesta está vacía';
+    $addCarsToBasket = '¡Agrega algunos autos a tu cesta para comenzar!';
+    $noRentalHistory = 'No hay historial de alquileres';
+    $bookFirstCar = 'Reserva tu primer auto';
+    $profileInfo = 'Información de perfil';
+    $editProfile = 'Editar perfil';
+    $fullName = 'Nombre completo';
+    $emailAddress = 'Correo electrónico';
+    $phoneNumber = 'Teléfono';
+    $memberSince = 'Miembro desde';
+    $city = 'Ciudad';
+    $accountSettings = 'Configuración de cuenta';
+    $changePassword = 'Cambiar contraseña';
+    $notificationPrefs = 'Preferencias de notificación';
+    $deleteAccount = 'Eliminar cuenta';
+    $notProvided = 'No proporcionado';
+    $logout = 'Cerrar sesión';
+    $home = 'Inicio';
+    $cars = 'Autos';
+    $contact = 'Contacto';
+    $dashboard = 'Panel';
+    $quickLinks = 'Enlaces rápidos';
+    $contactUs = 'Contáctenos';
+    $rightsReserved = 'Todos los derechos reservados.';
+} elseif ($language == 'fr') {
+    $themeText = 'Thème';
+    $lightText = 'Clair';
+    $darkText = 'Sombre';
+    $fontSizeText = 'Taille de police';
+    $resetText = 'Réinitialiser';
+    $languageText = 'Langue';
+    $welcomeBack = 'Bon retour';
+    $memberId = 'Identifiant membre';
+    $overview = 'Aperçu';
+    $myFavorites = 'Mes favoris';
+    $myBasket = 'Mon panier';
+    $rentalHistory = 'Historique des locations';
+    $profileSettings = 'Paramètres du profil';
+    $dashboardSubtitle = 'Gérez vos locations, favoris et paramètres du compte';
+    $favoriteCars = 'Voitures favorites';
+    $itemsInBasket = 'Articles dans le panier';
+    $totalRentals = 'Total locations';
+    $loyaltyPoints = 'Points de fidélité';
+    $recentFavorites = 'Favoris récents';
+    $viewAll = 'Voir tout';
+    $upcomingRentals = 'Locations à venir';
+    $noFavorites = 'Pas encore de favoris';
+    $startBrowsing = 'Commencez à parcourir notre collection de voitures et ajoutez vos favoris !';
+    $browseCars = 'Parcourir les voitures';
+    $noUpcoming = 'Aucune location à venir';
+    $remove = 'Supprimer';
+    $checkout = 'Paiement';
+    $details = 'Détails';
+    $bookNow = 'Réserver maintenant';
+    $modifyBooking = 'Modifier la réservation';
+    $viewDetails = 'Voir les détails';
+    $basketSummary = 'Récapitulatif du panier';
+    $total = 'Total';
+    $proceedToCheckout = 'Procéder au paiement';
+    $emptyBasket = 'Votre panier est vide';
+    $addCarsToBasket = 'Ajoutez des voitures à votre panier pour commencer !';
+    $noRentalHistory = 'Aucun historique de location';
+    $bookFirstCar = 'Réservez votre première voiture';
+    $profileInfo = 'Informations du profil';
+    $editProfile = 'Modifier le profil';
+    $fullName = 'Nom complet';
+    $emailAddress = 'Adresse e-mail';
+    $phoneNumber = 'Téléphone';
+    $memberSince = 'Membre depuis';
+    $city = 'Ville';
+    $accountSettings = 'Paramètres du compte';
+    $changePassword = 'Changer le mot de passe';
+    $notificationPrefs = 'Préférences de notification';
+    $deleteAccount = 'Supprimer le compte';
+    $notProvided = 'Non fourni';
+    $logout = 'Déconnexion';
+    $home = 'Accueil';
+    $cars = 'Voitures';
+    $contact = 'Contact';
+    $dashboard = 'Tableau de bord';
+    $quickLinks = 'Liens rapides';
+    $contactUs = 'Contactez-nous';
+    $rightsReserved = 'Tous droits réservés.';
+} elseif ($language == 'de') {
+    $themeText = 'Design';
+    $lightText = 'Hell';
+    $darkText = 'Dunkel';
+    $fontSizeText = 'Schriftgröße';
+    $resetText = 'Zurücksetzen';
+    $languageText = 'Sprache';
+    $welcomeBack = 'Willkommen zurück';
+    $memberId = 'Mitglieds-ID';
+    $overview = 'Übersicht';
+    $myFavorites = 'Meine Favoriten';
+    $myBasket = 'Mein Warenkorb';
+    $rentalHistory = 'Mietverlauf';
+    $profileSettings = 'Profileinstellungen';
+    $dashboardSubtitle = 'Verwalten Sie Ihre Mieten, Favoriten und Kontoeinstellungen';
+    $favoriteCars = 'Lieblingsautos';
+    $itemsInBasket = 'Artikel im Warenkorb';
+    $totalRentals = 'Gesamtmieten';
+    $loyaltyPoints = 'Treuepunkte';
+    $recentFavorites = 'Letzte Favoriten';
+    $viewAll = 'Alle ansehen';
+    $upcomingRentals = 'Kommende Mieten';
+    $noFavorites = 'Noch keine Favoriten';
+    $startBrowsing = 'Durchstöbern Sie unsere Fahrzeugsammlung und fügen Sie Ihre Favoriten hinzu!';
+    $browseCars = 'Autos durchsuchen';
+    $noUpcoming = 'Keine kommenden Mieten';
+    $remove = 'Entfernen';
+    $checkout = 'Zur Kasse';
+    $details = 'Details';
+    $bookNow = 'Jetzt buchen';
+    $modifyBooking = 'Buchung ändern';
+    $viewDetails = 'Details ansehen';
+    $basketSummary = 'Warenkorb Zusammenfassung';
+    $total = 'Gesamt';
+    $proceedToCheckout = 'Zur Kasse gehen';
+    $emptyBasket = 'Ihr Warenkorb ist leer';
+    $addCarsToBasket = 'Fügen Sie Autos zu Ihrem Warenkorb hinzu, um zu beginnen!';
+    $noRentalHistory = 'Kein Mietverlauf';
+    $bookFirstCar = 'Buchen Sie Ihr erstes Auto';
+    $profileInfo = 'Profilinformationen';
+    $editProfile = 'Profil bearbeiten';
+    $fullName = 'Vollständiger Name';
+    $emailAddress = 'E-Mail-Adresse';
+    $phoneNumber = 'Telefon';
+    $memberSince = 'Mitglied seit';
+    $city = 'Stadt';
+    $accountSettings = 'Kontoeinstellungen';
+    $changePassword = 'Passwort ändern';
+    $notificationPrefs = 'Benachrichtigungseinstellungen';
+    $deleteAccount = 'Konto löschen';
+    $notProvided = 'Nicht angegeben';
+    $logout = 'Abmelden';
+    $home = 'Startseite';
+    $cars = 'Autos';
+    $contact = 'Kontakt';
+    $dashboard = 'Dashboard';
+    $quickLinks = 'Schnelllinks';
+    $contactUs = 'Kontaktieren Sie uns';
+    $rightsReserved = 'Alle Rechte vorbehalten.';
+}
+
 $customer_id = $_SESSION['user']['id'];
 
 $stmt = $conn->prepare("
@@ -158,7 +402,77 @@ $upcoming_rentals_stmt->close();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Dashboard - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --footer-bg: #8C0050;
+            --footer-text: #ecf0f1;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --footer-bg: #222222;
+            --footer-text: #ffffff;
+        }
+
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] h4,
+        [data-theme="dark"] h5,
+        [data-theme="dark"] h6,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .stat-number,
+        [data-theme="dark"] .stat-label,
+        [data-theme="dark"] .info-label {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] p,
+        [data-theme="dark"] .car-specs,
+        [data-theme="dark"] .car-name,
+        [data-theme="dark"] .info-value,
+        [data-theme="dark"] .footer-column p,
+        [data-theme="dark"] .footer-column ul li {
+            color: #cccccc;
+        }
+
+        [data-theme="dark"] .stat-card,
+        [data-theme="dark"] .car-card,
+        [data-theme="dark"] .dashboard-section,
+        [data-theme="dark"] .dashboard-nav {
+            background-color: #2d2d2d;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] .dashboard-container {
+            background-color: #1a1a1a;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -179,72 +493,6 @@ $upcoming_rentals_stmt->close();
             margin: 0;
         }
 
-.language-selector {
-    position: relative;
-    display: flex;          
-    align-items: center;   
-}
-
-.language-selector > a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
-
-.language-selector:hover > a {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.language-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    min-width: 160px;
-    background-color: white;
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
-
-.language-selector:hover .language-dropdown {
-    display: block;
-}
-
-.language-dropdown a {
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    color: #333;
-    text-decoration: none;
-    transition: background-color 0.3s;
-    font-size: 15px !important;
-    padding: 10px 14px !important;
-}
-
-.language-dropdown a:hover {
-    background-color: #f1f1f1;
-}
-
-.language-selector i,
-.language-selector svg {
-    display: block;
-}
-
-.language-selector a {
-    font-size: 18px;     
-    line-height: 0;       
-}
-
-header {
-    position: relative;
-    z-index: 1000;
-}
-
         nav ul li a {
             color: white;
             text-decoration: none;
@@ -260,6 +508,155 @@ header {
         nav ul li a:hover,
         nav ul li a.active {
             background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        .language-selector {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .language-selector > a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            line-height: 0;
+            color: white;
+        }
+
+        .language-selector:hover > a {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .language-settings-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333;
+            border-color: #404040;
+            color: white;
+        }
+
+        .language-selector:hover .language-settings-dropdown {
+            display: block;
+        }
+
+        .settings-section {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        [data-theme="dark"] .settings-section {
+            border-color: #404040;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .settings-section h4 {
+            color: #fff;
+        }
+
+        .theme-option, .language-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
+        }
+
+        [data-theme="dark"] .theme-option, 
+        [data-theme="dark"] .language-option {
+            color: #fff;
+        }
+
+        .theme-option:hover, .language-option:hover {
+            background-color: #f1f1f1;
+        }
+
+        [data-theme="dark"] .theme-option:hover, 
+        [data-theme="dark"] .language-option:hover {
+            background-color: #404040;
+        }
+
+        .theme-option i, .language-option i {
+            width: 18px;
+            margin-right: 10px;
+            color: var(--vivid-indigo);
+            font-size: 14px;
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .font-btn {
+            background: var(--vivid-indigo);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-btn:hover {
+            background: var(--dark-magenta);
+        }
+
+        .font-size-display {
+            font-size: 14px;
+            color: #333;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .font-size-display {
+            color: #fff;
+        }
+
+        .active-indicator {
+            margin-left: auto;
+            color: var(--vivid-indigo);
+            font-size: 12px;
         }
         
         .basket-indicator {
@@ -691,6 +1088,61 @@ header {
             font-size: 1.2rem;
             color: #5c2aa5;
         }
+
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+            padding: 40px 0 20px;
+        }
+
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .footer-column p {
+            color: var(--footer-text);
+            line-height: 1.6;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-column ul li a {
+            color: var(--footer-text);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--coral-red);
+        }
+
+        .copyright {
+            text-align: center;
+            padding: 20px 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .copyright p {
+            color: var(--footer-text);
+            font-size: 0.9rem;
+        }
         
         @media (max-width: 992px) {
             .profile-info {
@@ -743,64 +1195,110 @@ header {
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-theme="<?php echo $darkMode; ?>">
     <header>
-    <div class="container header-content">
-        <div class="logo">
-            <img src="logo2.png" alt="Logo">
-        </div>
+        <div class="container header-content">
+            <div class="logo">
+                <img src="logo2.png" alt="Logo">
+            </div>
 
-        <nav>
-            <ul>
-                <li><a href="landing.php">Home</a></li>
-                <li><a href="cars.php">Cars</a></li>
-                <li><a href="contact.php">Contact</a></li>
-                <li><a href="customer-dashboard.php" class="active">Dashboard</a></li>
-                <li>
-                    <a href="logout.php" style="color: #ff4444;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-                <li class="language-selector">
-                    <a href="#">🌐︎</a>
-                    <div class="language-dropdown">
-                        <a href="#" data-lang="en">English</a>
-                        <a href="#" data-lang="es">Español</a>
-                        <a href="#" data-lang="fr">Français</a>
-                        <a href="#" data-lang="de">Deutsch</a>
-                        <a href="#" data-lang="it">Italiano</a>
-                        <a href="#" data-lang="zh">中文</a>
-                    </div>
-                </li>
-                <li class="basket-indicator">
-                    <a href="basket.php">
-                        <i class="fas fa-shopping-basket"></i>
-                        <span class="basket-count"><?php echo $basket_count; ?></span>
-                    </a>
-                </li>
-            </ul>
-        </nav>
-    </div>
-</header>
+            <nav>
+                <ul>
+                    <li><a href="landing.php"><?php echo $home; ?></a></li>
+                    <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                    <li><a href="contact.php"><?php echo $contact; ?></a></li>
+                    <li><a href="customer-dashboard.php" class="active"><?php echo $dashboard; ?></a></li>
+                    <li>
+                        <a href="logout.php" style="color: #ff4444;">
+                            <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
+                        </a>
+                    </li>
+                    <li class="language-selector">
+                        <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                        <div class="language-settings-dropdown">
+                            <div class="settings-section">
+                                <h4><?php echo $themeText; ?></h4>
+                                <a href="#" class="theme-option" data-theme="light">
+                                    <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                    <?php if ($darkMode == 'light'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                                <a href="#" class="theme-option" data-theme="dark">
+                                    <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                    <?php if ($darkMode == 'dark'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4><?php echo $fontSizeText; ?></h4>
+                                <div class="font-controls">
+                                    <button class="font-btn" id="font-decrease">A-</button>
+                                    <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                    <button class="font-btn" id="font-increase">A+</button>
+                                    <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
+                                </div>
+                            </div>
+
+                            <div class="settings-section">
+                                <h4><?php echo $languageText; ?></h4>
+                                <a href="#" class="language-option" data-lang="en">
+                                    <i class="fas fa-language"></i> English
+                                    <?php if ($language == 'en'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                                <a href="#" class="language-option" data-lang="es">
+                                    <i class="fas fa-language"></i> Español
+                                    <?php if ($language == 'es'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                                <a href="#" class="language-option" data-lang="fr">
+                                    <i class="fas fa-language"></i> Français
+                                    <?php if ($language == 'fr'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                                <a href="#" class="language-option" data-lang="de">
+                                    <i class="fas fa-language"></i> Deutsch
+                                    <?php if ($language == 'de'): ?>
+                                        <i class="fas fa-check active-indicator"></i>
+                                    <?php endif; ?>
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="basket-indicator">
+                        <a href="basket.php">
+                            <i class="fas fa-shopping-basket"></i>
+                            <span class="basket-count"><?php echo $basket_count; ?></span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
     <section class="dashboard-header">
         <div class="welcome-section">
-            <h1 class="welcome-title">Welcome back, <?php echo htmlspecialchars($customer['first_name']); ?>!</h1>
-            <p class="welcome-subtitle">Manage your rentals, favorites, and account settings</p>
-            <div class="member-id">Member ID: <?php echo $customer['customer_id']; ?></div>
+            <h1 class="welcome-title"><?php echo $welcomeBack; ?>, <?php echo htmlspecialchars($customer['first_name']); ?>!</h1>
+            <p class="welcome-subtitle"><?php echo $dashboardSubtitle; ?></p>
+            <div class="member-id"><?php echo $memberId; ?>: <?php echo $customer['customer_id']; ?></div>
         </div>
     </section>
 
     <nav class="dashboard-nav">
         <div class="nav-container">
             <ul class="nav-tabs">
-                <li class="nav-tab active" data-tab="overview">Overview</li>
-                <li class="nav-tab" data-tab="favorites">My Favorites</li>
-                <li class="nav-tab" data-tab="basket">My Basket</li>
-                <li class="nav-tab" data-tab="rentals">Rental History</li>
-                <li class="nav-tab" data-tab="profile">Profile Settings</li>
+                <li class="nav-tab active" data-tab="overview"><?php echo $overview; ?></li>
+                <li class="nav-tab" data-tab="favorites"><?php echo $myFavorites; ?></li>
+                <li class="nav-tab" data-tab="basket"><?php echo $myBasket; ?></li>
+                <li class="nav-tab" data-tab="rentals"><?php echo $rentalHistory; ?></li>
+                <li class="nav-tab" data-tab="profile"><?php echo $profileSettings; ?></li>
             </ul>
         </div>
     </nav>
@@ -814,7 +1312,7 @@ header {
                         <i class="fas fa-heart"></i>
                     </div>
                     <div class="stat-number"><?php echo $favorites_count; ?></div>
-                    <div class="stat-label">Favorite Cars</div>
+                    <div class="stat-label"><?php echo $favoriteCars; ?></div>
                 </div>
                 
                 <div class="stat-card">
@@ -822,7 +1320,7 @@ header {
                         <i class="fas fa-shopping-basket"></i>
                     </div>
                     <div class="stat-number"><?php echo $basket_count; ?></div>
-                    <div class="stat-label">Items in Basket</div>
+                    <div class="stat-label"><?php echo $itemsInBasket; ?></div>
                 </div>
                 
                 <div class="stat-card">
@@ -830,7 +1328,7 @@ header {
                         <i class="fas fa-car"></i>
                     </div>
                     <div class="stat-number"><?php echo $rentals_count; ?></div>
-                    <div class="stat-label">Total Rentals</div>
+                    <div class="stat-label"><?php echo $totalRentals; ?></div>
                 </div>
                 
                 <div class="stat-card">
@@ -838,14 +1336,14 @@ header {
                         <i class="fas fa-star"></i>
                     </div>
                     <div class="stat-number"><?php echo $loyalty_points; ?></div>
-                    <div class="stat-label">Loyalty Points</div>
+                    <div class="stat-label"><?php echo $loyaltyPoints; ?></div>
                 </div>
             </div>
 
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">Recent Favorites</h2>
-                    <a href="#favorites" class="view-all" onclick="switchTab('favorites')">View All</a>
+                    <h2 class="section-title"><?php echo $recentFavorites; ?></h2>
+                    <a href="#favorites" class="view-all" onclick="switchTab('favorites')"><?php echo $viewAll; ?></a>
                 </div>
                 <div class="cars-grid" id="recentFavorites">
                     <?php if (count($recent_favorites) > 0): ?>
@@ -870,8 +1368,8 @@ header {
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>">Details</button>
-                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>">Book Now</button>
+                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>"><?php echo $details; ?></button>
+                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>"><?php echo $bookNow; ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -879,9 +1377,9 @@ header {
                     <?php else: ?>
                         <div class="empty-state">
                             <i class="fas fa-heart"></i>
-                            <h3>No favorites yet</h3>
-                            <p>Start browsing our car collection and add your favorites!</p>
-                            <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;">Browse Cars</a>
+                            <h3><?php echo $noFavorites; ?></h3>
+                            <p><?php echo $startBrowsing; ?></p>
+                            <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;"><?php echo $browseCars; ?></a>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -889,8 +1387,8 @@ header {
 
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">Upcoming Rentals</h2>
-                    <a href="#rentals" class="view-all" onclick="switchTab('rentals')">View All</a>
+                    <h2 class="section-title"><?php echo $upcomingRentals; ?></h2>
+                    <a href="#rentals" class="view-all" onclick="switchTab('rentals')"><?php echo $viewAll; ?></a>
                 </div>
                 <div id="upcomingRentals">
                     <?php if (count($upcoming_rentals) > 0): ?>
@@ -912,8 +1410,8 @@ header {
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <button class="btn-secondary">View Details</button>
-                                        <button class="btn-primary">Modify Booking</button>
+                                        <button class="btn-secondary view-details" data-id="<?php echo $rental['booking_id']; ?>"><?php echo $viewDetails; ?></button>
+                                        <button class="btn-primary"><?php echo $modifyBooking; ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -921,7 +1419,7 @@ header {
                     <?php else: ?>
                         <div class="empty-state" style="padding: 20px;">
                             <i class="fas fa-calendar"></i>
-                            <p>No upcoming rentals</p>
+                            <p><?php echo $noUpcoming; ?></p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -931,7 +1429,7 @@ header {
         <div class="tab-content" id="favorites">
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">My Favorite Cars</h2>
+                    <h2 class="section-title"><?php echo $myFavorites; ?></h2>
                 </div>
                 <div class="cars-grid" id="favoritesGrid">
                     <?php if (count($all_favorites) > 0): ?>
@@ -956,9 +1454,9 @@ header {
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>">Details</button>
-                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>">Book Now</button>
-                                        <button class="btn-secondary remove-favorite" data-id="<?php echo $car['car_id']; ?>">Remove</button>
+                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>"><?php echo $details; ?></button>
+                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>"><?php echo $bookNow; ?></button>
+                                        <button class="btn-secondary remove-favorite" data-id="<?php echo $car['car_id']; ?>"><?php echo $remove; ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -966,9 +1464,9 @@ header {
                     <?php else: ?>
                         <div class="empty-state" id="emptyFavorites">
                             <i class="fas fa-heart"></i>
-                            <h3>No favorites yet</h3>
-                            <p>Start browsing our car collection and add your favorites!</p>
-                            <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;">Browse Cars</a>
+                            <h3><?php echo $noFavorites; ?></h3>
+                            <p><?php echo $startBrowsing; ?></p>
+                            <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;"><?php echo $browseCars; ?></a>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -978,9 +1476,9 @@ header {
         <div class="tab-content" id="basket">
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">My Basket</h2>
+                    <h2 class="section-title"><?php echo $myBasket; ?></h2>
                     <?php if ($basket_count > 0): ?>
-                        <a href="basket.php" class="view-all">Go to Checkout</a>
+                        <a href="basket.php" class="view-all"><?php echo $checkout; ?></a>
                     <?php endif; ?>
                 </div>
                 
@@ -1007,8 +1505,8 @@ header {
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <button class="btn-secondary remove-from-basket" data-id="<?php echo $item['item_id']; ?>">Remove</button>
-                                        <button class="btn-primary" onclick="window.location.href='basket.php'">Checkout</button>
+                                        <button class="btn-secondary remove-from-basket" data-id="<?php echo $item['item_id']; ?>"><?php echo $remove; ?></button>
+                                        <button class="btn-primary" onclick="window.location.href='basket.php'"><?php echo $checkout; ?></button>
                                     </div>
                                 </div>
                             </div>
@@ -1016,7 +1514,7 @@ header {
                     </div>
                     
                     <div class="basket-summary">
-                        <h3>Basket Summary</h3>
+                        <h3><?php echo $basketSummary; ?></h3>
                         <div id="basketItemsList">
                             <?php foreach($basket_items as $item): ?>
                                 <div class="basket-item">
@@ -1026,17 +1524,17 @@ header {
                             <?php endforeach; ?>
                         </div>
                         <div class="basket-total">
-                            <span>Total:</span>
+                            <span><?php echo $total; ?>:</span>
                             <span>£<?php echo number_format($basket_total, 2); ?></span>
                         </div>
-                        <a href="basket.php" class="btn-primary" style="display: block; text-align: center; margin-top: 15px;">Proceed to Checkout</a>
+                        <a href="basket.php" class="btn-primary" style="display: block; text-align: center; margin-top: 15px;"><?php echo $proceedToCheckout; ?></a>
                     </div>
                 <?php else: ?>
                     <div class="empty-state" id="emptyBasket">
                         <i class="fas fa-shopping-basket"></i>
-                        <h3>Your basket is empty</h3>
-                        <p>Add some cars to your basket to get started!</p>
-                        <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;">Browse Cars</a>
+                        <h3><?php echo $emptyBasket; ?></h3>
+                        <p><?php echo $addCarsToBasket; ?></p>
+                        <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;"><?php echo $browseCars; ?></a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1045,18 +1543,18 @@ header {
         <div class="tab-content" id="rentals">
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">Rental History</h2>
+                    <h2 class="section-title"><?php echo $rentalHistory; ?></h2>
                 </div>
                 <?php if (count($rentals) > 0): ?>
                     <div class="table-responsive">
                         <table class="rental-history">
                             <thead>
                                 <tr>
-                                    <th>Car</th>
-                                    <th>Rental Period</th>
-                                    <th>Pickup Location</th>
-                                    <th>Total Price</th>
-                                    <th>Status</th>
+                                    <th><?php echo $cars; ?></th>
+                                    <th><?php echo $rentalHistory; ?></th>
+                                    <th><?php echo $city; ?></th>
+                                    <th><?php echo $total; ?></th>
+                                    <th><?php echo $overview; ?></th>
                                 </tr>
                             </thead>
                             <tbody id="rentalsTableBody">
@@ -1079,9 +1577,9 @@ header {
                 <?php else: ?>
                     <div class="empty-state" id="emptyRentals">
                         <i class="fas fa-history"></i>
-                        <h3>No rental history</h3>
-                        <p>You haven't made any rentals yet.</p>
-                        <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;">Book Your First Car</a>
+                        <h3><?php echo $noRentalHistory; ?></h3>
+                        <p><?php echo $bookFirstCar; ?></p>
+                        <a href="cars.php" class="btn-primary" style="display: inline-block; margin-top: 15px;"><?php echo $browseCars; ?></a>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1090,32 +1588,32 @@ header {
         <div class="tab-content" id="profile">
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">Profile Information</h2>
-                    <button class="edit-profile-btn" id="editProfileBtn">Edit Profile</button>
+                    <h2 class="section-title"><?php echo $profileInfo; ?></h2>
+                    <button class="edit-profile-btn" id="editProfileBtn"><?php echo $editProfile; ?></button>
                 </div>
                 <div class="profile-info">
                     <div>
                         <div class="info-group">
-                            <div class="info-label">Full Name</div>
+                            <div class="info-label"><?php echo $fullName; ?></div>
                             <div class="info-value" id="profileName"><?php echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']); ?></div>
                         </div>
                         <div class="info-group">
-                            <div class="info-label">Email Address</div>
+                            <div class="info-label"><?php echo $emailAddress; ?></div>
                             <div class="info-value" id="profileEmail"><?php echo htmlspecialchars($customer['email']); ?></div>
                         </div>
                         <div class="info-group">
-                            <div class="info-label">Phone Number</div>
-                            <div class="info-value" id="profilePhone"><?php echo htmlspecialchars($customer['phone'] ?? 'Not provided'); ?></div>
+                            <div class="info-label"><?php echo $phoneNumber; ?></div>
+                            <div class="info-value" id="profilePhone"><?php echo htmlspecialchars($customer['phone'] ?? $notProvided); ?></div>
                         </div>
                     </div>
                     <div>
                         <div class="info-group">
-                            <div class="info-label">Member Since</div>
+                            <div class="info-label"><?php echo $memberSince; ?></div>
                             <div class="info-value" id="profileMemberSince"><?php echo date('F j, Y', strtotime($customer['created_at'])); ?></div>
                         </div>
                         <div class="info-group">
-                            <div class="info-label">City</div>
-                            <div class="info-value" id="profileCity"><?php echo htmlspecialchars($customer['city_name'] ?? 'Not provided'); ?></div>
+                            <div class="info-label"><?php echo $city; ?></div>
+                            <div class="info-value" id="profileCity"><?php echo htmlspecialchars($customer['city_name'] ?? $notProvided); ?></div>
                         </div>
                     </div>
                 </div>
@@ -1123,12 +1621,12 @@ header {
 
             <div class="dashboard-section">
                 <div class="section-header">
-                    <h2 class="section-title">Account Settings</h2>
+                    <h2 class="section-title"><?php echo $accountSettings; ?></h2>
                 </div>
                 <div class="profile-actions">
-                    <button class="btn-secondary" style="margin-right: 10px;">Change Password</button>
-                    <button class="btn-secondary" style="margin-right: 10px;">Notification Preferences</button>
-                    <button class="btn-secondary" id="deleteAccountBtn">Delete Account</button>
+                    <button class="btn-secondary" style="margin-right: 10px;"><?php echo $changePassword; ?></button>
+                    <button class="btn-secondary" style="margin-right: 10px;"><?php echo $notificationPrefs; ?></button>
+                    <button class="btn-secondary" id="deleteAccountBtn"><?php echo $deleteAccount; ?></button>
                 </div>
             </div>
         </div>
@@ -1142,16 +1640,15 @@ header {
                     <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
                 </div>
                 <div class="footer-column">
-                    <h3>Quick Links</h3>
+                    <h3><?php echo $quickLinks; ?></h3>
                     <ul>
-                        <li><a href="landing.php">Home</a></li>
-                        <li><a href="cars.php">Our Fleet</a></li>
-                        <li><a href="contact.php">Locations</a></li>
-                        <li><a href="#">Offers</a></li>
+                        <li><a href="landing.php"><?php echo $home; ?></a></li>
+                        <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                        <li><a href="contact.php"><?php echo $contact; ?></a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
-                    <h3>Contact Us</h3>
+                    <h3><?php echo $contactUs; ?></h3>
                     <ul>
                         <li>New Street Station, Birmingham</li>
                         <li>0712345678</li>
@@ -1160,38 +1657,116 @@ header {
                 </div>
             </div>
             <div class="copyright">
-                <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+                <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReserved; ?></p>
             </div>
         </div>
     </footer>
 
     <script>
+        let currentFontSize = <?php echo $fontSize; ?>;
+        let currentTheme = '<?php echo $darkMode; ?>';
+        let currentLanguage = '<?php echo $language; ?>';
+
+        function updateFontSizeDisplay() {
+            const display = document.getElementById('font-size-display');
+            if (display) {
+                display.textContent = currentFontSize + '%';
+            }
+            document.documentElement.style.fontSize = currentFontSize + '%';
+            document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
+            updateFontSizeDisplay();
             
+            // Theme options
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const theme = this.getAttribute('data-theme');
+                    setTheme(theme);
+                });
+            });
+
+            // Font size controls
+            const decreaseBtn = document.getElementById('font-decrease');
+            const increaseBtn = document.getElementById('font-increase');
+            const resetBtn = document.getElementById('font-reset');
+
+            if (decreaseBtn) {
+                decreaseBtn.addEventListener('click', function() {
+                    if (currentFontSize > 70) {
+                        currentFontSize -= 10;
+                        updateFontSizeDisplay();
+                    }
+                });
+            }
+
+            if (increaseBtn) {
+                increaseBtn.addEventListener('click', function() {
+                    if (currentFontSize < 150) {
+                        currentFontSize += 10;
+                        updateFontSizeDisplay();
+                    }
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    currentFontSize = 100;
+                    updateFontSizeDisplay();
+                });
+            }
+
+            // Language options
+            const languageOptions = document.querySelectorAll('.language-option');
+            languageOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.getAttribute('data-lang');
+                    setLanguage(lang);
+                });
+            });
+            
+            // Tab switching
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
                     switchTab(this.getAttribute('data-tab'));
                 });
             });
             
-           
+            // Edit profile button
             document.getElementById('editProfileBtn').addEventListener('click', function() {
                 alert('Edit profile functionality would open a form here.');
             });
             
-            
+            // Delete account button
             document.getElementById('deleteAccountBtn').addEventListener('click', function() {
                 if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
                     window.location.href = 'delete-account.php';
                 }
             });
             
-            
+            // Add car card event listeners
             addCarCardEventListeners();
         });
 
         function addCarCardEventListeners() {
-           
+            // View details buttons
             document.querySelectorAll('.view-details').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -1199,7 +1774,7 @@ header {
                 });
             });
             
-            
+            // Book now buttons
             document.querySelectorAll('.book-now').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -1207,7 +1782,7 @@ header {
                 });
             });
             
-            
+            // Remove from basket buttons
             document.querySelectorAll('.remove-from-basket').forEach(button => {
                 button.addEventListener('click', function() {
                     const itemId = this.getAttribute('data-id');
@@ -1217,7 +1792,7 @@ header {
                 });
             });
             
-            
+            // Remove favorite buttons
             document.querySelectorAll('.remove-favorite').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -1229,13 +1804,13 @@ header {
         }
 
         function switchTab(tabName) {
-            
+            // Update tab classes
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             document.querySelector(`.nav-tab[data-tab="${tabName}"]`).classList.add('active');
             
-            
+            // Update content visibility
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
@@ -1244,3 +1819,6 @@ header {
     </script>
 </body>
 </html>
+<?php
+$conn->close();
+?>
