@@ -7,6 +7,19 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 
+// Get user preferences from cookies
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+// Language variables for the settings dropdown
+$themeText = 'Theme';
+$lightText = 'Light';
+$darkText = 'Dark';
+$fontSizeText = 'Font Size';
+$resetText = 'Reset';
+$languageText = 'Language';
+
 $user = $_SESSION['user'];
 $adminId = $user['id'];
 
@@ -477,6 +490,129 @@ if ($citiesQuery) {
         nav ul li a:hover,
         nav ul li a.active {
             background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        /* Language selector styles */
+        .language-selector {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .language-selector > a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            line-height: 0;
+            color: white;
+        }
+
+        .language-selector:hover > a {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .language-settings-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .language-selector:hover .language-settings-dropdown {
+            display: block;
+        }
+
+        .settings-section {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .theme-option, .language-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .theme-option:hover, .language-option:hover {
+            background-color: #f1f1f1;
+        }
+
+        .theme-option i, .language-option i {
+            width: 18px;
+            margin-right: 10px;
+            color: var(--vivid-indigo, #8C0050);
+            font-size: 14px;
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .font-btn {
+            background: var(--vivid-indigo, #8C0050);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-btn:hover {
+            background: var(--dark-magenta, #1800AD);
+        }
+
+        .font-size-display {
+            font-size: 14px;
+            color: #333;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .active-indicator {
+            margin-left: auto;
+            color: var(--vivid-indigo, #8C0050);
+            font-size: 12px;
         }
         
         .admin-container {
@@ -1059,71 +1195,156 @@ if ($citiesQuery) {
             border: 1px solid #ef9a9a;
         }
 
-.language-selector {
-    position: relative;
-    display: flex;          
-    align-items: center;   
-}
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --footer-bg: #222222;
+            --footer-text: #ffffff;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
 
-.language-selector > a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border-radius: 4px;
-    transition: background-color 0.3s;
-}
+        [data-theme="dark"] body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
 
-.language-selector:hover > a {
-    background-color: rgba(255, 255, 255, 0.1);
-}
+        [data-theme="dark"] .admin-container {
+            background-color: var(--bg-secondary);
+        }
 
-.language-dropdown {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%;
-    min-width: 160px;
-    background-color: white;
-    border-radius: 5px;
-    overflow: hidden;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
+        [data-theme="dark"] .dashboard-section,
+        [data-theme="dark"] .metric-card,
+        [data-theme="dark"] .action-card,
+        [data-theme="dark"] .report-card,
+        [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .admin-nav {
+            background-color: var(--card-bg);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
 
-.language-selector:hover .language-dropdown {
-    display: block;
-}
+        [data-theme="dark"] .admin-tab {
+            color: var(--text-secondary);
+        }
 
-.language-dropdown a {
-    display: flex;
-    align-items: center;
-    padding: 10px 14px;
-    color: #333;
-    text-decoration: none;
-    transition: background-color 0.3s;
-    font-size: 15px !important;
-    padding: 10px 14px !important;
-}
+        [data-theme="dark"] .admin-tab.active {
+            color: #ffffff;
+            border-bottom-color: var(--coral-red);
+        }
 
-.language-dropdown a:hover {
-    background-color: #f1f1f1;
-}
+        [data-theme="dark"] .admin-tab:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
 
-.language-selector i,
-.language-selector svg {
-    display: block;
-}
+        [data-theme="dark"] .data-table th {
+            background-color: #404040;
+            color: #ffffff;
+        }
 
-.language-selector a {
-    font-size: 18px;     
-    line-height: 0;       
-}
+        [data-theme="dark"] .data-table td {
+            border-bottom-color: #404040;
+            color: #cccccc;
+        }
 
-header {
-    position: relative;
-    z-index: 1000;
-}
+        [data-theme="dark"] .data-table tr:hover {
+            background-color: #404040;
+        }
+
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .metric-value,
+        [data-theme="dark"] .metric-label,
+        [data-theme="dark"] .action-title,
+        [data-theme="dark"] .report-card h4,
+        [data-theme="dark"] .report-value,
+        [data-theme="dark"] .activity-text,
+        [data-theme="dark"] .modal-title {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .report-label,
+        [data-theme="dark"] .activity-time,
+        [data-theme="dark"] .action-description {
+            color: #cccccc;
+        }
+
+        [data-theme="dark"] .activity-icon {
+            background-color: #404040;
+        }
+
+        [data-theme="dark"] .activity-icon i {
+            color: var(--coral-red);
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] .close-modal {
+            color: #cccccc;
+        }
+
+        [data-theme="dark"] .close-modal:hover {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .form-group label {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select,
+        [data-theme="dark"] .form-group textarea {
+            background-color: #404040;
+            border-color: #555555;
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .form-group input:focus,
+        [data-theme="dark"] .form-group select:focus,
+        [data-theme="dark"] .form-group textarea:focus {
+            border-color: var(--coral-red);
+        }
+
+        [data-theme="dark"] .form-group input::placeholder,
+        [data-theme="dark"] .form-group textarea::placeholder {
+            color: #999999;
+        }
+
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] .settings-section {
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] .settings-section h4 {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .theme-option,
+        [data-theme="dark"] .language-option {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .theme-option:hover,
+        [data-theme="dark"] .language-option:hover {
+            background-color: #404040;
+        }
+
+        [data-theme="dark"] .font-size-display {
+            color: #ffffff;
+        }
         
         @media (max-width: 992px) {
             .admin-welcome {
@@ -1191,7 +1412,7 @@ header {
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body data-theme="<?php echo $darkMode; ?>">
 
 <header>
     <div class="container header-content">
@@ -1208,21 +1429,65 @@ header {
                     </a>
                 </li>
                 <li class="language-selector">
-                    <a href="#">🌐︎</a>
-                    <div class="language-dropdown">
-                        <a href="#" data-lang="en">English</a>
-                        <a href="#" data-lang="es">Español</a>
-                        <a href="#" data-lang="fr">Français</a>
-                        <a href="#" data-lang="de">Deutsch</a>
-                        <a href="#" data-lang="it">Italiano</a>
-                        <a href="#" data-lang="zh">中文</a>
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                    <div class="language-settings-dropdown">
+                        <div class="settings-section">
+                            <h4><?php echo $themeText; ?></h4>
+                            <a href="#" class="theme-option" data-theme="light">
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                <?php if ($darkMode == 'light'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="theme-option" data-theme="dark">
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                <?php if ($darkMode == 'dark'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $fontSizeText; ?></h4>
+                            <div class="font-controls">
+                                <button class="font-btn" id="font-decrease">A-</button>
+                                <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                <button class="font-btn" id="font-increase">A+</button>
+                                <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $languageText; ?></h4>
+                            <a href="#" class="language-option" data-lang="en">
+                                <i class="fas fa-language"></i> English
+                                <?php if ($language == 'en'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="es">
+                                <i class="fas fa-language"></i> Español
+                                <?php if ($language == 'es'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="fr">
+                                <i class="fas fa-language"></i> Français
+                                <?php if ($language == 'fr'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="de">
+                                <i class="fas fa-language"></i> Deutsch
+                                <?php if ($language == 'de'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
                     </div>
                 </li>
             </ul>
         </nav>
-    </div>
-</header>
-
     </div>
 </header>
 
@@ -1880,6 +2145,133 @@ header {
     </footer>
 
     <script>
+        let currentFontSize = <?php echo $fontSize; ?>;
+        let currentTheme = '<?php echo $darkMode; ?>';
+        let currentLanguage = '<?php echo $language; ?>';
+
+        function updateFontSizeDisplay() {
+            const display = document.getElementById('font-size-display');
+            if (display) {
+                display.textContent = currentFontSize + '%';
+            }
+            document.documentElement.style.fontSize = currentFontSize + '%';
+            document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.body.setAttribute('data-theme', theme);
+            document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        function setLanguage(lang) {
+            currentLanguage = lang;
+            document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFontSizeDisplay();
+            
+            const themeOptions = document.querySelectorAll('.theme-option');
+            themeOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const theme = this.getAttribute('data-theme');
+                    setTheme(theme);
+                });
+            });
+
+            const decreaseBtn = document.getElementById('font-decrease');
+            const increaseBtn = document.getElementById('font-increase');
+            const resetBtn = document.getElementById('font-reset');
+
+            if (decreaseBtn) {
+                decreaseBtn.addEventListener('click', function() {
+                    if (currentFontSize > 70) {
+                        currentFontSize -= 10;
+                        updateFontSizeDisplay();
+                    }
+                });
+            }
+
+            if (increaseBtn) {
+                increaseBtn.addEventListener('click', function() {
+                    if (currentFontSize < 150) {
+                        currentFontSize += 10;
+                        updateFontSizeDisplay();
+                    }
+                });
+            }
+
+            if (resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                    currentFontSize = 100;
+                    updateFontSizeDisplay();
+                });
+            }
+
+            const languageOptions = document.querySelectorAll('.language-option');
+            languageOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.getAttribute('data-lang');
+                    setLanguage(lang);
+                });
+            });
+
+            function showAddCarModal() {
+                document.getElementById('addCarModal').style.display = 'flex';
+            }
+            
+            function closeAddCarModal() {
+                document.getElementById('addCarModal').style.display = 'none';
+            }
+            
+            function showAddCityModal() {
+                document.getElementById('addCityModal').style.display = 'flex';
+            }
+            
+            function closeAddCityModal() {
+                document.getElementById('addCityModal').style.display = 'none';
+            }
+            
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.style.display = 'none';
+                    }
+                });
+            });
+
+            function switchTab(tabName) {
+                document.querySelectorAll('.admin-tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
+                
+                document.querySelectorAll('.admin-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tabName).classList.add('active');
+            }
+
+            document.querySelectorAll('.admin-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    switchTab(this.getAttribute('data-tab'));
+                });
+            });
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    document.querySelectorAll('.modal').forEach(modal => {
+                        modal.style.display = 'none';
+                    });
+                }
+            });
+        });
+
         function showAddCarModal() {
             document.getElementById('addCarModal').style.display = 'flex';
         }
@@ -1895,14 +2287,6 @@ header {
         function closeAddCityModal() {
             document.getElementById('addCityModal').style.display = 'none';
         }
-        
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                }
-            });
-        });
 
         function switchTab(tabName) {
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -1915,22 +2299,6 @@ header {
             });
             document.getElementById(tabName).classList.add('active');
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    switchTab(this.getAttribute('data-tab'));
-                });
-            });
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal').forEach(modal => {
-                        modal.style.display = 'none';
-                    });
-                }
-            });
-        });
 
         function contactCustomer(email, name) {
             const subject = 'Message from Motiv Car Hire';
@@ -1957,7 +2325,6 @@ header {
                 .then(data => {
                     if (data.success) {
                         showTemporaryMessage(data.message, 'success');
-                        // Reload the page to reflect changes
                         setTimeout(() => {
                             window.location.reload();
                         }, 1000);
