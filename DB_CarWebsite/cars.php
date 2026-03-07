@@ -1613,7 +1613,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 <?php else: ?>
                     <li><a href="customer-dashboard.php"><?php echo $dashboardText; ?></a></li>
                     <li>
-                        <a href="logout.php">
+                        <a href="logout.php" style="color: #ff7f50;">
                             <i class="fas fa-sign-out-alt"></i> <?php echo $logoutText; ?>
                         </a>
                     </li>
@@ -2386,3 +2386,4 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 <?php
 $conn->close();
 ?>
+
