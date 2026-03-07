@@ -1004,7 +1004,7 @@ if ($language == 'en') {
                 <?php else: ?>
                     <li><a href="customer-dashboard.php">Dashboard</a></li>
                     <li>
-                        <a href="logout.php">
+                        <a href="logout.php" style="color: #ff7f50;">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
                     </li>
@@ -1415,3 +1415,4 @@ if ($language == 'en') {
 <?php
 $conn->close();
 ?>
+
