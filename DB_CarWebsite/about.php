@@ -74,6 +74,10 @@ if ($language == 'en') {
     $contact = 'Contact';
     $contactUs = 'Contact Us';
     $rightsReserved = 'All rights reserved.';
+    $dashboard = 'Dashboard';
+    $login = 'Login';
+    $logout = 'Logout';
+    $cars = 'Cars';
 } elseif ($language == 'es') {
     $themeText = 'Tema';
     $lightText = 'Claro';
@@ -115,6 +119,10 @@ if ($language == 'en') {
     $contact = 'Contacto';
     $contactUs = 'Contáctenos';
     $rightsReserved = 'Todos los derechos reservados.';
+    $dashboard = 'Panel';
+    $login = 'Iniciar sesión';
+    $logout = 'Cerrar sesión';
+    $cars = 'Autos';
 } elseif ($language == 'fr') {
     $themeText = 'Thème';
     $lightText = 'Clair';
@@ -156,6 +164,10 @@ if ($language == 'en') {
     $contact = 'Contact';
     $contactUs = 'Contactez-nous';
     $rightsReserved = 'Tous droits réservés.';
+    $dashboard = 'Tableau de bord';
+    $login = 'Connexion';
+    $logout = 'Déconnexion';
+    $cars = 'Voitures';
 } elseif ($language == 'de') {
     $themeText = 'Design';
     $lightText = 'Hell';
@@ -197,6 +209,10 @@ if ($language == 'en') {
     $contact = 'Kontakt';
     $contactUs = 'Kontaktieren Sie uns';
     $rightsReserved = 'Alle Rechte vorbehalten.';
+    $dashboard = 'Dashboard';
+    $login = 'Anmelden';
+    $logout = 'Abmelden';
+    $cars = 'Autos';
 }
 ?>
 <!DOCTYPE html>
@@ -365,6 +381,22 @@ if ($language == 'en') {
         nav ul li.dropdown .dropdown-content a:hover {
             background-color: #f8f9fa;
             color: var(--vivid-indigo);
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content {
+            background-color: #333333;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a {
+            color: #fff;
+            background-color: #333333;
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #404040;
+            color: var(--coral-red);
         }
 
         .basket-indicator {
@@ -830,27 +862,42 @@ if ($language == 'en') {
             color: white;
         }
 
+        /* Footer Styles - Exactly matching contact page */
         footer {
             background-color: var(--footer-bg);
             color: var(--footer-text);
+            padding: 40px 0 20px;
         }
 
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .footer-column h3 {
             color: white;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--coral-red);
         }
 
         .footer-column p {
             color: var(--footer-text);
             line-height: 1.6;
+            opacity: 0.9;
         }
 
         .footer-column ul {
@@ -859,16 +906,23 @@ if ($language == 'en') {
         }
 
         .footer-column ul li {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .footer-column ul li a {
             color: var(--footer-text);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: inline-block;
         }
 
         .footer-column ul li a:hover {
+            color: var(--coral-red);
+            padding-left: 5px;
+        }
+
+        .footer-column ul li i {
+            margin-right: 10px;
             color: var(--coral-red);
         }
 
@@ -881,6 +935,7 @@ if ($language == 'en') {
         .copyright p {
             color: var(--footer-text);
             font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         @media (max-width: 992px) {
@@ -903,6 +958,10 @@ if ($language == 'en') {
             
             .story-image img {
                 height: 300px;
+            }
+            
+            .footer-content {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             }
         }
         
@@ -943,6 +1002,16 @@ if ($language == 'en') {
             
             .story-image img {
                 height: 250px;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .footer-column h3::after {
+                left: 50%;
+                transform: translateX(-50%);
             }
         }
         
@@ -989,23 +1058,23 @@ if ($language == 'en') {
         <nav>
             <ul>
                 <li class="dropdown">
-                    <a href="landing.php" class="dropbtn">Home <i class="fas fa-caret-down"></i></a>
+                    <a href="landing.php" class="dropbtn"><?php echo $home; ?> <i class="fas fa-caret-down"></i></a>
                     <div class="dropdown-content">
-                        <a href="landing.php">Home</a>
-                        <a href="about.php" class="active">About</a>
+                        <a href="landing.php"><?php echo $home; ?></a>
+                        <a href="about.php" class="active"><?php echo $about; ?></a>
                     </div>
                 </li>
-                <li><a href="cars.php">Cars</a></li>
-                <li><a href="contact.php">Contact</a></li>
+                <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                <li><a href="contact.php"><?php echo $contact; ?></a></li>
 
                 <?php if (!isset($_SESSION['user'])): ?>
                     
-                    <li><a href="loginPage.php">Login</a></li>
+                    <li><a href="loginPage.php"><?php echo $login; ?></a></li>
                 <?php else: ?>
-                    <li><a href="customer-dashboard.php">Dashboard</a></li>
+                    <li><a href="customer-dashboard.php"><?php echo $dashboard; ?></a></li>
                     <li>
                         <a href="logout.php" style="color: #ff7f50;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
+                            <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
                         </a>
                     </li>
                 <?php endif; ?>
@@ -1271,7 +1340,7 @@ if ($language == 'en') {
     <div class="container">
         <div class="footer-content">
             <div class="footer-column">
-                <h3>Motiv Car Rental</h3>
+                <h3>Motiv, Car Rental</h3>
                 <p><?php echo $footerTagline; ?></p>
             </div>
             <div class="footer-column">
@@ -1279,7 +1348,7 @@ if ($language == 'en') {
                 <ul>
                     <li><a href="landing.php"><?php echo $home; ?></a></li>
                     <li><a href="about.php"><?php echo $about; ?></a></li>
-                    <li><a href="cars.php"><?php echo $ourFleet; ?></a></li>
+                    <li><a href="cars.php"><?php echo $cars; ?></a></li>
                     <li><a href="contact.php"><?php echo $contact; ?></a></li>
                 </ul>
             </div>
@@ -1415,4 +1484,3 @@ if ($language == 'en') {
 <?php
 $conn->close();
 ?>
-
