@@ -67,6 +67,7 @@ if ($language == 'en') {
     $notProvided = 'Not provided';
     $logout = 'Logout';
     $home = 'Home';
+    $about = 'About';
     $cars = 'Cars';
     $contact = 'Contact';
     $dashboard = 'Dashboard';
@@ -141,6 +142,7 @@ if ($language == 'en') {
     $notProvided = 'No proporcionado';
     $logout = 'Cerrar sesión';
     $home = 'Inicio';
+    $about = 'Acerca de';
     $cars = 'Autos';
     $contact = 'Contacto';
     $dashboard = 'Panel';
@@ -214,6 +216,7 @@ if ($language == 'en') {
     $notProvided = 'Non fourni';
     $logout = 'Déconnexion';
     $home = 'Accueil';
+    $about = 'À propos';
     $cars = 'Voitures';
     $contact = 'Contact';
     $dashboard = 'Tableau de bord';
@@ -287,6 +290,7 @@ if ($language == 'en') {
     $notProvided = 'Nicht angegeben';
     $logout = 'Abmelden';
     $home = 'Startseite';
+    $about = 'Über uns';
     $cars = 'Autos';
     $contact = 'Kontakt';
     $dashboard = 'Dashboard';
@@ -597,6 +601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
         
         nav ul li {
             margin: 0;
+            position: relative;
         }
 
         nav ul li a {
@@ -614,6 +619,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
         nav ul li a:hover,
         nav ul li a.active {
             background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Dropdown Styles */
+        nav ul li.dropdown {
+            position: relative;
+        }
+
+        nav ul li.dropdown .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 120px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1001;
+            border-radius: 5px;
+            overflow: hidden;
+            top: 100%;
+            left: 0;
+        }
+
+        nav ul li.dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        nav ul li.dropdown .dropdown-content a {
+            color: #333;
+            padding: 10px 14px;
+            display: block;
+            transition: background-color 0.3s;
+            border-bottom: 1px solid #f1f1f1;
+            font-size: 0.9rem;
+            background-color: white;
+        }
+
+        nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #f8f9fa;
+            color: var(--vivid-indigo);
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content {
+            background-color: #333333;
+            border-color: #404040;
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a {
+            color: #fff;
+            background-color: #333333;
+            border-bottom-color: #404040;
+        }
+
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #404040;
+            color: var(--coral-red);
         }
 
         .language-selector {
@@ -1629,7 +1687,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
 
             <nav>
                 <ul>
-                    <li><a href="landing.php"><?php echo $home; ?></a></li>
+                    <li class="dropdown">
+                        <a href="landing.php" class="dropbtn"><?php echo $home; ?> <i class="fas fa-caret-down"></i></a>
+                        <div class="dropdown-content">
+                            <a href="landing.php"><?php echo $home; ?></a>
+                            <a href="about.php"><?php echo $about; ?></a>
+                        </div>
+                    </li>
                     <li><a href="cars.php"><?php echo $cars; ?></a></li>
                     <li><a href="contact.php"><?php echo $contact; ?></a></li>
                     <li><a href="customer-dashboard.php" class="active"><?php echo $dashboard; ?></a></li>
@@ -1723,7 +1787,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 <li class="nav-tab" data-tab="basket"><?php echo $myBasket; ?></li>
                 <li class="nav-tab" data-tab="rentals"><?php echo $rentalHistory; ?></li>
                 <li class="nav-tab" data-tab="profile"><?php echo $profileSettings; ?></li>
-                <!-- NEW: Rewards tab -->
                 <li class="nav-tab" data-tab="rewards"><?php echo $redeemPoints; ?></li>
             </ul>
         </div>
@@ -1742,7 +1805,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
             </div>
         <?php endif; ?>
 
-        <!-- NEW: Voucher success display -->
         <?php if ($voucher_message && $voucher_code): ?>
             <div class="message success-message" style="max-width: 1200px; margin: 0 auto 20px; padding: 0 20px;">
                 <strong><?php echo $congrats; ?></strong><br>
@@ -1816,7 +1878,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                                             <span><?php echo htmlspecialchars($car['city_name']); ?></span>
                                         </div>
                                     </div>
-                                    <!-- REMOVED: View Details and Book Now buttons -->
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -1855,7 +1916,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                                             <span><?php echo htmlspecialchars($rental['city_name']); ?></span>
                                         </div>
                                     </div>
-                                    <!-- REMOVED: View Details and Modify Booking buttons -->
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -1897,7 +1957,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <!-- REMOVED: View Details and Book Now buttons, keeping only Remove button -->
                                         <button class="btn-secondary remove-favorite" data-id="<?php echo $car['car_id']; ?>"><?php echo $remove; ?></button>
                                     </div>
                                 </div>
@@ -2073,7 +2132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
             </div>
         </div>
 
-        <!-- NEW: Rewards Tab Content -->
         <div class="tab-content" id="rewards">
             <div class="dashboard-section">
                 <div class="section-header">
@@ -2085,7 +2143,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 </div>
 
                 <div class="rewards-grid">
-                    <!-- Voucher 1: £10 off -->
                     <div class="reward-card <?php echo (in_array('voucher_50', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
                         <div class="reward-icon">
                             <i class="fas fa-ticket-alt"></i>
@@ -2118,7 +2175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Voucher 2: £25 off -->
                     <div class="reward-card <?php echo (in_array('voucher_100', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
                         <div class="reward-icon">
                             <i class="fas fa-ticket-alt"></i>
@@ -2151,7 +2207,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                         <?php endif; ?>
                     </div>
 
-                    <!-- Voucher 3: Free Upgrade -->
                     <div class="reward-card <?php echo (in_array('voucher_150', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
                         <div class="reward-icon">
                             <i class="fas fa-star"></i>
@@ -2205,6 +2260,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                     <h3><?php echo $quickLinks; ?></h3>
                     <ul>
                         <li><a href="landing.php"><?php echo $home; ?></a></li>
+                        <li><a href="about.php"><?php echo $about; ?></a></li>
                         <li><a href="cars.php"><?php echo $cars; ?></a></li>
                         <li><a href="contact.php"><?php echo $contact; ?></a></li>
                     </ul>
@@ -2332,20 +2388,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
         }
 
         function switchTab(tabName) {
-            // Update tab classes
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             document.querySelector(`.nav-tab[data-tab="${tabName}"]`).classList.add('active');
             
-            // Update content visibility
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
             document.getElementById(tabName).classList.add('active');
         }
 
-        // NEW: Copy voucher code function
         function copyVoucherCode(code) {
             navigator.clipboard.writeText(code).then(function() {
                 alert('<?php echo $codeCopied; ?>');
@@ -2357,7 +2410,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
         document.addEventListener('DOMContentLoaded', function() {
             updateFontSizeDisplay();
             
-            // Theme options
             const themeOptions = document.querySelectorAll('.theme-option');
             themeOptions.forEach(option => {
                 option.addEventListener('click', function(e) {
@@ -2367,7 +2419,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             });
 
-            // Font size controls
             const decreaseBtn = document.getElementById('font-decrease');
             const increaseBtn = document.getElementById('font-increase');
             const resetBtn = document.getElementById('font-reset');
@@ -2397,7 +2448,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             }
 
-            // Language options
             const languageOptions = document.querySelectorAll('.language-option');
             languageOptions.forEach(option => {
                 option.addEventListener('click', function(e) {
@@ -2407,19 +2457,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             });
             
-            // Tab switching
             document.querySelectorAll('.nav-tab').forEach(tab => {
                 tab.addEventListener('click', function() {
                     switchTab(this.getAttribute('data-tab'));
                 });
             });
             
-            // Modal functionality
             const editProfileModal = document.getElementById('editProfileModal');
             const changePasswordModal = document.getElementById('changePasswordModal');
             const deleteConfirmModal = document.getElementById('deleteConfirmModal');
 
-            // Open modals
             document.getElementById('editProfileBtn').addEventListener('click', function() {
                 editProfileModal.style.display = 'block';
             });
@@ -2432,27 +2479,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 deleteConfirmModal.style.display = 'block';
             });
 
-            // Close modals with X buttons
             document.querySelectorAll('.close-modal').forEach(closeBtn => {
                 closeBtn.addEventListener('click', function() {
                     this.closest('.modal').style.display = 'none';
                 });
             });
 
-            // Cancel delete button
             document.querySelector('.cancel-delete')?.addEventListener('click', function() {
                 deleteConfirmModal.style.display = 'none';
                 document.getElementById('confirm_delete').value = '';
             });
 
-            // Close modals when clicking outside
             window.addEventListener('click', function(event) {
                 if (event.target.classList.contains('modal')) {
                     event.target.style.display = 'none';
                 }
             });
 
-            // Password confirmation validation
             document.querySelector('#changePasswordModal form')?.addEventListener('submit', function(e) {
                 const newPass = document.getElementById('new_password').value;
                 const confirmPass = document.getElementById('confirm_password').value;
@@ -2463,7 +2506,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 }
             });
 
-            // Delete account confirmation validation
             document.querySelector('#deleteConfirmModal form')?.addEventListener('submit', function(e) {
                 const confirmInput = document.getElementById('confirm_delete').value;
                 if (confirmInput !== 'DELETE') {
@@ -2472,12 +2514,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 }
             });
             
-            // Add car card event listeners
             addCarCardEventListeners();
         });
 
         function addCarCardEventListeners() {
-            // View details buttons
             document.querySelectorAll('.view-details').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -2485,7 +2525,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             });
             
-            // Book now buttons
             document.querySelectorAll('.book-now').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -2493,7 +2532,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             });
             
-            // Remove from basket buttons
             document.querySelectorAll('.remove-from-basket').forEach(button => {
                 button.addEventListener('click', function() {
                     const itemId = this.getAttribute('data-id');
@@ -2503,7 +2541,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 });
             });
             
-            // Remove favorite buttons
             document.querySelectorAll('.remove-favorite').forEach(button => {
                 button.addEventListener('click', function() {
                     const carId = this.getAttribute('data-id');
@@ -2514,7 +2551,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
             });
         }
 
-        // Auto-hide messages after 5 seconds
         setTimeout(() => {
             document.querySelectorAll('.message').forEach(msg => {
                 msg.style.opacity = '0';
@@ -2527,4 +2563,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
 <?php
 $conn->close();
 ?>
-
