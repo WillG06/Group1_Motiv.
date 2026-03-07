@@ -1914,35 +1914,35 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 </div>
 
 <footer>
-    <div class="container">
-        <div class="footer-content">
-            <div class="footer-column">
-                <h3>Motiv Car Rental</h3>
-                <p><?php echo $footerTagline; ?></p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Motiv, Car Rental</h3>
+                    <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
+                </div>
+                <div class="footer-column">
+                    <h3><?php echo $quickLinks; ?></h3>
+                    <ul>
+                        <li><a href="landing.php"><?php echo $home; ?></a></li>
+                        <li><a href="about.php"><?php echo $about; ?></a></li>
+                        <li><a href="cars.php"></a></li>
+                        <li><a href="contact.php"><?php echo $contact; ?></a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3><?php echo $contactUs; ?></h3>
+                    <ul>
+                        <li>New Street Station, Birmingham</li>
+                        <li>0712345678</li>
+                        <li>info@motivcarrental.com</li>
+                    </ul>
+                </div>
             </div>
-            <div class="footer-column">
-                <h3><?php echo $quickLinks; ?></h3>
-                <ul>
-                    <li><a href="landing.php"><?php echo $home; ?></a></li>
-                    <li><a href="about.php"><?php echo $about; ?></a></li>
-                    <li><a href="cars.php"><?php echo $ourFleet; ?></a></li>
-                    <li><a href="contact.php"><?php echo $contact; ?></a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3><?php echo $contactUs; ?></h3>
-                <ul>
-                    <li>New Street Station, Birmingham</li>
-                    <li>0712345678</li>
-                    <li>info@motivcarrental.com</li>
-                </ul>
+            <div class="copyright">
+                <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReserved; ?></p>
             </div>
         </div>
-        <div class="copyright">
-            <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReserved; ?></p>
-        </div>
-    </div>
-</footer>
+    </footer>
 
 <script>
     // Pass PHP variables to JavaScript
@@ -2386,4 +2386,5 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 <?php
 $conn->close();
 ?>
+
 
