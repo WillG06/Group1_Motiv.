@@ -1925,36 +1925,36 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
     </section>
 
     
-        <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Motiv Car Rental</h3>
-                    <p><?php echo $footerTaglineText; ?></p>
-                </div>
-                <div class="footer-column">
-                    <h3><?php echo $quickLinksText; ?></h3>
-                    <ul>
-                        <li><a href="landing.php"><?php echo $home ?? 'Home'; ?></a></li>
-                        <li><a href="cars.php"><?php echo $ourFleetText; ?></a></li>
-                        <li><a href="contact.php"><?php echo $contact ?? 'Contact'; ?></a></li>
-                        <li><a href="#"><?php echo $offersText; ?></a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3><?php echo $contactUsText; ?></h3>
-                    <ul>
-                        <li>New Street Station, Birmingham</li>
-                        <li>+44 (0) 7123 456 789</li>
-                        <li>info@motivcarrental.com</li>
-                    </ul>
-                </div>
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Motiv, Car Rental</h3>
+                <p><?php echo $footerTaglineText; ?></p>
             </div>
-            <div class="copyright">
-                <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReservedText; ?></p>
+            <div class="footer-column">
+                <h3><?php echo $quickLinksText; ?></h3>
+                <ul>
+                    <li><a href="landing.php">Home</a></li>
+                    <li><a href="about.php">About</a></li>
+                    <li><a href="cars.php">Cars</a></li>
+                    <li><a href="contact.php">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3><?php echo $contactUsText; ?></h3>
+                <ul>
+                    <li>New Street Station, Birmingham</li>
+                    <li>0712345678</li>
+                    <li>info@motivcarrental.com</li>
+                </ul>
             </div>
         </div>
-    </footer>
+        <div class="copyright">
+            <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReservedText; ?></p>
+        </div>
+    </div>
+</footer>
 
 <!-- Chatbot HTML -->
 <button class="chat-toggle" id="chatToggle">
@@ -2324,4 +2324,5 @@ if (isset($_POST['chat_message']) && !empty($_POST['chat_message'])) {
 <?php
 $conn->close();
 ?>
+
 
