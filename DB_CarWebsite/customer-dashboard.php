@@ -1634,7 +1634,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                     <li><a href="contact.php"><?php echo $contact; ?></a></li>
                     <li><a href="customer-dashboard.php" class="active"><?php echo $dashboard; ?></a></li>
                     <li>
-                        <a href="logout.php" style="color: #ff4444;">
+                        <a href="logout.php" style="color: #ff7f50;">
                             <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
                         </a>
                     </li>
@@ -2527,3 +2527,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
 <?php
 $conn->close();
 ?>
+
