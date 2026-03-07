@@ -3,7 +3,7 @@ session_start();
 
 if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'customer') {
     header("Location: loginPage.php");
-    exit();
+    exit(); 
 }
 
 require_once 'db.php';
@@ -27,7 +27,7 @@ if ($language == 'en') {
     $myFavorites = 'My Favorites';
     $myBasket = 'My Basket';
     $rentalHistory = 'Rental History';
-    $dashboardSubtitle = 'Manage your rentals, favourites, and account settings';
+    $dashboardSubtitle = 'Manage your rentals, favorites, and account settings';
     $profileSettings = 'Profile Settings'; 
     $favoriteCars = 'Favorite Cars';
     $itemsInBasket = 'Items in Basket';
@@ -73,6 +73,21 @@ if ($language == 'en') {
     $quickLinks = 'Quick Links';
     $contactUs = 'Contact Us';
     $rightsReserved = 'All rights reserved.';
+    // NEW: Loyalty points translations
+    $redeemPoints = 'Redeem Points';
+    $availableRewards = 'Available Rewards';
+    $pointsNeeded = 'Points Needed';
+    $redeem = 'Redeem';
+    $congrats = 'Congratulations!';
+    $voucherCode = 'Your voucher code is';
+    $copyCode = 'Copy Code';
+    $codeCopied = 'Code copied to clipboard!';
+    $insufficientPoints = 'Insufficient points';
+    $voucherDescription = '£10 off your next rental';
+    $voucherDescription2 = '£25 off your next rental'; 
+    $voucherDescription3 = 'Free upgrade to premium car';
+    $redeemSuccess = 'Voucher redeemed successfully!';
+    $pointsRemaining = 'Points remaining';
 } elseif ($language == 'es') {
     $themeText = 'Tema';
     $lightText = 'Claro';
@@ -132,6 +147,20 @@ if ($language == 'en') {
     $quickLinks = 'Enlaces rápidos';
     $contactUs = 'Contáctenos';
     $rightsReserved = 'Todos los derechos reservados.';
+    $redeemPoints = 'Canjear puntos';
+    $availableRewards = 'Recompensas disponibles';
+    $pointsNeeded = 'Puntos necesarios';
+    $redeem = 'Canjear';
+    $congrats = '¡Felicidades!';
+    $voucherCode = 'Tu código de vale es';
+    $copyCode = 'Copiar código';
+    $codeCopied = '¡Código copiado al portapapeles!';
+    $insufficientPoints = 'Puntos insuficientes';
+    $voucherDescription = '£10 de descuento en tu próximo alquiler';
+    $voucherDescription2 = '£25 de descuento en tu próximo alquiler';
+    $voucherDescription3 = 'Actualización gratuita a auto premium';
+    $redeemSuccess = '¡Vale canjeado exitosamente!';
+    $pointsRemaining = 'Puntos restantes';
 } elseif ($language == 'fr') {
     $themeText = 'Thème';
     $lightText = 'Clair';
@@ -191,6 +220,20 @@ if ($language == 'en') {
     $quickLinks = 'Liens rapides';
     $contactUs = 'Contactez-nous';
     $rightsReserved = 'Tous droits réservés.';
+    $redeemPoints = 'Échanger des points';
+    $availableRewards = 'Récompenses disponibles';
+    $pointsNeeded = 'Points nécessaires';
+    $redeem = 'Échanger';
+    $congrats = 'Félicitations !';
+    $voucherCode = 'Votre code promo est';
+    $copyCode = 'Copier le code';
+    $codeCopied = 'Code copié dans le presse-papiers !';
+    $insufficientPoints = 'Points insuffisants';
+    $voucherDescription = '£10 de réduction sur votre prochaine location';
+    $voucherDescription2 = '£25 de réduction sur votre prochaine location';
+    $voucherDescription3 = 'Surclassement gratuit en voiture premium';
+    $redeemSuccess = 'Bon échangé avec succès !';
+    $pointsRemaining = 'Points restants';
 } elseif ($language == 'de') {
     $themeText = 'Design';
     $lightText = 'Hell';
@@ -250,6 +293,20 @@ if ($language == 'en') {
     $quickLinks = 'Schnelllinks';
     $contactUs = 'Kontaktieren Sie uns';
     $rightsReserved = 'Alle Rechte vorbehalten.';
+    $redeemPoints = 'Punkte einlösen';
+    $availableRewards = 'Verfügbare Belohnungen';
+    $pointsNeeded = 'Benötigte Punkte';
+    $redeem = 'Einlösen';
+    $congrats = 'Glückwunsch!';
+    $voucherCode = 'Ihr Gutscheincode ist';
+    $copyCode = 'Code kopieren';
+    $codeCopied = 'Code in Zwischenablage kopiert!';
+    $insufficientPoints = 'Nicht genügend Punkte';
+    $voucherDescription = '£10 Rabatt auf Ihre nächste Miete';
+    $voucherDescription2 = '£25 Rabatt auf Ihre nächste Miete';
+    $voucherDescription3 = 'Kostenlose Upgrade auf Premium-Auto';
+    $redeemSuccess = 'Gutschein erfolgreich eingelöst!';
+    $pointsRemaining = 'Verbleibende Punkte';
 }
 
 $customer_id = $_SESSION['user']['id'];
@@ -302,6 +359,8 @@ $rentals_count = $rentals_result->fetch_assoc()['count'];
 $rentals_stmt->close();
 $loyalty_points = $rentals_count * 10;
 
+// NEW: Check for existing redeemed vouchers in session
+$redeemed_vouchers = $_SESSION['redeemed_vouchers'] ?? [];
 
 $recent_favorites_stmt = $conn->prepare("
     SELECT c.*, m.make_name, ct.type_name, cs.status_name, ci.city_name
@@ -393,6 +452,49 @@ $upcoming_rentals_stmt->execute();
 $upcoming_rentals_result = $upcoming_rentals_stmt->get_result();
 $upcoming_rentals = $upcoming_rentals_result->fetch_all(MYSQLI_ASSOC);
 $upcoming_rentals_stmt->close();
+
+// Get cities for dropdown in edit profile
+$cities_query = "SELECT city_id, city_name FROM cities ORDER BY city_name";
+$cities_result = $conn->query($cities_query);
+$cities = [];
+while ($city_row = $cities_result->fetch_assoc()) {
+    $cities[] = $city_row;
+}
+
+// Display success/error messages
+$success_message = $_SESSION['success_message'] ?? '';
+$error_message = $_SESSION['error_message'] ?? '';
+unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+// NEW: Handle voucher redemption via POST
+$voucher_message = '';
+$voucher_code = '';
+$redeemed_points = 0;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
+    $points_required = (int)$_POST['points_required'];
+    $voucher_value = $_POST['voucher_value'];
+    
+    if ($loyalty_points >= $points_required) {
+        // Generate a random voucher code
+        $voucher_code = strtoupper(substr(md5(uniqid()), 0, 8));
+        
+        // Store in session to prevent duplicate redemptions (simple approach)
+        $redemption_id = 'voucher_' . $points_required;
+        if (!in_array($redemption_id, $redeemed_vouchers)) {
+            $redeemed_vouchers[] = $redemption_id;
+            $_SESSION['redeemed_vouchers'] = $redeemed_vouchers;
+            
+            // In a real app, you would store this in a database
+            $voucher_message = $redeemSuccess;
+            $redeemed_points = $points_required;
+        } else {
+            $error_message = 'You have already redeemed this voucher!';
+        }
+    } else {
+        $error_message = $insufficientPoints;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -418,6 +520,9 @@ $upcoming_rentals_stmt->close();
             --dark-magenta: #1800AD;
             --cobalt-blue: #004AAD;
             --coral-red: #FF7F50;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #17a2b8;
         }
 
         [data-theme="dark"] {
@@ -457,7 +562,8 @@ $upcoming_rentals_stmt->close();
         [data-theme="dark"] .stat-card,
         [data-theme="dark"] .car-card,
         [data-theme="dark"] .dashboard-section,
-        [data-theme="dark"] .dashboard-nav {
+        [data-theme="dark"] .dashboard-nav,
+        [data-theme="dark"] .reward-card {
             background-color: #2d2d2d;
             border-color: #404040;
         }
@@ -927,7 +1033,7 @@ $upcoming_rentals_stmt->close();
             gap: 10px;
         }
         
-        .btn-secondary, .btn-primary {
+        .btn-secondary, .btn-primary, .btn-success, .btn-warning {
             flex: 1;
             padding: 8px 15px;
             border-radius: 6px;
@@ -957,6 +1063,38 @@ $upcoming_rentals_stmt->close();
         
         .btn-primary:hover {
             background: #a0206a;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
         }
         
         .empty-state {
@@ -1143,6 +1281,273 @@ $upcoming_rentals_stmt->close();
             color: var(--footer-text);
             font-size: 0.9rem;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background-color: var(--bg-primary);
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .close-modal:hover {
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--vivid-indigo);
+        }
+
+        .checkbox-group {
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        [data-theme="dark"] .success-message {
+            background-color: #155724;
+            color: #d4edda;
+            border-color: #28a745;
+        }
+
+        [data-theme="dark"] .error-message {
+            background-color: #721c24;
+            color: #f8d7da;
+            border-color: #dc3545;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background-color: #2d2d2d;
+            border: 1px solid #404040;
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select {
+            background-color: #333;
+            border-color: #404040;
+            color: #fff;
+        }
+
+        /* NEW: Rewards/Loyalty Points Styles */
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .reward-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .reward-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--vivid-indigo);
+        }
+
+        .reward-card.redeemed {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+            border-color: var(--success);
+        }
+
+        .reward-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(to right, #004aad, #5c2aa5);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .reward-icon i {
+            color: white;
+            font-size: 1.8rem;
+        }
+
+        .reward-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #5c2aa5;
+            margin-bottom: 10px;
+        }
+
+        .reward-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .reward-points {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #ff7f50;
+            margin-bottom: 15px;
+        }
+
+        .reward-points i {
+            margin-right: 5px;
+        }
+
+        .reward-status {
+            margin-top: 15px;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .reward-status.redeemed {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .voucher-display {
+            background: linear-gradient(to right, #004aad, #5c2aa5);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .voucher-code {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: white;
+            color: #5c2aa5;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .copy-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+
+        .points-badge {
+            display: inline-block;
+            background: #ff7f50;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .current-points {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .current-points span {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #5c2aa5;
+        }
         
         @media (max-width: 992px) {
             .profile-info {
@@ -1179,6 +1584,16 @@ $upcoming_rentals_stmt->close();
                 display: block;
                 overflow-x: auto;
             }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px;
+                width: 95%;
+            }
+
+            .rewards-grid {
+                grid-template-columns: 1fr;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1192,6 +1607,15 @@ $upcoming_rentals_stmt->close();
             
             .car-actions {
                 flex-direction: column;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+            }
+
+            .profile-actions button {
+                width: 100%;
+                margin: 5px 0 !important;
             }
         }
     </style>
@@ -1299,11 +1723,36 @@ $upcoming_rentals_stmt->close();
                 <li class="nav-tab" data-tab="basket"><?php echo $myBasket; ?></li>
                 <li class="nav-tab" data-tab="rentals"><?php echo $rentalHistory; ?></li>
                 <li class="nav-tab" data-tab="profile"><?php echo $profileSettings; ?></li>
+                <!-- NEW: Rewards tab -->
+                <li class="nav-tab" data-tab="rewards"><?php echo $redeemPoints; ?></li>
             </ul>
         </div>
     </nav>
 
     <div class="dashboard-container">
+        <?php if ($success_message): ?>
+            <div class="message success-message" style="max-width: 1200px; margin: 0 auto 20px; padding: 0 20px;">
+                <?php echo htmlspecialchars($success_message); ?>
+            </div>
+        <?php endif; ?>
+        
+        <?php if ($error_message): ?>
+            <div class="message error-message" style="max-width: 1200px; margin: 0 auto 20px; padding: 0 20px;">
+                <?php echo htmlspecialchars($error_message); ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- NEW: Voucher success display -->
+        <?php if ($voucher_message && $voucher_code): ?>
+            <div class="message success-message" style="max-width: 1200px; margin: 0 auto 20px; padding: 0 20px;">
+                <strong><?php echo $congrats; ?></strong><br>
+                <?php echo $voucher_message; ?><br>
+                <div style="background: white; color: #155724; padding: 10px; border-radius: 6px; margin-top: 10px; font-family: monospace; font-size: 1.2rem;">
+                    <?php echo $voucherCode; ?>: <strong><?php echo $voucher_code; ?></strong>
+                </div>
+                <button class="copy-btn" onclick="copyVoucherCode('<?php echo $voucher_code; ?>')" style="margin-top: 10px;"><?php echo $copyCode; ?></button>
+            </div>
+        <?php endif; ?>
 
         <div class="tab-content active" id="overview">
             <div class="stats-grid">
@@ -1367,10 +1816,7 @@ $upcoming_rentals_stmt->close();
                                             <span><?php echo htmlspecialchars($car['city_name']); ?></span>
                                         </div>
                                     </div>
-                                    <div class="car-actions">
-                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>"><?php echo $details; ?></button>
-                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>"><?php echo $bookNow; ?></button>
-                                    </div>
+                                    <!-- REMOVED: View Details and Book Now buttons -->
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -1409,10 +1855,7 @@ $upcoming_rentals_stmt->close();
                                             <span><?php echo htmlspecialchars($rental['city_name']); ?></span>
                                         </div>
                                     </div>
-                                    <div class="car-actions">
-                                        <button class="btn-secondary view-details" data-id="<?php echo $rental['booking_id']; ?>"><?php echo $viewDetails; ?></button>
-                                        <button class="btn-primary"><?php echo $modifyBooking; ?></button>
-                                    </div>
+                                    <!-- REMOVED: View Details and Modify Booking buttons -->
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -1454,8 +1897,7 @@ $upcoming_rentals_stmt->close();
                                         </div>
                                     </div>
                                     <div class="car-actions">
-                                        <button class="btn-secondary view-details" data-id="<?php echo $car['car_id']; ?>"><?php echo $details; ?></button>
-                                        <button class="btn-primary book-now" data-id="<?php echo $car['car_id']; ?>"><?php echo $bookNow; ?></button>
+                                        <!-- REMOVED: View Details and Book Now buttons, keeping only Remove button -->
                                         <button class="btn-secondary remove-favorite" data-id="<?php echo $car['car_id']; ?>"><?php echo $remove; ?></button>
                                     </div>
                                 </div>
@@ -1624,10 +2066,130 @@ $upcoming_rentals_stmt->close();
                     <h2 class="section-title"><?php echo $accountSettings; ?></h2>
                 </div>
                 <div class="profile-actions">
-                    <button class="btn-secondary" style="margin-right: 10px;"><?php echo $changePassword; ?></button>
+                    <button class="btn-secondary" id="changePasswordBtn" style="margin-right: 10px;"><?php echo $changePassword; ?></button>
                     <button class="btn-secondary" style="margin-right: 10px;"><?php echo $notificationPrefs; ?></button>
                     <button class="btn-secondary" id="deleteAccountBtn"><?php echo $deleteAccount; ?></button>
                 </div>
+            </div>
+        </div>
+
+        <!-- NEW: Rewards Tab Content -->
+        <div class="tab-content" id="rewards">
+            <div class="dashboard-section">
+                <div class="section-header">
+                    <h2 class="section-title"><?php echo $redeemPoints; ?></h2>
+                </div>
+                
+                <div class="current-points">
+                    <?php echo $loyaltyPoints; ?>: <span><?php echo $loyalty_points; ?></span>
+                </div>
+
+                <div class="rewards-grid">
+                    <!-- Voucher 1: £10 off -->
+                    <div class="reward-card <?php echo (in_array('voucher_50', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
+                        <div class="reward-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <h3 class="reward-title">£10 Voucher</h3>
+                        <p class="reward-description"><?php echo $voucherDescription; ?></p>
+                        <div class="reward-points">
+                            <i class="fas fa-star"></i> 50 <?php echo $loyaltyPoints; ?>
+                        </div>
+                        
+                        <?php if (in_array('voucher_50', $redeemed_vouchers)): ?>
+                            <div class="reward-status redeemed">
+                                <i class="fas fa-check-circle"></i> Already Redeemed
+                            </div>
+                        <?php elseif ($loyalty_points >= 50): ?>
+                            <form method="POST" style="margin-top: 15px;">
+                                <input type="hidden" name="points_required" value="50">
+                                <input type="hidden" name="voucher_value" value="10">
+                                <button type="submit" name="redeem_voucher" class="btn-success" style="width: 100%;">
+                                    <i class="fas fa-gift"></i> <?php echo $redeem; ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="reward-status" style="color: #dc3545;">
+                                <i class="fas fa-times-circle"></i> <?php echo $insufficientPoints; ?>
+                            </div>
+                            <div class="points-badge" style="margin-top: 10px;">
+                                Need: <?php echo (50 - $loyalty_points); ?> more points
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Voucher 2: £25 off -->
+                    <div class="reward-card <?php echo (in_array('voucher_100', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
+                        <div class="reward-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <h3 class="reward-title">£25 Voucher</h3>
+                        <p class="reward-description"><?php echo $voucherDescription2; ?></p>
+                        <div class="reward-points">
+                            <i class="fas fa-star"></i> 100 <?php echo $loyaltyPoints; ?>
+                        </div>
+                        
+                        <?php if (in_array('voucher_100', $redeemed_vouchers)): ?>
+                            <div class="reward-status redeemed">
+                                <i class="fas fa-check-circle"></i> Already Redeemed
+                            </div>
+                        <?php elseif ($loyalty_points >= 100): ?>
+                            <form method="POST" style="margin-top: 15px;">
+                                <input type="hidden" name="points_required" value="100">
+                                <input type="hidden" name="voucher_value" value="25">
+                                <button type="submit" name="redeem_voucher" class="btn-success" style="width: 100%;">
+                                    <i class="fas fa-gift"></i> <?php echo $redeem; ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="reward-status" style="color: #dc3545;">
+                                <i class="fas fa-times-circle"></i> <?php echo $insufficientPoints; ?>
+                            </div>
+                            <div class="points-badge" style="margin-top: 10px;">
+                                Need: <?php echo (100 - $loyalty_points); ?> more points
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Voucher 3: Free Upgrade -->
+                    <div class="reward-card <?php echo (in_array('voucher_150', $redeemed_vouchers)) ? 'redeemed' : ''; ?>">
+                        <div class="reward-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <h3 class="reward-title">Premium Upgrade</h3>
+                        <p class="reward-description"><?php echo $voucherDescription3; ?></p>
+                        <div class="reward-points">
+                            <i class="fas fa-star"></i> 150 <?php echo $loyaltyPoints; ?>
+                        </div>
+                        
+                        <?php if (in_array('voucher_150', $redeemed_vouchers)): ?>
+                            <div class="reward-status redeemed">
+                                <i class="fas fa-check-circle"></i> Already Redeemed
+                            </div>
+                        <?php elseif ($loyalty_points >= 150): ?>
+                            <form method="POST" style="margin-top: 15px;">
+                                <input type="hidden" name="points_required" value="150">
+                                <input type="hidden" name="voucher_value" value="upgrade">
+                                <button type="submit" name="redeem_voucher" class="btn-success" style="width: 100%;">
+                                    <i class="fas fa-gift"></i> <?php echo $redeem; ?>
+                                </button>
+                            </form>
+                        <?php else: ?>
+                            <div class="reward-status" style="color: #dc3545;">
+                                <i class="fas fa-times-circle"></i> <?php echo $insufficientPoints; ?>
+                            </div>
+                            <div class="points-badge" style="margin-top: 10px;">
+                                Need: <?php echo (150 - $loyalty_points); ?> more points
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if ($redeemed_points > 0): ?>
+                    <div class="current-points" style="margin-top: 20px; color: var(--success);">
+                        <i class="fas fa-check-circle"></i> <?php echo $pointsRemaining; ?>: <?php echo ($loyalty_points - $redeemed_points); ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -1662,6 +2224,86 @@ $upcoming_rentals_stmt->close();
         </div>
     </footer>
 
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><?php echo $editProfile; ?></h2>
+            <form action="update-profile.php" method="POST">
+                <div class="form-group">
+                    <label for="first_name">First Name:</label>
+                    <input type="text" id="first_name" name="first_name" value="<?php echo htmlspecialchars($customer['first_name']); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name:</label>
+                    <input type="text" id="last_name" name="last_name" value="<?php echo htmlspecialchars($customer['last_name']); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="email"><?php echo $emailAddress; ?>:</label>
+                    <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($customer['email']); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone"><?php echo $phoneNumber; ?>:</label>
+                    <input type="tel" id="phone" name="phone" value="<?php echo htmlspecialchars($customer['phone'] ?? ''); ?>">
+                </div>
+                <div class="form-group">
+                    <label for="city"><?php echo $city; ?>:</label>
+                    <select id="city" name="city_id">
+                        <option value=""><?php echo $notProvided; ?></option>
+                        <?php foreach ($cities as $city_option): ?>
+                            <option value="<?php echo $city_option['city_id']; ?>" <?php echo ($customer['city_id'] == $city_option['city_id']) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($city_option['city_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2><?php echo $changePassword; ?></h2>
+            <form action="change-password.php" method="POST">
+                <div class="form-group">
+                    <label for="current_password">Current Password:</label>
+                    <input type="password" id="current_password" name="current_password" required>
+                </div>
+                <div class="form-group">
+                    <label for="new_password">New Password:</label>
+                    <input type="password" id="new_password" name="new_password" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirm_password">Confirm New Password:</label>
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                </div>
+                <button type="submit" class="btn-primary">Update Password</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div id="deleteConfirmModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Confirm Delete</h2>
+            <p style="margin: 20px 0; color: var(--text-primary);">Are you sure you want to delete your account? This action cannot be undone.</p>
+            <form action="delete-account.php" method="POST">
+                <div class="form-group">
+                    <label for="confirm_delete">Type "DELETE" to confirm:</label>
+                    <input type="text" id="confirm_delete" name="confirm_delete" placeholder="DELETE" required>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button type="button" class="btn-secondary cancel-delete" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="flex: 1; background-color: #dc3545;">Delete Account</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let currentFontSize = <?php echo $fontSize; ?>;
         let currentTheme = '<?php echo $darkMode; ?>';
@@ -1687,6 +2329,29 @@ $upcoming_rentals_stmt->close();
             currentLanguage = lang;
             document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
             location.reload();
+        }
+
+        function switchTab(tabName) {
+            // Update tab classes
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`.nav-tab[data-tab="${tabName}"]`).classList.add('active');
+            
+            // Update content visibility
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // NEW: Copy voucher code function
+        function copyVoucherCode(code) {
+            navigator.clipboard.writeText(code).then(function() {
+                alert('<?php echo $codeCopied; ?>');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -1749,15 +2414,61 @@ $upcoming_rentals_stmt->close();
                 });
             });
             
-            // Edit profile button
+            // Modal functionality
+            const editProfileModal = document.getElementById('editProfileModal');
+            const changePasswordModal = document.getElementById('changePasswordModal');
+            const deleteConfirmModal = document.getElementById('deleteConfirmModal');
+
+            // Open modals
             document.getElementById('editProfileBtn').addEventListener('click', function() {
-                alert('Edit profile functionality would open a form here.');
+                editProfileModal.style.display = 'block';
             });
-            
-            // Delete account button
+
+            document.getElementById('changePasswordBtn').addEventListener('click', function() {
+                changePasswordModal.style.display = 'block';
+            });
+
             document.getElementById('deleteAccountBtn').addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-                    window.location.href = 'delete-account.php';
+                deleteConfirmModal.style.display = 'block';
+            });
+
+            // Close modals with X buttons
+            document.querySelectorAll('.close-modal').forEach(closeBtn => {
+                closeBtn.addEventListener('click', function() {
+                    this.closest('.modal').style.display = 'none';
+                });
+            });
+
+            // Cancel delete button
+            document.querySelector('.cancel-delete')?.addEventListener('click', function() {
+                deleteConfirmModal.style.display = 'none';
+                document.getElementById('confirm_delete').value = '';
+            });
+
+            // Close modals when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target.classList.contains('modal')) {
+                    event.target.style.display = 'none';
+                }
+            });
+
+            // Password confirmation validation
+            document.querySelector('#changePasswordModal form')?.addEventListener('submit', function(e) {
+                const newPass = document.getElementById('new_password').value;
+                const confirmPass = document.getElementById('confirm_password').value;
+                
+                if (newPass !== confirmPass) {
+                    e.preventDefault();
+                    alert('Passwords do not match!');
+                }
+            });
+
+            // Delete account confirmation validation
+            document.querySelector('#deleteConfirmModal form')?.addEventListener('submit', function(e) {
+                const confirmInput = document.getElementById('confirm_delete').value;
+                if (confirmInput !== 'DELETE') {
+                    e.preventDefault();
+                    alert('Please type DELETE to confirm account deletion');
                 }
             });
             
@@ -1803,19 +2514,13 @@ $upcoming_rentals_stmt->close();
             });
         }
 
-        function switchTab(tabName) {
-            // Update tab classes
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
+        // Auto-hide messages after 5 seconds
+        setTimeout(() => {
+            document.querySelectorAll('.message').forEach(msg => {
+                msg.style.opacity = '0';
+                setTimeout(() => msg.remove(), 300);
             });
-            document.querySelector(`.nav-tab[data-tab="${tabName}"]`).classList.add('active');
-            
-            // Update content visibility
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tabName).classList.add('active');
-        }
+        }, 5000);
     </script>
 </body>
 </html>
