@@ -2113,36 +2113,36 @@ if ($citiesQuery) {
         </div>
     </div>
 
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Motiv, Car Rental</h3>
-                    <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="landing.php">Home</a></li>
-                        <li><a href="cars.php">Our Fleet</a></li>
-                        <li><a href="contact.php">Locations</a></li>
-                        <li><a href="#">Offers</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Contact Us</h3>
-                    <ul>
-                        <li>New Street Station, Birmingham</li>
-                        <li>0712345678</li>
-                        <li>info@motivcarrental.com</li>
-                    </ul>
-                </div>
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Motiv, Car Rental</h3>
+                <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
             </div>
-            <div class="copyright">
-                <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="landing.php">Home</a></li>
+                    <li><a href="about.php">About</a></li>
+                    <li><a href="cars.php">Cars</a></li>
+                    <li><a href="contact.php">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>New Street Station, Birmingham</li>
+                    <li>0712345678</li>
+                    <li>info@motivcarrental.com</li>
+                </ul>
             </div>
         </div>
-    </footer>
+        <div class="copyright">
+            <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
 
     <script>
         let currentFontSize = <?php echo $fontSize; ?>;
@@ -2385,3 +2385,4 @@ if ($citiesQuery) {
 <?php
 $conn->close();
 ?>
+
