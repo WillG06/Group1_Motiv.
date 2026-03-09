@@ -465,6 +465,32 @@ if (!empty($selectedExtras) && !empty($basketItems)) {
 }
 
 $grandTotal = $basketTotal + $extrasTotal;
+
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+$themeText = 'Theme'; $lightText = 'Light'; $darkText = 'Dark';
+$fontSizeText = 'Font Size'; $resetText = 'Reset'; $languageText = 'Language';
+$home = 'Home'; $cars = 'Cars'; $contact = 'Contact';
+$dashboard = 'Dashboard'; $login = 'Login'; $logout = 'Logout';
+
+if ($language == 'es') {
+    $themeText = 'Tema'; $lightText = 'Claro'; $darkText = 'Oscuro';
+    $fontSizeText = 'Tamaño de fuente'; $resetText = 'Reiniciar'; $languageText = 'Idioma';
+    $home = 'Inicio'; $cars = 'Autos'; $contact = 'Contacto';
+    $dashboard = 'Panel'; $login = 'Iniciar sesión'; $logout = 'Cerrar sesión';
+} elseif ($language == 'fr') {
+    $themeText = 'Thème'; $lightText = 'Clair'; $darkText = 'Sombre';
+    $fontSizeText = 'Taille de police'; $resetText = 'Réinitialiser'; $languageText = 'Langue';
+    $home = 'Accueil'; $cars = 'Voitures'; $contact = 'Contact';
+    $dashboard = 'Tableau de bord'; $login = 'Connexion'; $logout = 'Déconnexion';
+} elseif ($language == 'de') {
+    $themeText = 'Design'; $lightText = 'Hell'; $darkText = 'Dunkel';
+    $fontSizeText = 'Schriftgröße'; $resetText = 'Zurücksetzen'; $languageText = 'Sprache';
+    $home = 'Startseite'; $cars = 'Autos'; $contact = 'Kontakt';
+    $dashboard = 'Dashboard'; $login = 'Anmelden'; $logout = 'Abmelden';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1227,49 +1253,263 @@ $grandTotal = $basketTotal + $extrasTotal;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <img src="logo2.png" alt="Logo">
-            </div>
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
 
-            <nav>
-                <ul>
-                    <li><a href="landing.php">Home</a></li>
-                    <li><a href="cars.php">Cars</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                    
-                    <li>
-                        <?php if (isset($_SESSION['user'])): ?>
-                            <a href="<?php echo $_SESSION['user']['role'] === 'admin' ? 'admin-dashboard.php' : 'customer-dashboard.php'; ?>">
-                                Dashboard
-                            </a>
-                        <?php else: ?>
-                            <a href="loginPage.php">Login</a>
-                        <?php endif; ?>
-                    </li>
-                    <li><a href="#">🌐︎</a></li>
-                    <li class="basket-indicator">
-                        <a href="basket.php" id="basketLink">
-                            <i class="fas fa-shopping-basket"></i>
-                            <?php if ($basketCount > 0): ?>
-                                <span class="basket-count"><?php echo $basketCount; ?></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                    <?php if (isset($_SESSION['user'])): ?>
-                    <li>
-                        <a href="logout.php" style="color: #ff4444;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] body,
+        [data-theme="dark"] .basket-container,
+        [data-theme="dark"] .step-content,
+        [data-theme="dark"] .basket-items,
+        [data-theme="dark"] .basket-summary {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .basket-item,
+        [data-theme="dark"] .extra-option,
+        [data-theme="dark"] .extra-category,
+        [data-theme="dark"] .confirmation-details,
+        [data-theme="dark"] .card-form {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .basket-title {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] p,
+        [data-theme="dark"] .item-specs span,
+        [data-theme="dark"] .detail-label,
+        [data-theme="dark"] .extra-description {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select,
+        [data-theme="dark"] .form-group textarea {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Nav dropdown */
+        nav ul li.dropdown { position: relative; }
+        nav ul li.dropdown .dropdown-content {
+            display: none; position: absolute;
+            background-color: white; min-width: 120px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1001; border-radius: 5px; overflow: hidden;
+            top: 100%; left: 0;
+        }
+        nav ul li.dropdown:hover .dropdown-content { display: block; }
+        nav ul li.dropdown .dropdown-content a {
+            color: #333; padding: 10px 14px; display: block;
+            transition: background-color 0.3s; border-bottom: 1px solid #f1f1f1;
+            font-size: 0.9rem; text-decoration: none; font-weight: normal;
+        }
+        nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #f8f9fa; color: var(--vivid-indigo);
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content {
+            background-color: #333333; border-color: #404040;
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a {
+            color: #fff; background-color: #333333; border-bottom-color: #404040;
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #404040; color: var(--coral-red);
+        }
+
+        /* Accessibility / language dropdown */
+        .language-selector { position: relative; display: flex; align-items: center; }
+        .language-selector > a {
+            display: flex; align-items: center; justify-content: center;
+            padding: 8px; border-radius: 4px; transition: background-color 0.3s;
+            font-size: 18px; line-height: 0; color: white;
+        }
+        .language-selector:hover > a { background-color: rgba(255,255,255,0.1); }
+        .language-settings-dropdown {
+            display: none; position: absolute; right: 0; top: 100%;
+            min-width: 200px; background-color: white;
+            border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15); z-index: 1000;
+        }
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333; border-color: #404040; color: white;
+        }
+        .language-selector:hover .language-settings-dropdown { display: block; }
+        .settings-section {
+            padding: 12px 15px; border-bottom: 1px solid #e0e0e0;
+        }
+        [data-theme="dark"] .settings-section { border-color: #404040; }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section h4 {
+            margin: 0 0 8px 0; color: #333; font-size: 13px;
+            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+        }
+        [data-theme="dark"] .settings-section h4 { color: #fff; }
+        .theme-option, .language-option {
+            display: flex; align-items: center; padding: 8px 12px;
+            color: #333; text-decoration: none; transition: background-color 0.2s;
+            border-radius: 4px; margin-bottom: 2px; font-size: 14px;
+        }
+        [data-theme="dark"] .theme-option,
+        [data-theme="dark"] .language-option { color: #fff; }
+        .theme-option:hover, .language-option:hover { background-color: #f1f1f1; }
+        [data-theme="dark"] .theme-option:hover,
+        [data-theme="dark"] .language-option:hover { background-color: #404040; }
+        .theme-option i, .language-option i {
+            width: 18px; margin-right: 10px;
+            color: var(--vivid-indigo); font-size: 14px;
+        }
+        .font-controls { display: flex; align-items: center; gap: 6px; }
+        .font-btn {
+            background: var(--vivid-indigo); color: white; border: none;
+            width: 32px; height: 32px; border-radius: 4px; cursor: pointer;
+            font-size: 14px; font-weight: bold; transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .font-btn:hover { background: var(--dark-magenta); }
+        .font-size-display {
+            font-size: 14px; color: #333; min-width: 50px;
+            text-align: center; font-weight: 600;
+        }
+        [data-theme="dark"] .font-size-display { color: #fff; }
+        .active-indicator { margin-left: auto; color: var(--vivid-indigo); font-size: 12px; }
+
+        /* Basket indicator */
+        .basket-indicator { position: relative; display: inline-block; }
+        .basket-count {
+            position: absolute; top: -8px; right: -8px;
+            background: var(--coral-red); color: white; border-radius: 50%;
+            width: 20px; height: 20px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.7rem; font-weight: 600;
+        }
+
+    </style>
+</head>
+<body data-theme="<?php echo $darkMode; ?>">
+
+<header>
+    <div class="container header-content">
+        <div class="logo">
+            <img src="logo2.png" alt="Logo">
         </div>
-    </header>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="landing.php" class="dropbtn"><?php echo $home; ?> <i class="fas fa-caret-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="landing.php"><?php echo $home; ?></a>
+                        <a href="about.php">About</a>
+                    </div>
+                </li>
+                <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                <li><a href="contact.php"><?php echo $contact; ?></a></li>
+
+                <?php if (!isset($_SESSION['user'])): ?>
+                    <li><a href="loginPage.php"><?php echo $login; ?></a></li>
+                <?php else: ?>
+                    <li><a href="<?php echo $_SESSION['user']['role'] === 'admin' ? 'admin-dashboard.php' : 'customer-dashboard.php'; ?>"><?php echo $dashboard; ?></a></li>
+                    <li>
+                        <a href="logout.php" style="color: #ff7f50;">
+                            <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <li class="language-selector">
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                    <div class="language-settings-dropdown">
+                        <div class="settings-section">
+                            <h4><?php echo $themeText; ?></h4>
+                            <a href="#" class="theme-option" data-theme="light">
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                <?php if ($darkMode == 'light'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="theme-option" data-theme="dark">
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                <?php if ($darkMode == 'dark'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                        </div>
+                        <div class="settings-section">
+                            <h4><?php echo $fontSizeText; ?></h4>
+                            <div class="font-controls">
+                                <button class="font-btn" id="font-decrease">A-</button>
+                                <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                <button class="font-btn" id="font-increase">A+</button>
+                                <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
+                            </div>
+                        </div>
+                        <div class="settings-section">
+                            <h4><?php echo $languageText; ?></h4>
+                            <a href="#" class="language-option" data-lang="en">
+                                <i class="fas fa-language"></i> English
+                                <?php if ($language == 'en'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="es">
+                                <i class="fas fa-language"></i> Español
+                                <?php if ($language == 'es'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="fr">
+                                <i class="fas fa-language"></i> Français
+                                <?php if ($language == 'fr'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="de">
+                                <i class="fas fa-language"></i> Deutsch
+                                <?php if ($language == 'de'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="basket-indicator">
+                    <a href="basket.php" id="basketLink">
+                        <i class="fas fa-shopping-basket"></i>
+                        <?php if ($basketCount > 0): ?>
+                            <span class="basket-count"><?php echo $basketCount; ?></span>
+                        <?php endif; ?>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
 
     <div class="toast" id="toast"></div>
 
@@ -2004,6 +2244,57 @@ $grandTotal = $basketTotal + $extrasTotal;
             };
         });
 
+        // Accessibility controls
+        let currentFontSize = <?php echo $fontSize; ?>;
+
+        function updateFontSizeDisplay() {
+            const display = document.getElementById('font-size-display');
+            if (display) display.textContent = currentFontSize + '%';
+            document.documentElement.style.fontSize = currentFontSize + '%';
+            document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        }
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        function setLanguage(lang) {
+            document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateFontSizeDisplay();
+
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setTheme(this.getAttribute('data-theme'));
+                });
+            });
+
+            const decreaseBtn = document.getElementById('font-decrease');
+            const increaseBtn = document.getElementById('font-increase');
+            const resetBtn = document.getElementById('font-reset');
+            if (decreaseBtn) decreaseBtn.addEventListener('click', function() {
+                if (currentFontSize > 70) { currentFontSize -= 10; updateFontSizeDisplay(); }
+            });
+            if (increaseBtn) increaseBtn.addEventListener('click', function() {
+                if (currentFontSize < 150) { currentFontSize += 10; updateFontSizeDisplay(); }
+            });
+            if (resetBtn) resetBtn.addEventListener('click', function() {
+                currentFontSize = 100; updateFontSizeDisplay();
+            });
+
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setLanguage(this.getAttribute('data-lang'));
+                });
+            });
+        });
 
     </script>
 </body>
@@ -2013,6 +2304,4 @@ $grandTotal = $basketTotal + $extrasTotal;
 $conn->close();
 
 ?>
-
-
 
