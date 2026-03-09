@@ -206,47 +206,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: basket.php');
         exit;
         
-    } elseif (isset($_POST['update_rental_dates'])) {
-        $itemId = $_POST['item_id'];
-        $startDate = $_POST['start_date'];
-        $endDate = $_POST['end_date'];
-        
-       
-        $start = new DateTime($startDate);
-        $end = new DateTime($endDate);
-        $rentalDays = $start->diff($end)->days;
-        $rentalDays = $rentalDays > 0 ? $rentalDays : 1;
-        
-        
-        $carQuery = $conn->prepare("
-            SELECT c.price_per_day 
-            FROM basket_items bi 
-            JOIN cars c ON bi.car_id = c.car_id 
-            WHERE bi.item_id = ?
-        ");
-        $carQuery->bind_param("i", $itemId);
-        $carQuery->execute();
-        $carResult = $carQuery->get_result();
-        $carData = $carResult->fetch_assoc();
-        $pricePerDay = $carData['price_per_day'];
-        
-        $estimatedTotal = $pricePerDay * $rentalDays;
-        $depositAmount = $estimatedTotal * 0.2;
-        
-        
-        $updateQuery = $conn->prepare("
-            UPDATE basket_items 
-            SET start_date = ?, end_date = ?, rental_days = ?, estimated_total = ?, deposit_amount = ?
-            WHERE item_id = ?
-        ");
-        $updateQuery->bind_param("ssiddi", $startDate, $endDate, $rentalDays, $estimatedTotal, $depositAmount, $itemId);
-        $updateQuery->execute();
-        $updateQuery->close();
-        
-        $_SESSION['success'] = 'Rental dates updated';
-        header('Location: basket.php');
-        exit;
-        
     } elseif (isset($_POST['save_rental_details'])) {
         
         $pickupLocation = $_POST['pickup_location'];
@@ -516,50 +475,6 @@ $grandTotal = $basketTotal + $extrasTotal;
     <link rel="stylesheet" href="style.css">
     <style>
         /* Extras */
-                .extrasSummary {
-            background-color: #f8e8ed;
-            border: 2px solid #8B1538;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            margin-top: 30px;
-        }
-        
-        .summaryContent {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .summaryLeft {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 16px;
-        }
-        
-        .summaryLeft strong {
-            color: #333;
-            font-weight: 700;
-        }
-        
-        .summaryRight {
-            text-align: right;
-        }
-        
-        .summaryTotal {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 18px;
-        }
-        
-        .totalAmount {
-            font-size: 28px;
-            font-weight: bold;
-            color: #8B1538;
-        }
-
         .extras-grid {
             display: flex;
             flex-direction: column;
@@ -1292,28 +1207,16 @@ $grandTotal = $basketTotal + $extrasTotal;
             }
         }
         
-        @media (max-width: 768px) {
+        @media (max-width: 480px) {
             .basket-items,
             .basket-summary,
             .step-content {
                 padding: 20px;
             }
             
-            .summaryContent {
-            flex-direction: column;
-            gap: 15px;
-            align-items: flex-start;
-            }
-
-            .summaryLeft {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            }
-
-            .summaryRight {
-            text-align: left;
-            width: 100%;
+            .step-actions {
+                flex-direction: column;
+                gap: 15px;
             }
             
             .btn-back,
@@ -1444,28 +1347,8 @@ $grandTotal = $basketTotal + $extrasTotal;
                                     </div>
                                     
 
-                                    <div class="rental-dates-form" id="datesForm-<?php echo $item['item_id']; ?>">
-                                        <form method="POST" class="date-inputs">
-                                            <input type="hidden" name="update_rental_dates" value="1">
-                                            <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
-                                            <div>
-                                                <label>Start Date:</label>
-                                                <input type="date" name="start_date" value="<?php echo $item['start_date']; ?>" required>
-                                            </div>
-                                            <div>
-                                                <label>End Date:</label>
-                                                <input type="date" name="end_date" value="<?php echo $item['end_date']; ?>" required>
-                                            </div>
-                                            <button type="submit" class="update-btn">
-                                                <i class="fas fa-save"></i> Update Dates
-                                            </button>
-                                        </form>
-                                    </div>
                                 </div>
                                 <div class="item-actions">
-                                    <button type="button" class="update-btn" onclick="toggleDatesForm(<?php echo $item['item_id']; ?>)">
-                                        <i class="fas fa-calendar-alt"></i> Update Dates
-                                    </button>
                                     <form method="POST" style="display: inline;">
                                         <input type="hidden" name="remove_item" value="1">
                                         <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
@@ -1573,22 +1456,6 @@ $grandTotal = $basketTotal + $extrasTotal;
                             </div>
                         <?php endforeach; ?>
                     </div>
-            
-                    <div class="extrasSummary">
-                        <div class="summaryContent">
-                            <div class="summaryLeft">
-                                <strong>Selected Extras:</strong>
-                                <span id="extrasCount">0 items selected</span>
-                            </div>
-                            <div class="summaryRight">
-                                <div class="summaryTotal">
-                                    <span>Extras Total:</span>
-                                    <span class="totalAmount" id="extrasTotal">£0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     
                     <div class="step-actions">
                         <a href="basket.php?step=2" class="btn-back">Back to Rental Details</a>
@@ -1748,6 +1615,7 @@ $grandTotal = $basketTotal + $extrasTotal;
                             </div>
                             <div class="payment-name">Credit/Debit Card</div>
                         </div>
+                       
                     </div>
                     
                     <input type="hidden" name="payment_method" id="paymentMethod" required>
@@ -1878,12 +1746,12 @@ $grandTotal = $basketTotal + $extrasTotal;
                 <?php elseif (!empty($basketItems)): ?>
                 
                     <?php if ($currentStep == 1): ?>
-                        <a href="basket.php?step=2" class="checkout-btn">Continue to Rental Details</a>
+                        <a href="basket.php?step=2" class="checkout-btn">Proceed to Checkout</a>
                     <?php else: ?>
                         <a href="basket.php?step=1" class="checkout-btn">Back to Basket</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <button class="checkout-btn" disabled>Continue to Rental Details</button>
+                    <button class="checkout-btn" disabled>Proceed to Checkout</button>
                 <?php endif; ?>
             </div>
         </div>
@@ -1997,11 +1865,8 @@ $grandTotal = $basketTotal + $extrasTotal;
                             extraOption.classList.add('selected');
                             checkbox.checked = true;
                         }
-
-                        updateExtrasSummary();
                     }
                 });
-                updateExtrasSummary();
             }
             
             const cardNumberInput = document.getElementById('cardNumber');
@@ -2077,42 +1942,7 @@ $grandTotal = $basketTotal + $extrasTotal;
                     }
                 });
             }
-            
-            function updateExtrasSummary() {
-                const selectedCheckboxes = document.querySelectorAll('.extra-option input[type="checkbox"]:checked');
-                const count = selectedCheckboxes.length;
-                let total = 0;
-                
-                const rentalDays = <?php echo !empty($basketItems) ? $basketItems[0]['rental_days'] : 1; ?>;
-                
-                selectedCheckboxes.forEach(checkbox => {
-                    const extraOption = checkbox.closest('.extra-option');
-                    const priceText = extraOption.querySelector('.price-amount').textContent;
-                    const price = parseFloat(priceText.replace('£', ''));
-                    const unit = extraOption.getAttribute('data-unit');
 
-                    if (unit === 'per day') {
-                        total += (price * rentalDays);
-                    } else {
-                        total += price;
-                    }
-                });
-
-                const extrasCountElement = document.getElementById('extrasCount');
-                const extrasTotalElement = document.getElementById('extrasTotal');
-                
-                if (extrasCountElement) {
-                    extrasCountElement.textContent = 
-                        count === 0 ? '0 items selected' :
-                        count === 1 ? '1 item selected' :
-                        `${count} items selected`;
-                }
-                
-                if (extrasTotalElement) {
-                    extrasTotalElement.textContent = `£${total.toFixed(2)}`;
-                }
-            }                
-  
             const basketLink = document.getElementById('basketLink');
             if (basketLink) {
                 basketLink.addEventListener('click', function(e) {
@@ -2174,10 +2004,7 @@ $grandTotal = $basketTotal + $extrasTotal;
             };
         });
 
-        function toggleDatesForm(itemId) {
-            const form = document.getElementById('datesForm-' + itemId);
-            form.classList.toggle('show');
-        }
+
     </script>
 </body>
 </html>
@@ -2185,7 +2012,7 @@ $grandTotal = $basketTotal + $extrasTotal;
 
 $conn->close();
 
-
 ?>
+
 
 
