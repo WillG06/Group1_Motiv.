@@ -1604,7 +1604,7 @@ if ($language == 'es') {
                 <?php if (!empty($basketItems)): ?>
                 <div class="step-actions">
                     <span></span>
-                    <a href="basket.php?step=2" class="btn-next" style="text-decoration: none; display: inline-block;">Continue to Extras</a>
+                    <a href="basket.php?step=2" class="btn-next" style="text-decoration: none; display: inline-block;">Continue to Rental Details</a>
                 </div>
                 <?php endif; ?>
             </div>
@@ -2310,6 +2310,7 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
+
 
 
 
