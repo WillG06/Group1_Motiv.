@@ -1601,6 +1601,12 @@ if ($language == 'es') {
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
+                <?php if (!empty($basketItems)): ?>
+                <div class="step-actions">
+                    <span></span>
+                    <a href="basket.php?step=2" class="btn-next">Continue to Extras</a>
+                </div>
+                <?php endif; ?>
             </div>
 
             <div class="step-content <?php echo $currentStep == 2 ? 'active' : ''; ?>" id="step2">
@@ -2304,4 +2310,5 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
+
 
