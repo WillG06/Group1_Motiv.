@@ -1581,7 +1581,10 @@ if ($language == 'es') {
                                         <span><?php echo htmlspecialchars($item['city_name']); ?></span>
                                     </div>
                                     <div class="item-price">£<?php echo number_format($item['price_per_day'], 2); ?>/day</div>
-    
+                                    <div class="item-specs">
+                                        <span>Rental Days: <?php echo $item['rental_days']; ?></span>
+                                        <span>Total: £<?php echo number_format($item['estimated_total'], 2); ?></span>
+                                    </div>
                                     
 
                                 </div>
@@ -1962,28 +1965,21 @@ if ($language == 'es') {
                         <?php foreach ($basketItems as $item): ?>
                             <div class="summary-row">
                                 <span><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model']); ?></span>
-                                <span>£<?php echo number_format($item['estimated_total'], 2); ?></span>
+                                <span>£<?php echo $currentStep == 1 ? number_format($item['price_per_day'], 2) : number_format($item['estimated_total'], 2); ?></span>
                             </div>
-                            <?php if ($currentStep >= 2): ?>
-                                <div class="summary-row">
-                                    <span style="color:#666; font-size:0.9rem;">Rental Days</span>
-                                    <span style="color:#666; font-size:0.9rem;"><?php echo $item['rental_days']; ?> days</span>
-                                </div>
-                            <?php endif; ?>
                         <?php endforeach; ?>
                         
-                        <?php if ($currentStep >= 3): ?>
-                            <?php if ($extrasTotal > 0): ?>
-                                <div class="summary-row">
-                                    <span>Extras</span>
-                                    <span>£<?php echo number_format($extrasTotal, 2); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            <div class="summary-row total">
-                                <span>Total</span>
-                                <span>£<?php echo number_format($grandTotal, 2); ?></span>
+                        <?php if ($extrasTotal > 0): ?>
+                            <div class="summary-row">
+                                <span>Extras</span>
+                                <span>£<?php echo number_format($extrasTotal, 2); ?></span>
                             </div>
                         <?php endif; ?>
+                        
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>£<?php echo number_format($grandTotal, 2); ?></span>
+                        </div>
                     <?php else: ?>
                         <p>Your basket is empty</p>
                     <?php endif; ?>
@@ -2314,8 +2310,5 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
-
-
-
 
 
