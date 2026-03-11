@@ -214,6 +214,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pickupTime = $_POST['pickup_time'];
         $dropoffDate = $_POST['dropoff_date'];
         $dropoffTime = $_POST['dropoff_time'];
+
+        // Recalculate rental days and estimated total based on selected dates
+        $start = new DateTime($pickupDate);
+        $end = new DateTime($dropoffDate);
+        $rentalDays = $start->diff($end)->days;
+        $rentalDays = $rentalDays > 0 ? $rentalDays : 1;
+
+        // Update basket_items with new dates and recalculated totals
+        $updateQuery = $conn->prepare("
+            UPDATE basket_items bi
+            JOIN baskets b ON bi.basket_id = b.basket_id
+            JOIN cars c ON bi.car_id = c.car_id
+            SET bi.start_date = ?,
+                bi.end_date = ?,
+                bi.rental_days = ?,
+                bi.estimated_total = c.price_per_day * ?,
+                bi.deposit_amount = (c.price_per_day * ?) * 0.2
+            WHERE b.customer_id = ? AND b.status = 'active'
+        ");
+        $updateQuery->bind_param("ssiiid", $pickupDate, $dropoffDate, $rentalDays, $rentalDays, $rentalDays, $userId);
+        $updateQuery->execute();
+        $updateQuery->close();
         
         $_SESSION['rental_details'] = [
             'pickup_location' => $pickupLocation,
@@ -1965,12 +1987,7 @@ if ($language == 'es') {
                             </div>
                         <?php endforeach; ?>
                         
-                        <?php if ($currentStep == 1): ?>
-                            <div class="summary-row total">
-                                <span>Total</span>
-                                <span>£<?php echo number_format($basketItems[0]['price_per_day'], 2); ?></span>
-                            </div>
-                        <?php else: ?>
+                        <?php if ($currentStep > 1): ?>
                             <?php if ($extrasTotal > 0): ?>
                                 <div class="summary-row">
                                     <span>Extras</span>
@@ -2312,4 +2329,5 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
+
 
