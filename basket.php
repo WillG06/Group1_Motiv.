@@ -1581,10 +1581,7 @@ if ($language == 'es') {
                                         <span><?php echo htmlspecialchars($item['city_name']); ?></span>
                                     </div>
                                     <div class="item-price">£<?php echo number_format($item['price_per_day'], 2); ?>/day</div>
-                                    <div class="item-specs">
-                                        <span>Rental Days: <?php echo $item['rental_days']; ?></span>
-                                        <span>Total: £<?php echo number_format($item['estimated_total'], 2); ?></span>
-                                    </div>
+    
                                     
 
                                 </div>
@@ -2310,6 +2307,7 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
+
 
 
 
