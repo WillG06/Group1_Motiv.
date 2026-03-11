@@ -1965,7 +1965,12 @@ if ($language == 'es') {
                             </div>
                         <?php endforeach; ?>
                         
-                        <?php if ($currentStep > 1): ?>
+                        <?php if ($currentStep == 1): ?>
+                            <div class="summary-row total">
+                                <span>Total</span>
+                                <span>£<?php echo number_format($basketItems[0]['price_per_day'], 2); ?></span>
+                            </div>
+                        <?php else: ?>
                             <?php if ($extrasTotal > 0): ?>
                                 <div class="summary-row">
                                     <span>Extras</span>
@@ -2307,5 +2312,4 @@ if ($language == 'es') {
 $conn->close();
 
 ?>
-
 
