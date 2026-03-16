@@ -239,121 +239,43 @@ function isCarInFavorites($conn, $customer_id, $car_id) {
     return $is_favorite;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'toggle_favorite') {
-        header('Content-Type: application/json');
-        
-        if (!$is_logged_in) {
-            echo json_encode(['success' => false, 'message' => 'Please login to save favorites']);
-            exit;
-        }
-        
-        $car_id = intval($_POST['car_id']);
-        
-        try {
-            $is_favorite = isCarInFavorites($conn, $customer_id, $car_id);
-            
-            if ($is_favorite) {
-                $stmt = $conn->prepare("DELETE FROM favorites WHERE customer_id = ? AND car_id = ?");
-                $stmt->bind_param("ii", $customer_id, $car_id);
-                $result = $stmt->execute();
-                $stmt->close();
-                
-                echo json_encode(['success' => true, 'is_favorite' => false, 'message' => 'Removed from favorites']);
-            } else {
-                $stmt = $conn->prepare("INSERT INTO favorites (customer_id, car_id) VALUES (?, ?)");
-                $stmt->bind_param("ii", $customer_id, $car_id);
-                $result = $stmt->execute();
-                $stmt->close();
-                
-                echo json_encode(['success' => true, 'is_favorite' => true, 'message' => 'Added to favorites']);
-            }
-        } catch (Exception $e) {
-            error_log("Favorite error: " . $e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Error saving favorite']);
-        }
+// Handle favorite toggle via AJAX
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_favorite') {
+    header('Content-Type: application/json');
+    
+    if (!$is_logged_in) {
+        echo json_encode(['success' => false, 'message' => 'Please login to save favorites']);
         exit;
     }
+    
+    $car_id = intval($_POST['car_id']);
+    
+    try {
+        $is_favorite = isCarInFavorites($conn, $customer_id, $car_id);
+        
+        if ($is_favorite) {
+            $stmt = $conn->prepare("DELETE FROM favorites WHERE customer_id = ? AND car_id = ?");
+            $stmt->bind_param("ii", $customer_id, $car_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            echo json_encode(['success' => true, 'is_favorite' => false, 'message' => 'Removed from favorites']);
+        } else {
+            $stmt = $conn->prepare("INSERT INTO favorites (customer_id, car_id) VALUES (?, ?)");
+            $stmt->bind_param("ii", $customer_id, $car_id);
+            $stmt->execute();
+            $stmt->close();
+            
+            echo json_encode(['success' => true, 'is_favorite' => true, 'message' => 'Added to favorites']);
+        }
+    } catch (Exception $e) {
+        error_log("Favorite error: " . $e->getMessage());
+        echo json_encode(['success' => false, 'message' => 'Error saving favorite']);
+    }
+    exit;
 }
 
-$searchCriteria = [
-    'pickup_location' => $_SESSION['search_criteria']['pickup_location'] ?? '',
-    'pickup_date' => $_SESSION['search_criteria']['pickup_date'] ?? date('Y-m-d'),
-    'pickup_time' => $_SESSION['search_criteria']['pickup_time'] ?? '10:00',
-    'dropoff_date' => $_SESSION['search_criteria']['dropoff_date'] ?? date('Y-m-d', strtotime('+3 days')),
-    'dropoff_time' => $_SESSION['search_criteria']['dropoff_time'] ?? '10:00'
-];
-
-$selectedCityId = $searchCriteria['pickup_location'] ?? '';
-
-$selectedCityName = '';
-if (!empty($selectedCityId)) {
-    $cityNameQuery = $conn->prepare("SELECT city_name FROM cities WHERE city_id = ?");
-    $cityNameQuery->bind_param("i", $selectedCityId);
-    $cityNameQuery->execute();
-    $cityResult = $cityNameQuery->get_result();
-    $cityData = $cityResult->fetch_assoc();
-    $selectedCityName = $cityData['city_name'] ?? '';
-    $cityNameQuery->close();
-}
-
-$carsQueryString = "
-    SELECT c.car_id, c.model, c.year, c.price_per_day, c.deposit_required, 
-           c.description, c.image_url,
-           mk.make_name, ct.type_name, cs.status_name, ci.city_name,
-           ci.city_id, cs.status_id
-    FROM cars c
-    JOIN makes mk ON c.make_id = mk.make_id
-    JOIN car_types ct ON c.type_id = ct.type_id
-    JOIN car_status cs ON c.status_id = cs.status_id
-    JOIN cities ci ON c.city_id = ci.city_id
-    WHERE 1=1
-";
-
-if (!empty($selectedCityId)) {
-    $carsQueryString .= " AND c.city_id = ?";
-}
-
-$carsQueryString .= " ORDER BY cs.status_id ASC, c.created_at DESC";
-
-if (!empty($selectedCityId)) {
-    $carsQuery = $conn->prepare($carsQueryString);
-    $carsQuery->bind_param("i", $selectedCityId);
-    $carsQuery->execute();
-    $carsResult = $carsQuery->get_result();
-} else {
-    $carsQuery = $conn->query($carsQueryString);
-    $carsResult = $carsQuery;
-}
-
-$cars = [];
-while ($car = $carsResult->fetch_assoc()) {
-    $cars[] = $car;
-}
-
-if (!empty($selectedCityId) && isset($carsQuery)) {
-    $carsQuery->close();
-}
-
-$carTypes = [];
-$typesQuery = $conn->query("SELECT DISTINCT type_name FROM car_types ORDER BY type_name");
-while ($type = $typesQuery->fetch_assoc()) {
-    $carTypes[] = $type['type_name'];
-}
-
-$cities = [];
-$cityQuery = $conn->query("SELECT city_id, city_name FROM cities ORDER BY city_name");
-while ($city = $cityQuery->fetch_assoc()) {
-    $cities[] = $city;
-}
-
-// Build city data array for JavaScript
-$cityData = [];
-$cityQuery = $conn->query("SELECT city_id, city_name FROM cities");
-while ($city = $cityQuery->fetch_assoc()) {
-    $cityData[$city['city_id']] = $city['city_name'];
-}
-
+// Handle adding to basket - FIXED to use 1-day rental
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     if (!isset($_SESSION['user'])) {
         $_SESSION['error_message'] = 'Please login to add cars to your basket';
@@ -365,7 +287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     $userId = $_SESSION['user']['id'];
     
     try {
-        $carAvailableQuery = $conn->prepare("SELECT status_id FROM cars WHERE car_id = ?");
+        // Check if car exists and is available
+        $carAvailableQuery = $conn->prepare("SELECT status_id, price_per_day, deposit_required FROM cars WHERE car_id = ?");
         $carAvailableQuery->bind_param("i", $carId);
         $carAvailableQuery->execute();
         $availableResult = $carAvailableQuery->get_result();
@@ -376,15 +299,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
             exit;
         }
 
-        $carStatus = $availableResult->fetch_assoc();
+        $carData = $availableResult->fetch_assoc();
         $carAvailableQuery->close();
 
-        if ($carStatus['status_id'] != 1) {
+        if ($carData['status_id'] != 1) {
             $_SESSION['error_message'] = 'This car is no longer available for booking.';
             header('Location: cars.php');
             exit;
         }
         
+        // Get or create active basket
         $basketQuery = $conn->prepare("SELECT basket_id FROM baskets WHERE customer_id = ? AND status = 'active'");
         $basketQuery->bind_param("i", $userId);
         $basketQuery->execute();
@@ -402,6 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
         }
         $basketQuery->close();
         
+        // Check if car already in basket
         $checkItemQuery = $conn->prepare("SELECT item_id FROM basket_items WHERE basket_id = ? AND car_id = ?");
         $checkItemQuery->bind_param("ii", $basketId, $carId);
         $checkItemQuery->execute();
@@ -414,45 +339,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
         }
         $checkItemQuery->close();
         
-        $startDate = $searchCriteria['pickup_date'];
-        $endDate = $searchCriteria['dropoff_date'];
-        
-        if (empty($startDate) || !strtotime($startDate)) {
-            $startDate = date('Y-m-d');
-        }
-        if (empty($endDate) || !strtotime($endDate)) {
-            $endDate = date('Y-m-d', strtotime('+3 days'));
-        }
-        
-        if (strtotime($endDate) <= strtotime($startDate)) {
-            $endDate = date('Y-m-d', strtotime($startDate . ' +3 days'));
-        }
-        
-        $carDetailsQuery = $conn->prepare("
-            SELECT price_per_day, deposit_required 
-            FROM cars 
-            WHERE car_id = ?
-        ");
-        $carDetailsQuery->bind_param("i", $carId);
-        $carDetailsQuery->execute();
-        $carDetailsResult = $carDetailsQuery->get_result();
-        
-        if ($carDetailsResult->num_rows === 0) {
-            throw new Exception('Car not found');
-        }
-        
-        $carData = $carDetailsResult->fetch_assoc();
-        $carDetailsQuery->close();
-        
-        $pricePerDay = floatval($carData['price_per_day']);
+        // FORCE 1-DAY RENTAL (today to tomorrow)
+        $startDate = date('Y-m-d');
+        $endDate = date('Y-m-d', strtotime('+1 day'));
+        $estimatedTotal = $carData['price_per_day'] * 1; // 1 day
         $depositAmount = floatval($carData['deposit_required'] ?? 0);
         
-        $startDateTime = new DateTime($startDate);
-        $endDateTime = new DateTime($endDate);
-        $rentalDays = $endDateTime->diff($startDateTime)->days;
-        $rentalDays = max(1, $rentalDays);
-        $estimatedTotal = $pricePerDay * $rentalDays;
-        
+        // Insert into basket - FIXED: removed rental_days as it's a generated column
         $insertItemQuery = $conn->prepare("
             INSERT INTO basket_items (
                 basket_id, 
@@ -491,6 +384,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     exit;
 }
 
+// Get search criteria from session
+$searchCriteria = [
+    'pickup_location' => $_SESSION['search_criteria']['pickup_location'] ?? '',
+    'pickup_date' => $_SESSION['search_criteria']['pickup_date'] ?? date('Y-m-d'),
+    'pickup_time' => $_SESSION['search_criteria']['pickup_time'] ?? '10:00',
+    'dropoff_date' => $_SESSION['search_criteria']['dropoff_date'] ?? date('Y-m-d', strtotime('+3 days')),
+    'dropoff_time' => $_SESSION['search_criteria']['dropoff_time'] ?? '10:00'
+];
+
+$selectedCityId = $searchCriteria['pickup_location'] ?? '';
+
+$selectedCityName = '';
+if (!empty($selectedCityId)) {
+    $cityNameQuery = $conn->prepare("SELECT city_name FROM cities WHERE city_id = ?");
+    $cityNameQuery->bind_param("i", $selectedCityId);
+    $cityNameQuery->execute();
+    $cityResult = $cityNameQuery->get_result();
+    $cityData = $cityResult->fetch_assoc();
+    $selectedCityName = $cityData['city_name'] ?? '';
+    $cityNameQuery->close();
+}
+
+// Build cars query
+$carsQueryString = "
+    SELECT c.car_id, c.model, c.year, c.price_per_day, c.deposit_required, 
+           c.description, c.image_url,
+           mk.make_name, ct.type_name, cs.status_name, ci.city_name,
+           ci.city_id, cs.status_id
+    FROM cars c
+    JOIN makes mk ON c.make_id = mk.make_id
+    JOIN car_types ct ON c.type_id = ct.type_id
+    JOIN car_status cs ON c.status_id = cs.status_id
+    JOIN cities ci ON c.city_id = ci.city_id
+    WHERE 1=1
+";
+
+if (!empty($selectedCityId)) {
+    $carsQueryString .= " AND c.city_id = ?";
+}
+
+$carsQueryString .= " ORDER BY cs.status_id ASC, c.created_at DESC";
+
+if (!empty($selectedCityId)) {
+    $carsQuery = $conn->prepare($carsQueryString);
+    $carsQuery->bind_param("i", $selectedCityId);
+    $carsQuery->execute();
+    $carsResult = $carsQuery->get_result();
+} else {
+    $carsQuery = $conn->query($carsQueryString);
+    $carsResult = $carsQuery;
+}
+
+$cars = [];
+while ($car = $carsResult->fetch_assoc()) {
+    $cars[] = $car;
+}
+
+if (!empty($selectedCityId) && isset($carsQuery)) {
+    $carsQuery->close();
+}
+
+// Get car types for filters
+$carTypes = [];
+$typesQuery = $conn->query("SELECT DISTINCT type_name FROM car_types ORDER BY type_name");
+while ($type = $typesQuery->fetch_assoc()) {
+    $carTypes[] = $type['type_name'];
+}
+
+// Get cities for filters
+$cities = [];
+$cityQuery = $conn->query("SELECT city_id, city_name FROM cities ORDER BY city_name");
+while ($city = $cityQuery->fetch_assoc()) {
+    $cities[] = $city;
+}
+
+// Build city data array for JavaScript
+$cityData = [];
+$cityQuery = $conn->query("SELECT city_id, city_name FROM cities");
+while ($city = $cityQuery->fetch_assoc()) {
+    $cityData[$city['city_id']] = $city['city_name'];
+}
+
+// Get basket count for header
 $basketCount = 0;
 if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     $userId = $_SESSION['user']['id'];
@@ -889,58 +865,40 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         }
         
         .no-cars-message {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: 60px 40px;
-    background: var(--card-bg);
-    border-radius: 12px;
-    box-shadow: 0 3px 10px var(--shadow-color);
-    border: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-}
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 40px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+        }
 
-.no-cars-message i {
-    font-size: 64px;
-    color: var(--vivid-indigo);
-    margin-bottom: 20px;
-    opacity: 0.5;
-}
+        .no-cars-message i {
+            font-size: 64px;
+            color: var(--vivid-indigo);
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
 
-.no-cars-message h3 {
-    color: var(--vivid-indigo);
-    margin-bottom: 15px;
-    font-size: 1.8rem;
-}
+        .no-cars-message h3 {
+            color: var(--vivid-indigo);
+            margin-bottom: 15px;
+            font-size: 1.8rem;
+        }
 
-.no-cars-message p {
-    margin-bottom: 20px;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    max-width: 500px;
-    line-height: 1.6;
-}
-
-[data-theme="dark"] .no-cars-message {
-    background: var(--card-bg);
-    border-color: var(--border-color);
-}
-
-[data-theme="dark"] .no-cars-message h3 {
-    color: #ffffff;
-}
-
-[data-theme="dark"] .no-cars-message p {
-    color: #cccccc;
-}
-
-[data-theme="dark"] .no-cars-message i {
-    color: #ffffff;
-    opacity: 0.7;
-}
+        .no-cars-message p {
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 500px;
+            line-height: 1.6;
+        }
 
         [data-theme="dark"] .no-cars-message {
             background: var(--card-bg);
@@ -1679,7 +1637,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 </li>
 
                 <li class="basket-indicator">
-                    <a href="basket.php">
+                    <a href="basket.php" id="basketLink">
                         <i class="fas fa-shopping-basket"></i>
                         <?php if ($basketCount > 0): ?>
                             <span class="basket-count"><?php echo $basketCount; ?></span>
@@ -1844,9 +1802,13 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                                 <div class="car-cta">
                                     <button class="view-details-btn" data-id="<?php echo $car['car_id']; ?>"><?php echo $viewDetailsText; ?></button>
                                     <?php if ($car['status_id'] == 1): ?>
-                                        <button class="book-now-btn" data-id="<?php echo $car['car_id']; ?>" data-name="<?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?>"><?php echo $bookNowText; ?></button>
+                                        <form method="POST" action="cars.php" style="display: inline; width: 100%;">
+                                            <input type="hidden" name="add_to_basket" value="1">
+                                            <input type="hidden" name="car_id" value="<?php echo $car['car_id']; ?>">
+                                            <button type="submit" class="book-now-btn" style="width: 100%;"><?php echo $bookNowText; ?></button>
+                                        </form>
                                     <?php else: ?>
-                                        <button class="book-now-btn" disabled style="background: #ccc; cursor: not-allowed;"><?php echo $unavailableText; ?></button>
+                                        <button class="book-now-btn" disabled style="background: #ccc; cursor: not-allowed; width: 100%;"><?php echo $unavailableText; ?></button>
                                     <?php endif; ?>
                                 </div>
                             </div>
@@ -1895,7 +1857,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                         Car description goes here...
                     </div>
                     <div class="car-detail-price" id="modalCarPrice">£0<?php echo $dayText; ?></div>
-                    <button class="btn-primary" id="modalAddToBasket"><?php echo $addToBasketText; ?></button>
+                    <form method="POST" action="cars.php" id="modalAddToBasketForm">
+                        <input type="hidden" name="add_to_basket" value="1">
+                        <input type="hidden" name="car_id" id="modalCarIdInput" value="">
+                        <button type="submit" class="btn-primary" id="modalAddToBasketBtn"><?php echo $addToBasketText; ?></button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -1988,34 +1954,34 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     }
 
     function checkForVisibleCars() {
-    const carCards = document.querySelectorAll('.car-card');
-    let visibleCount = 0;
-    
-    carCards.forEach(card => {
-        if (card.style.display !== 'none') {
-            visibleCount++;
+        const carCards = document.querySelectorAll('.car-card');
+        let visibleCount = 0;
+        
+        carCards.forEach(card => {
+            if (card.style.display !== 'none') {
+                visibleCount++;
+            }
+        });
+        
+        let noCarsMessage = document.querySelector('.no-cars-message');
+        
+        // If there are no visible cars and we don't have a no-cars message
+        if (visibleCount === 0 && !noCarsMessage) {
+            // Create and show the no vehicles message without the button
+            noCarsMessage = document.createElement('div');
+            noCarsMessage.className = 'no-cars-message';
+            noCarsMessage.innerHTML = `
+                <i class="fas fa-car"></i>
+                <h3>${translations.noCarsMessage2}</h3>
+                <p>${translations.noCarsSuggestion3}</p>
+            `;
+            document.getElementById('carsGrid').appendChild(noCarsMessage);
         }
-    });
-    
-    let noCarsMessage = document.querySelector('.no-cars-message');
-    
-    // If there are no visible cars and we don't have a no-cars message
-    if (visibleCount === 0 && !noCarsMessage) {
-        // Create and show the no vehicles message without the button
-        noCarsMessage = document.createElement('div');
-        noCarsMessage.className = 'no-cars-message';
-        noCarsMessage.innerHTML = `
-            <i class="fas fa-car"></i>
-            <h3>${translations.noCarsMessage2}</h3>
-            <p>${translations.noCarsSuggestion3}</p>
-        `;
-        document.getElementById('carsGrid').appendChild(noCarsMessage);
+        // If there are visible cars and we have a no-cars message, remove it
+        else if (visibleCount > 0 && noCarsMessage) {
+            noCarsMessage.remove();
+        }
     }
-    // If there are visible cars and we have a no-cars message, remove it
-    else if (visibleCount > 0 && noCarsMessage) {
-        noCarsMessage.remove();
-    }
-}
 
     function applyFilters() {
         const selectedTypes = getSelectedValues('type');
@@ -2112,29 +2078,22 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             document.getElementById('modalCarDescription').textContent = carDescription;
             document.getElementById('modalCarPrice').textContent = carPrice;
             document.getElementById('modalCarId').value = carId;
+            document.getElementById('modalCarIdInput').value = carId;
             
             const bookedBadge = document.getElementById('modalBookedBadge');
+            const modalAddToBasketBtn = document.getElementById('modalAddToBasketBtn');
+            
             if (isAvailable) {
                 bookedBadge.style.display = 'none';
-                document.getElementById('modalAddToBasket').disabled = false;
-                document.getElementById('modalAddToBasket').textContent = '<?php echo $addToBasketText; ?>';
+                modalAddToBasketBtn.disabled = false;
+                modalAddToBasketBtn.textContent = '<?php echo $addToBasketText; ?>';
             } else {
                 bookedBadge.style.display = 'block';
-                document.getElementById('modalAddToBasket').disabled = true;
-                document.getElementById('modalAddToBasket').textContent = '<?php echo $unavailableText; ?>';
+                modalAddToBasketBtn.disabled = true;
+                modalAddToBasketBtn.textContent = '<?php echo $unavailableText; ?>';
             }
             
             carDetailModal.style.display = 'flex';
-        }
-    }
-
-    function addToBasketFromModal() {
-        const carId = document.getElementById('modalCarId').value;
-        const carName = document.getElementById('modalCarName').textContent;
-        
-        if (carId && carName) {
-            addToBasket(carId, carName);
-            carDetailModal.style.display = 'none';
         }
     }
 
@@ -2213,56 +2172,26 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             return;
         }
         
-        addToBasket(carId, carName, button);
-    }
-
-    async function addToBasket(carId, carName, button = null) {
-        if (!currentUser) {
-            showTemporaryMessage('Please login to add cars to basket', 'error');
-            setTimeout(() => {
-                window.location.href = 'loginPage.php';
-            }, 1500);
-            return;
-        }
+        // Create and submit a form for the basket button
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = 'cars.php';
+        form.style.display = 'none';
         
-        const carCard = document.querySelector(`.car-card[data-id="${carId}"]`);
-        if (carCard && carCard.getAttribute('data-status') !== '1') {
-            showTemporaryMessage('This car is no longer available for booking', 'error');
-            return;
-        }
+        const addToBasketInput = document.createElement('input');
+        addToBasketInput.type = 'hidden';
+        addToBasketInput.name = 'add_to_basket';
+        addToBasketInput.value = '1';
         
-        if (button) {
-            const originalHTML = button.innerHTML;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            button.disabled = true;
-        }
+        const carIdInput = document.createElement('input');
+        carIdInput.type = 'hidden';
+        carIdInput.name = 'car_id';
+        carIdInput.value = carId;
         
-        try {
-            const formData = new FormData();
-            formData.append('add_to_basket', '1');
-            formData.append('car_id', carId);
-            
-            const response = await fetch('cars.php', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (response.redirected) {
-                window.location.href = response.url;
-                return;
-            }
-            
-            window.location.reload();
-            
-        } catch (error) {
-            console.error('Error adding to basket:', error);
-            showTemporaryMessage('Error adding car to basket', 'error');
-            
-            if (button) {
-                button.innerHTML = button.classList.contains('basket-btn') ? '<i class="fas fa-shopping-basket"></i>' : 'Book Now';
-                button.disabled = false;
-            }
-        }
+        form.appendChild(addToBasketInput);
+        form.appendChild(carIdInput);
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function showTemporaryMessage(message, type) {
@@ -2354,11 +2283,9 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             button.addEventListener('click', handleFavoriteClick);
         });
         
-        document.querySelectorAll('.basket-btn, .book-now-btn').forEach(button => {
+        document.querySelectorAll('.basket-btn').forEach(button => {
             button.addEventListener('click', handleBasketClick);
         });
-        
-        document.getElementById('modalAddToBasket').addEventListener('click', addToBasketFromModal);
         
         document.getElementById('clear-search')?.addEventListener('click', function() {
             fetch('clear_search.php')
@@ -2386,6 +2313,3 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 <?php
 $conn->close();
 ?>
-
-
-
