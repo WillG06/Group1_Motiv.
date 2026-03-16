@@ -817,32 +817,35 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             color: var(--text-secondary);
             margin-bottom: 15px;
             line-height: 1.5;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
         
-        /* New styles for buttons in one line */
+        /* Updated button styles - centered and full width */
         .car-cta {
             display: flex;
-            gap: 8px;
-            margin-top: 10px;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
         }
         
         .view-details-btn {
             flex: 1;
-            padding: 8px 12px;
+            padding: 12px 0;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
             border: 1px solid var(--cobalt-blue);
             background: transparent;
             color: var(--cobalt-blue);
-            white-space: nowrap;
+            text-decoration: none;
+            display: inline-block;
         }
         
         .view-details-btn:hover {
@@ -851,16 +854,18 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         
         .book-now-btn {
             flex: 1;
-            padding: 8px 12px;
+            padding: 12px 0;
             border-radius: 6px;
             font-weight: 600;
-            font-size: 0.9rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: all 0.3s;
+            text-align: center;
             border: none;
             background: var(--cobalt-blue);
             color: white;
-            white-space: nowrap;
+            display: inline-block;
+            width: 100%;
         }
         
         .book-now-btn:hover {
@@ -870,6 +875,19 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         .book-now-btn:disabled {
             background: #cccccc;
             cursor: not-allowed;
+        }
+        
+        /* Ensure the form doesn't affect the layout */
+        .car-cta form {
+            flex: 1;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        
+        .car-cta form .book-now-btn {
+            width: 100%;
         }
         
         .no-cars-message {
@@ -1810,7 +1828,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                                 <div class="car-cta">
                                     <button class="view-details-btn" data-id="<?php echo $car['car_id']; ?>"><?php echo $viewDetailsText; ?></button>
                                     <?php if ($car['status_id'] == 1): ?>
-                                        <form method="POST" action="cars.php" style="display: inline; width: 100%;">
+                                        <form method="POST" action="cars.php">
                                             <input type="hidden" name="add_to_basket" value="1">
                                             <input type="hidden" name="car_id" value="<?php echo $car['car_id']; ?>">
                                             <button type="submit" class="book-now-btn"><?php echo $bookNowText; ?></button>
