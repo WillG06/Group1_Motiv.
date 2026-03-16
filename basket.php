@@ -1390,7 +1390,7 @@ if (isset($_SESSION['error'])) {
             --vivid-indigo: #8C0050;
             --dark-magenta: #1800AD;
             --cobalt-blue: #004AAD;
-            --coral-red: #FF7F50;
+            --coral-red: #FF0000;
         }
 
         [data-theme="dark"] {
