@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 session_start();
 require_once 'db.php';
 
@@ -25,22 +29,16 @@ $basketCount = 0;
 $selectedExtras = [];
 
 $extras = [
-
     ['extra_id' => 1, 'name' => 'Personal Accident Insurance', 'price' => 12.50, 'description' => 'Covers medical costs for you and your passengers', 'category' => 'Protection Products', 'unit' => 'per day'],
     ['extra_id' => 2, 'name' => 'Theft Protection', 'price' => 10.00, 'description' => 'Reduces your liability if the vehicle is stolen', 'category' => 'Protection Products', 'unit' => 'per day'],
-    
     ['extra_id' => 3, 'name' => 'Additional Driver', 'price' => 10.00, 'description' => 'Add an extra authorised driver to your rental', 'category' => 'Additional Services', 'unit' => 'per day'],
     ['extra_id' => 4, 'name' => 'Young Driver Fee', 'price' => 15.00, 'description' => 'Required surcharge for drivers aged 21-24', 'category' => 'Additional Services', 'unit' => 'per day'],
-
     ['extra_id' => 5, 'name' => 'Child Seat', 'price' => 7.50, 'description' => 'Suitable for children 9-18kg (Age 9 months to 4 years)', 'category' => 'Equipment & Services', 'unit' => 'per day'],
     ['extra_id' => 6, 'name' => 'Booster Seat', 'price' => 7.50, 'description' => 'Suitable for children 15-36kg (Age 4 to 11 years)', 'category' => 'Equipment & Services', 'unit' => 'per day'],
-
     ['extra_id' => 7, 'name' => 'GPS Navigation', 'price' => 8.00, 'description' => 'Satellite navigation system', 'category' => 'Equipment & Services', 'unit' => 'per day'],
     ['extra_id' => 8, 'name' => 'Pre-paid Fuel', 'price' => 60.00, 'description' => 'Purchase a full tank and return empty', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
-
     ['extra_id' => 9, 'name' => 'One-Way Rental Fee', 'price' => 45.00, 'description' => 'Drop off at a different location', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
     ['extra_id' => 10, 'name' => 'Out-of-Hours Service', 'price' => 25.00, 'description' => 'Collection or return outside standard opening hours', 'category' => 'Equipment & Services', 'unit' => 'one-time'],
-
     ['extra_id' => 11, 'name' => 'Winter Tyres', 'price' => 12.00, 'description' => 'Winter tyres for snowy conditions', 'category' => 'Equipment & Services', 'unit' => 'per day'],
     ['extra_id' => 12, 'name' => 'Roadside Assistance', 'price' => 7.00, 'description' => '24/7 roadside assistance', 'category' => 'Equipment & Services', 'unit' => 'per day'],
 ];
@@ -54,6 +52,7 @@ foreach ($extras as $extra) {
     $extrasByCategory[$category][] = $extra;
 }
 
+// Handle messages
 if (isset($_SESSION['error'])) {
     $errorMessage = $_SESSION['error'];
     unset($_SESSION['error']);
@@ -64,92 +63,18 @@ if (isset($_SESSION['success'])) {
     unset($_SESSION['success']);
 }
 
+// Get selected extras from session
 if (isset($_SESSION['selected_extras'])) {
     $selectedExtras = $_SESSION['selected_extras'];
 }
 
-if (isset($_POST['add_to_basket']) && isset($_POST['car_id'])) {
-    $carId = $_POST['car_id'];
-    $startDate = $_POST['start_date'] ?? date('Y-m-d');
-    $endDate = $_POST['end_date'] ?? date('Y-m-d', strtotime('+1 day'));
-    
-    $start = new DateTime($startDate);
-    $end = new DateTime($endDate);
-    $rentalDays = $start->diff($end)->days;
-    $rentalDays = $rentalDays > 0 ? $rentalDays : 1;
-    
-    $carQuery = $conn->prepare("SELECT price_per_day, status_id FROM cars WHERE car_id = ?");
-    $carQuery->bind_param("i", $carId);
-    $carQuery->execute();
-    $carResult = $carQuery->get_result();
-    
-    if ($carResult->num_rows === 0) {
-        echo json_encode(['success' => false, 'message' => 'Car not found!']);
-        exit;
-    }
-    
-    $carData = $carResult->fetch_assoc();
-    $pricePerDay = $carData['price_per_day'];
-    
-    if ($carData['status_id'] != 1) {
-        echo json_encode(['success' => false, 'message' => 'Car is not available for rental!']);
-        exit;
-    }
-    
-    $estimatedTotal = $pricePerDay * $rentalDays;
-    $depositAmount = $estimatedTotal * 0.2; // 20% deposit
-    
-    $basketQuery = $conn->prepare("SELECT basket_id FROM baskets WHERE customer_id = ? AND status = 'active'");
-    $basketQuery->bind_param("i", $userId);
-    $basketQuery->execute();
-    $basketResult = $basketQuery->get_result();
-    
-    if ($basketResult->num_rows > 0) {
-        $basketData = $basketResult->fetch_assoc();
-        $basketId = $basketData['basket_id'];
-    } else {
-        $createBasketQuery = $conn->prepare("INSERT INTO baskets (customer_id, status) VALUES (?, 'active')");
-        $createBasketQuery->bind_param("i", $userId);
-        $createBasketQuery->execute();
-        $basketId = $createBasketQuery->insert_id;
-        $createBasketQuery->close();
-    }
-    $basketQuery->close();
-    
-    $checkItemQuery = $conn->prepare("SELECT item_id FROM basket_items WHERE basket_id = ? AND car_id = ?");
-    $checkItemQuery->bind_param("ii", $basketId, $carId);
-    $checkItemQuery->execute();
-    $checkItemResult = $checkItemQuery->get_result();
-    
-    if ($checkItemResult->num_rows > 0) {
-        echo json_encode(['success' => false, 'message' => 'Car is already in your basket!']);
-        exit;
-    }
-    $checkItemQuery->close();
-    
-    $addItemQuery = $conn->prepare("
-        INSERT INTO basket_items (basket_id, car_id, start_date, end_date, rental_days, deposit_amount, estimated_total) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    ");
-    $addItemQuery->bind_param("iissidd", $basketId, $carId, $startDate, $endDate, $rentalDays, $depositAmount, $estimatedTotal);
-    
-    if ($addItemQuery->execute()) {
-        echo json_encode(['success' => true, 'message' => 'Car added to basket!']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Failed to add car to basket!']);
-    }
-    
-    $addItemQuery->close();
-    exit;
-}
-
+// Get basket items
 if ($userRole === 'customer') {
-    
     $basketStatus = ($currentStep == 'success') ? 'completed' : 'active';
     
     $basketQuery = $conn->prepare("
         SELECT b.basket_id, bi.item_id, bi.car_id, bi.start_date, bi.end_date, 
-               bi.deposit_amount, bi.estimated_total, bi.rental_days,
+               bi.deposit_amount, bi.estimated_total,
                c.car_id, c.model, c.year, c.price_per_day, c.image_url,
                mk.make_name, ct.type_name, cs.status_name,
                ci.city_name
@@ -164,12 +89,23 @@ if ($userRole === 'customer') {
         ORDER BY b.basket_id DESC
         LIMIT 1
     ");
+    
+    if (!$basketQuery) {
+        die("Error preparing basket query: " . $conn->error);
+    }
+    
     $basketQuery->bind_param("is", $userId, $basketStatus);
     $basketQuery->execute();
     $basketResult = $basketQuery->get_result();
     
     while ($item = $basketResult->fetch_assoc()) {
         if ($item['car_id']) {
+            // Calculate rental days from dates
+            $start = new DateTime($item['start_date']);
+            $end = new DateTime($item['end_date']);
+            $item['rental_days'] = $start->diff($end)->days;
+            if ($item['rental_days'] < 1) $item['rental_days'] = 1;
+            
             $basketItems[] = $item;
             $basketTotal += $item['estimated_total'];
             $basketCount++;
@@ -178,84 +114,68 @@ if ($userRole === 'customer') {
     $basketQuery->close();
     
     if (empty($basketItems) && $currentStep == 'success' && isset($_SESSION['booking_confirmation'])) {
-
         $basketItems = [];
     }
 }
 
-
+// Get cities for dropdown
 $cities = [];
 $cityQuery = $conn->query("SELECT city_id, city_name FROM cities ORDER BY city_name");
-if ($cityQuery->num_rows > 0) {
+if ($cityQuery && $cityQuery->num_rows > 0) {
     while ($city = $cityQuery->fetch_assoc()) {
         $cities[] = $city;
     }
 }
 
+// Handle POST requests
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    
+    // Remove item from basket
     if (isset($_POST['remove_item'])) {
-        $itemId = $_POST['item_id'];
-        
+        $itemId = intval($_POST['item_id']);
         
         $deleteQuery = $conn->prepare("DELETE FROM basket_items WHERE item_id = ?");
+        if (!$deleteQuery) {
+            die("Error preparing delete query: " . $conn->error);
+        }
+        
         $deleteQuery->bind_param("i", $itemId);
-        $deleteQuery->execute();
+        if ($deleteQuery->execute()) {
+            $_SESSION['success'] = 'Item removed from basket';
+        } else {
+            $_SESSION['error'] = 'Failed to remove item: ' . $deleteQuery->error;
+        }
         $deleteQuery->close();
-        
-        $_SESSION['success'] = 'Item removed from basket';
         header('Location: basket.php');
         exit;
+    }
+    
+    // Save rental details and UPDATE BASKET ITEMS with new dates and prices
+    elseif (isset($_POST['save_rental_details'])) {
         
-    } elseif (isset($_POST['update_rental_dates'])) {
-        $itemId = $_POST['item_id'];
-        $startDate = $_POST['start_date'];
-        $endDate = $_POST['end_date'];
+        // Get form data
+        $pickupLocation = isset($_POST['pickup_location']) ? intval($_POST['pickup_location']) : 0;
+        $dropoffLocation = isset($_POST['dropoff_location']) ? intval($_POST['dropoff_location']) : 0;
+        $pickupDate = isset($_POST['pickup_date']) ? $_POST['pickup_date'] : '';
+        $pickupTime = isset($_POST['pickup_time']) ? $_POST['pickup_time'] : '10:00';
+        $dropoffDate = isset($_POST['dropoff_date']) ? $_POST['dropoff_date'] : '';
+        $dropoffTime = isset($_POST['dropoff_time']) ? $_POST['dropoff_time'] : '10:00';
         
-       
-        $start = new DateTime($startDate);
-        $end = new DateTime($endDate);
-        $rentalDays = $start->diff($end)->days;
-        $rentalDays = $rentalDays > 0 ? $rentalDays : 1;
+        // Validate required fields
+        if (empty($pickupLocation) || empty($dropoffLocation) || empty($pickupDate) || empty($dropoffDate)) {
+            $_SESSION['error'] = 'Please fill in all required fields';
+            header('Location: basket.php?step=2');
+            exit;
+        }
         
+        // Validate dates
+        if (strtotime($pickupDate) === false || strtotime($dropoffDate) === false) {
+            $_SESSION['error'] = 'Please enter valid dates';
+            header('Location: basket.php?step=2');
+            exit;
+        }
         
-        $carQuery = $conn->prepare("
-            SELECT c.price_per_day 
-            FROM basket_items bi 
-            JOIN cars c ON bi.car_id = c.car_id 
-            WHERE bi.item_id = ?
-        ");
-        $carQuery->bind_param("i", $itemId);
-        $carQuery->execute();
-        $carResult = $carQuery->get_result();
-        $carData = $carResult->fetch_assoc();
-        $pricePerDay = $carData['price_per_day'];
-        
-        $estimatedTotal = $pricePerDay * $rentalDays;
-        $depositAmount = $estimatedTotal * 0.2;
-        
-        
-        $updateQuery = $conn->prepare("
-            UPDATE basket_items 
-            SET start_date = ?, end_date = ?, rental_days = ?, estimated_total = ?, deposit_amount = ?
-            WHERE item_id = ?
-        ");
-        $updateQuery->bind_param("ssiddi", $startDate, $endDate, $rentalDays, $estimatedTotal, $depositAmount, $itemId);
-        $updateQuery->execute();
-        $updateQuery->close();
-        
-        $_SESSION['success'] = 'Rental dates updated';
-        header('Location: basket.php');
-        exit;
-        
-    } elseif (isset($_POST['save_rental_details'])) {
-        
-        $pickupLocation = $_POST['pickup_location'];
-        $dropoffLocation = $_POST['dropoff_location'];
-        $pickupDate = $_POST['pickup_date'];
-        $pickupTime = $_POST['pickup_time'];
-        $dropoffDate = $_POST['dropoff_date'];
-        $dropoffTime = $_POST['dropoff_time'];
-        
+        // Save to session
         $_SESSION['rental_details'] = [
             'pickup_location' => $pickupLocation,
             'dropoff_location' => $dropoffLocation,
@@ -265,47 +185,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'dropoff_time' => $dropoffTime
         ];
         
-        header('Location: basket.php?step=3');
-        exit;
-        
-    } elseif (isset($_POST['save_extras'])) {
-
+        // Update basket items with new dates and recalculate totals
+        if (!empty($basketItems)) {
+            $start = new DateTime($pickupDate);
+            $end = new DateTime($dropoffDate);
+            $newRentalDays = $start->diff($end)->days;
+            $newRentalDays = $newRentalDays > 0 ? $newRentalDays : 1;
+            
+            $updateSuccess = true;
+            
+            foreach ($basketItems as $item) {
+                // Get car price
+                $priceQuery = $conn->prepare("SELECT price_per_day FROM cars WHERE car_id = ?");
+                if (!$priceQuery) {
+                    $_SESSION['error'] = "Error preparing price query: " . $conn->error;
+                    $updateSuccess = false;
+                    break;
+                }
+                
+                $priceQuery->bind_param("i", $item['car_id']);
+                $priceQuery->execute();
+                $priceResult = $priceQuery->get_result();
+                $priceData = $priceResult->fetch_assoc();
+                $priceQuery->close();
+                
+                if (!$priceData) {
+                    $updateSuccess = false;
+                    $_SESSION['error'] = 'Car price not found for ID: ' . $item['car_id'];
+                    break;
+                }
+                
+                $newEstimatedTotal = $priceData['price_per_day'] * $newRentalDays;
+                $newDepositAmount = $newEstimatedTotal * 0.2;
+                
+                // Update basket item with new dates and totals
+                // IMPORTANT: rental_days is a generated column, so we don't update it
+                $updateQuery = $conn->prepare("
+                    UPDATE basket_items 
+                    SET start_date = ?, end_date = ?, estimated_total = ?, deposit_amount = ? 
+                    WHERE item_id = ?
+                ");
+                
+                if (!$updateQuery) {
+                    $_SESSION['error'] = "Error preparing update query: " . $conn->error;
+                    $updateSuccess = false;
+                    break;
+                }
+                
+                $updateQuery->bind_param("ssddi", $pickupDate, $dropoffDate, $newEstimatedTotal, $newDepositAmount, $item['item_id']);
+                
+                if (!$updateQuery->execute()) {
+                    $updateSuccess = false;
+                    $_SESSION['error'] = 'Failed to update basket: ' . $updateQuery->error;
+                    $updateQuery->close();
+                    break;
+                }
+                $updateQuery->close();
+            }
+            
+            if ($updateSuccess) {
+                // Clear any previous errors
+                unset($_SESSION['error']);
+                header('Location: basket.php?step=3');
+                exit;
+            } else {
+                header('Location: basket.php?step=2');
+                exit;
+            }
+        } else {
+            $_SESSION['error'] = 'No items in basket';
+            header('Location: basket.php?step=1');
+            exit;
+        }
+    }
+    
+    // Save extras
+    elseif (isset($_POST['save_extras'])) {
         $selectedExtras = isset($_POST['extras']) ? $_POST['extras'] : [];
         $_SESSION['selected_extras'] = $selectedExtras;
-        
         header('Location: basket.php?step=4');
         exit;
-        
-    } elseif (isset($_POST['save_confirmation'])) {
-
-        $specialRequests = $_POST['special_requests'] ?? '';
+    }
+    
+    // Save confirmation
+    elseif (isset($_POST['save_confirmation'])) {
+        $specialRequests = isset($_POST['special_requests']) ? $_POST['special_requests'] : '';
         $_SESSION['special_requests'] = $specialRequests;
-        
         header('Location: basket.php?step=5');
         exit;
+    }
+    
+    // Process payment
+    elseif (isset($_POST['process_payment'])) {
+        $paymentMethod = isset($_POST['payment_method']) ? $_POST['payment_method'] : '';
+        $specialRequests = isset($_SESSION['special_requests']) ? $_SESSION['special_requests'] : '';
+        $selectedExtras = isset($_SESSION['selected_extras']) ? $_SESSION['selected_extras'] : [];
         
-    } elseif (isset($_POST['process_payment'])) {
-        $paymentMethod = $_POST['payment_method'];
-        $cardNumber = $_POST['card_number'] ?? '';
-        $expiryDate = $_POST['expiry_date'] ?? '';
-        $cvv = $_POST['cvv'] ?? '';
-        $cardholderName = $_POST['cardholder_name'] ?? '';
-        $specialRequests = $_SESSION['special_requests'] ?? '';
+        if (empty($paymentMethod)) {
+            $_SESSION['error'] = 'Please select a payment method';
+            header('Location: basket.php?step=5');
+            exit;
+        }
         
-
         $basketQuery = $conn->prepare("
             SELECT b.basket_id, bi.item_id, bi.car_id, bi.start_date, bi.end_date, 
-                   bi.estimated_total, bi.deposit_amount, bi.rental_days
+                   bi.estimated_total, bi.deposit_amount
             FROM baskets b 
             JOIN basket_items bi ON b.basket_id = bi.basket_id 
             WHERE b.customer_id = ? AND b.status = 'active'
         ");
+        
+        if (!$basketQuery) {
+            $_SESSION['error'] = "Error preparing basket query: " . $conn->error;
+            header('Location: basket.php?step=5');
+            exit;
+        }
+        
         $basketQuery->bind_param("i", $userId);
         $basketQuery->execute();
         $basketResult = $basketQuery->get_result();
         $basketItemsForBooking = [];
         
         while ($item = $basketResult->fetch_assoc()) {
+            // Calculate rental days
+            $start = new DateTime($item['start_date']);
+            $end = new DateTime($item['end_date']);
+            $item['rental_days'] = $start->diff($end)->days;
+            if ($item['rental_days'] < 1) $item['rental_days'] = 1;
+            
             $basketItemsForBooking[] = $item;
         }
         $basketQuery->close();
@@ -319,68 +326,72 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->begin_transaction();
         
         try {
-            
+            // Get booking status ID for 'Confirmed'
             $statusQuery = $conn->query("SELECT booking_status_id FROM booking_status WHERE status_name = 'Confirmed' LIMIT 1");
-            if ($statusQuery->num_rows > 0) {
+            if ($statusQuery && $statusQuery->num_rows > 0) {
                 $statusData = $statusQuery->fetch_assoc();
                 $bookingStatusId = $statusData['booking_status_id'];
             } else {
-                $conn->query("INSERT INTO booking_status (status_name) VALUES ('Confirmed')");
-                $bookingStatusId = $conn->insert_id;
+                // Default to 6 if not found (from your data)
+                $bookingStatusId = 6;
             }
             
-         
-            $paymentMethodId = 1; 
-            $paymentMethodsQuery = $conn->query("SELECT method_id FROM payment_methods LIMIT 1");
-            if ($paymentMethodsQuery->num_rows > 0) {
-                $paymentMethodData = $paymentMethodsQuery->fetch_assoc();
-                $paymentMethodId = $paymentMethodData['method_id'];
+            // Get payment method ID for 'Credit Card'
+            $paymentMethodQuery = $conn->query("SELECT method_id FROM payment_methods WHERE method_name = 'Credit Card' LIMIT 1");
+            if ($paymentMethodQuery && $paymentMethodQuery->num_rows > 0) {
+                $methodData = $paymentMethodQuery->fetch_assoc();
+                $paymentMethodId = $methodData['method_id'];
             } else {
-                
-                $conn->query("INSERT INTO payment_methods (method_name) VALUES ('Credit Card')");
-                $paymentMethodId = $conn->insert_id;
+                // Default to 2 if not found (from your data)
+                $paymentMethodId = 2;
             }
             
-            $paymentStatusId = 1; // Default to completed status
+            // Get payment status ID for 'Completed'
             $paymentStatusQuery = $conn->query("SELECT payment_status_id FROM payment_status WHERE status_name = 'Completed' LIMIT 1");
-            if ($paymentStatusQuery->num_rows > 0) {
-                $paymentStatusData = $paymentStatusQuery->fetch_assoc();
-                $paymentStatusId = $paymentStatusData['payment_status_id'];
+            if ($paymentStatusQuery && $paymentStatusQuery->num_rows > 0) {
+                $statusData = $paymentStatusQuery->fetch_assoc();
+                $paymentStatusId = $statusData['payment_status_id'];
             } else {
-                // Create completed status if not exists
-                $conn->query("INSERT INTO payment_status (status_name) VALUES ('Completed')");
-                $paymentStatusId = $conn->insert_id;
+                // Default to 5 if not found (from your data)
+                $paymentStatusId = 5;
             }
             
             // Process each basket item as separate booking
             $bookingIds = [];
             $totalAmount = 0;
+            $extrasTotal = 0;
 
             foreach ($basketItemsForBooking as $item) {
-                // Calculate total price per extra item based on rental period
-                $extrasTotal = 0;
+                // Calculate extras total for this item
+                $itemExtrasTotal = 0;
                 if (!empty($selectedExtras)) {
                     foreach ($selectedExtras as $extraId) {
                         foreach ($extras as $extra) {
                             if ($extra['extra_id'] == $extraId) {
-                                // Apply per-item rental days for accurate pricing
                                 if ($extra['unit'] === 'per day') {
-                                    $extrasTotal += ($extra['price'] * $item['rental_days']);
+                                    $itemExtrasTotal += ($extra['price'] * $item['rental_days']);
                                 } else {
-                                    $extrasTotal += $extra['price'];
+                                    $itemExtrasTotal += $extra['price'];
                                 }
                                 break;
                             }
                         }
                     }
                 }
-        
-                $itemTotal = $item['estimated_total'] + $extrasTotal;
                 
+                $extrasTotal += $itemExtrasTotal;
+                $itemTotal = $item['estimated_total'] + $itemExtrasTotal;
+                
+                // Create booking
                 $bookingQuery = $conn->prepare("
                     INSERT INTO bookings (customer_id, car_id, start_date, end_date, total_cost, deposit_paid, booking_status_id, special_requests) 
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ");
+                
+                if (!$bookingQuery) {
+                    throw new Exception("Error preparing booking query: " . $conn->error);
+                }
+                
                 $bookingQuery->bind_param("iissddss", 
                     $userId, 
                     $item['car_id'], 
@@ -397,6 +408,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $bookingIds[] = $bookingId;
                     $totalAmount += $itemTotal;
                     
+                    // Add extras to booking notes if any
                     if (!empty($selectedExtras)) {
                         $selectedExtrasNames = [];
                         foreach ($selectedExtras as $extraId) {
@@ -417,36 +429,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $updateBookingQuery->close();
                     }
                     
+                    // Create payment record
                     $paymentQuery = $conn->prepare("
                         INSERT INTO payments (booking_id, payment_method_id, payment_status_id, amount, payment_date) 
                         VALUES (?, ?, ?, ?, NOW())
                     ");
+                    
+                    if (!$paymentQuery) {
+                        throw new Exception("Error preparing payment query: " . $conn->error);
+                    }
+                    
                     $paymentQuery->bind_param("iiid", $bookingId, $paymentMethodId, $paymentStatusId, $itemTotal);
                     
                     if (!$paymentQuery->execute()) {
-                        throw new Exception("Payment creation failed: " . $conn->error);
+                        throw new Exception("Payment creation failed: " . $paymentQuery->error);
                     }
                     $paymentQuery->close();
                     
+                    // Update car status to Occupied (status_id = 2)
                     $updateCarQuery = $conn->prepare("UPDATE cars SET status_id = 2 WHERE car_id = ?");
+                    
+                    if (!$updateCarQuery) {
+                        throw new Exception("Error preparing car update query: " . $conn->error);
+                    }
+                    
                     $updateCarQuery->bind_param("i", $item['car_id']);
                     if (!$updateCarQuery->execute()) {
-                        throw new Exception("Car status update failed: " . $conn->error);
+                        throw new Exception("Car status update failed: " . $updateCarQuery->error);
                     }
                     $updateCarQuery->close();
                     
                     $bookingQuery->close();
                 } else {
-                    throw new Exception("Booking creation failed: " . $conn->error);
+                    throw new Exception("Booking creation failed: " . $bookingQuery->error);
                 }
             }
             
+            // Update basket status to completed
             $updateBasketQuery = $conn->prepare("
                 UPDATE baskets SET status = 'completed' WHERE customer_id = ? AND status = 'active'
             ");
+            
+            if (!$updateBasketQuery) {
+                throw new Exception("Error preparing basket update query: " . $conn->error);
+            }
+            
             $updateBasketQuery->bind_param("i", $userId);
             if (!$updateBasketQuery->execute()) {
-                throw new Exception("Basket update failed: " . $conn->error);
+                throw new Exception("Basket update failed: " . $updateBasketQuery->error);
             }
             $updateBasketQuery->close();
             
@@ -456,10 +486,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'booking_ids' => $bookingIds,
                 'total_amount' => $totalAmount,
                 'payment_method' => $paymentMethod,
-                'extras_total' => $extrasTotal,
-                'pickup_location' => $_SESSION['rental_details']['pickup_location'] ?? '',
-                'pickup_date' => $_SESSION['rental_details']['pickup_date'] ?? '',
-                'pickup_time' => $_SESSION['rental_details']['pickup_time'] ?? ''
+                'extras_total' => $extrasTotal
             ];
             
             unset($_SESSION['selected_extras']);
@@ -470,7 +497,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
             
         } catch (Exception $e) {
-            // Rollback transaction on error
             $conn->rollback();
             $_SESSION['error'] = 'Payment processing failed: ' . $e->getMessage();
             header('Location: basket.php?step=5');
@@ -479,21 +505,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Re-fetch basket items after potential updates
+if ($userRole === 'customer' && $currentStep != 'success' && $currentStep > 1) {
+    $basketQuery = $conn->prepare("
+        SELECT b.basket_id, bi.item_id, bi.car_id, bi.start_date, bi.end_date, 
+               bi.deposit_amount, bi.estimated_total,
+               c.car_id, c.model, c.year, c.price_per_day, c.image_url,
+               mk.make_name, ct.type_name, cs.status_name,
+               ci.city_name
+        FROM baskets b 
+        LEFT JOIN basket_items bi ON b.basket_id = bi.basket_id 
+        LEFT JOIN cars c ON bi.car_id = c.car_id
+        LEFT JOIN makes mk ON c.make_id = mk.make_id
+        LEFT JOIN car_types ct ON c.type_id = ct.type_id
+        LEFT JOIN car_status cs ON c.status_id = cs.status_id
+        LEFT JOIN cities ci ON c.city_id = ci.city_id
+        WHERE b.customer_id = ? AND b.status = 'active'
+        ORDER BY b.basket_id DESC
+        LIMIT 1
+    ");
+    
+    if ($basketQuery) {
+        $basketQuery->bind_param("i", $userId);
+        $basketQuery->execute();
+        $basketResult = $basketQuery->get_result();
+        
+        $basketItems = [];
+        $basketTotal = 0;
+        $basketCount = 0;
+        
+        while ($item = $basketResult->fetch_assoc()) {
+            if ($item['car_id']) {
+                // Calculate rental days from dates
+                $start = new DateTime($item['start_date']);
+                $end = new DateTime($item['end_date']);
+                $item['rental_days'] = $start->diff($end)->days;
+                if ($item['rental_days'] < 1) $item['rental_days'] = 1;
+                
+                $basketItems[] = $item;
+                $basketTotal += $item['estimated_total'];
+                $basketCount++;
+            }
+        }
+        $basketQuery->close();
+    }
+}
+
+// Calculate totals
 $basketTotal = 0;
 foreach ($basketItems as $item) {
     $basketTotal += $item['estimated_total'];
 }
 
-
 $extrasTotal = 0;
-if (!empty($selectedExtras) && !empty($basketItems)) {
-    // Use the amount rental days from the first basket item
+if (!empty($_SESSION['selected_extras']) && !empty($basketItems)) {
+    // Use the rental days from the first basket item
     $rentalDays = $basketItems[0]['rental_days'];
     
-    foreach ($selectedExtras as $extraId) {
+    foreach ($_SESSION['selected_extras'] as $extraId) {
         foreach ($extras as $extra) {
             if ($extra['extra_id'] == $extraId) {
-                // Multiply extras by the amount of days for items prices per day, flat rate used for items used once
                 if ($extra['unit'] === 'per day') {
                     $extrasTotal += ($extra['price'] * $rentalDays);
                 } else {
@@ -506,6 +577,39 @@ if (!empty($selectedExtras) && !empty($basketItems)) {
 }
 
 $grandTotal = $basketTotal + $extrasTotal;
+
+// Language and theme variables
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+$themeText = 'Theme'; $lightText = 'Light'; $darkText = 'Dark';
+$fontSizeText = 'Font Size'; $resetText = 'Reset'; $languageText = 'Language';
+$home = 'Home'; $cars = 'Cars'; $contact = 'Contact';
+$dashboard = 'Dashboard'; $login = 'Login'; $logout = 'Logout';
+
+if ($language == 'es') {
+    $themeText = 'Tema'; $lightText = 'Claro'; $darkText = 'Oscuro';
+    $fontSizeText = 'Tamaño de fuente'; $resetText = 'Reiniciar'; $languageText = 'Idioma';
+    $home = 'Inicio'; $cars = 'Autos'; $contact = 'Contacto';
+    $dashboard = 'Panel'; $login = 'Iniciar sesión'; $logout = 'Cerrar sesión';
+} elseif ($language == 'fr') {
+    $themeText = 'Thème'; $lightText = 'Clair'; $darkText = 'Sombre';
+    $fontSizeText = 'Taille de police'; $resetText = 'Réinitialiser'; $languageText = 'Langue';
+    $home = 'Accueil'; $cars = 'Voitures'; $contact = 'Contact';
+    $dashboard = 'Tableau de bord'; $login = 'Connexion'; $logout = 'Déconnexion';
+} elseif ($language == 'de') {
+    $themeText = 'Design'; $lightText = 'Hell'; $darkText = 'Dunkel';
+    $fontSizeText = 'Schriftgröße'; $resetText = 'Zurücksetzen'; $languageText = 'Sprache';
+    $home = 'Startseite'; $cars = 'Autos'; $contact = 'Kontakt';
+    $dashboard = 'Dashboard'; $login = 'Anmelden'; $logout = 'Abmelden';
+}
+
+// Handle any session errors that need to be displayed
+if (isset($_SESSION['error'])) {
+    $errorMessage = $_SESSION['error'];
+    unset($_SESSION['error']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -798,6 +902,12 @@ $grandTotal = $basketTotal + $extrasTotal;
             font-size: 1.2rem;
             font-weight: 700;
             color: var(--vivid-indigo);
+        }
+
+        .rental-dates-info {
+            font-size: 0.85rem;
+            color: var(--cobalt-blue);
+            margin-top: 5px;
         }
         
         .item-actions {
@@ -1268,812 +1378,1032 @@ $grandTotal = $basketTotal + $extrasTotal;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] body,
+        [data-theme="dark"] .basket-container,
+        [data-theme="dark"] .step-content,
+        [data-theme="dark"] .basket-items,
+        [data-theme="dark"] .basket-summary {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .basket-item,
+        [data-theme="dark"] .extra-option,
+        [data-theme="dark"] .extra-category,
+        [data-theme="dark"] .confirmation-details,
+        [data-theme="dark"] .card-form {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] h1,
+        [data-theme="dark"] h2,
+        [data-theme="dark"] h3,
+        [data-theme="dark"] .section-title,
+        [data-theme="dark"] .basket-title {
+            color: #ffffff !important;
+        }
+
+        [data-theme="dark"] p,
+        [data-theme="dark"] .item-specs span,
+        [data-theme="dark"] .detail-label,
+        [data-theme="dark"] .extra-description {
+            color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] .form-group input,
+        [data-theme="dark"] .form-group select,
+        [data-theme="dark"] .form-group textarea {
+            background-color: #2d2d2d;
+            border-color: #404040;
+            color: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Nav dropdown */
+        nav ul li.dropdown { position: relative; }
+        nav ul li.dropdown .dropdown-content {
+            display: none; position: absolute;
+            background-color: white; min-width: 120px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            z-index: 1001; border-radius: 5px; overflow: hidden;
+            top: 100%; left: 0;
+        }
+        nav ul li.dropdown:hover .dropdown-content { display: block; }
+        nav ul li.dropdown .dropdown-content a {
+            color: #333; padding: 10px 14px; display: block;
+            transition: background-color 0.3s; border-bottom: 1px solid #f1f1f1;
+            font-size: 0.9rem; text-decoration: none; font-weight: normal;
+        }
+        nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #f8f9fa; color: var(--vivid-indigo);
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content {
+            background-color: #333333; border-color: #404040;
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a {
+            color: #fff; background-color: #333333; border-bottom-color: #404040;
+        }
+        [data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
+            background-color: #404040; color: var(--coral-red);
+        }
+
+        /* Accessibility / language dropdown */
+        .language-selector { position: relative; display: flex; align-items: center; }
+        .language-selector > a {
+            display: flex; align-items: center; justify-content: center;
+            padding: 8px; border-radius: 4px; transition: background-color 0.3s;
+            font-size: 18px; line-height: 0; color: white;
+        }
+        .language-selector:hover > a { background-color: rgba(255,255,255,0.1); }
+        .language-settings-dropdown {
+            display: none; position: absolute; right: 0; top: 100%;
+            min-width: 200px; background-color: white;
+            border: 1px solid #e0e0e0; border-radius: 6px; overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15); z-index: 1000;
+        }
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333; border-color: #404040; color: white;
+        }
+        .language-selector:hover .language-settings-dropdown { display: block; }
+        .settings-section {
+            padding: 12px 15px; border-bottom: 1px solid #e0e0e0;
+        }
+        [data-theme="dark"] .settings-section { border-color: #404040; }
+        .settings-section:last-child { border-bottom: none; }
+        .settings-section h4 {
+            margin: 0 0 8px 0; color: #333; font-size: 13px;
+            text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+        }
+        [data-theme="dark"] .settings-section h4 { color: #fff; }
+        .theme-option, .language-option {
+            display: flex; align-items: center; padding: 8px 12px;
+            color: #333; text-decoration: none; transition: background-color 0.2s;
+            border-radius: 4px; margin-bottom: 2px; font-size: 14px;
+        }
+        [data-theme="dark"] .theme-option,
+        [data-theme="dark"] .language-option { color: #fff; }
+        .theme-option:hover, .language-option:hover { background-color: #f1f1f1; }
+        [data-theme="dark"] .theme-option:hover,
+        [data-theme="dark"] .language-option:hover { background-color: #404040; }
+        .theme-option i, .language-option i {
+            width: 18px; margin-right: 10px;
+            color: var(--vivid-indigo); font-size: 14px;
+        }
+        .font-controls { display: flex; align-items: center; gap: 6px; }
+        .font-btn {
+            background: var(--vivid-indigo); color: white; border: none;
+            width: 32px; height: 32px; border-radius: 4px; cursor: pointer;
+            font-size: 14px; font-weight: bold; transition: background 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .font-btn:hover { background: var(--dark-magenta); }
+        .font-size-display {
+            font-size: 14px; color: #333; min-width: 50px;
+            text-align: center; font-weight: 600;
+        }
+        [data-theme="dark"] .font-size-display { color: #fff; }
+        .active-indicator { margin-left: auto; color: var(--vivid-indigo); font-size: 12px; }
+
+        /* Basket indicator */
+        .basket-indicator { position: relative; display: inline-block; }
+        .basket-count {
+            position: absolute; top: -8px; right: -8px;
+            background: var(--coral-red); color: white; border-radius: 50%;
+            width: 20px; height: 20px; display: flex; align-items: center;
+            justify-content: center; font-size: 0.7rem; font-weight: 600;
+        }
+
+    </style>
 </head>
-<body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <img src="logo2.png" alt="Logo">
-            </div>
+<body data-theme="<?php echo $darkMode; ?>">
 
-            <nav>
-                <ul>
-                    <li><a href="landing.php">Home</a></li>
-                    <li><a href="cars.php">Cars</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                    
+<header>
+    <div class="container header-content">
+        <div class="logo">
+            <img src="logo2.png" alt="Logo">
+        </div>
+        <nav>
+            <ul>
+                <li class="dropdown">
+                    <a href="landing.php" class="dropbtn"><?php echo $home; ?> <i class="fas fa-caret-down"></i></a>
+                    <div class="dropdown-content">
+                        <a href="landing.php"><?php echo $home; ?></a>
+                        <a href="about.php">About</a>
+                    </div>
+                </li>
+                <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                <li><a href="contact.php"><?php echo $contact; ?></a></li>
+
+                <?php if (!isset($_SESSION['user'])): ?>
+                    <li><a href="loginPage.php"><?php echo $login; ?></a></li>
+                <?php else: ?>
+                    <li><a href="<?php echo $_SESSION['user']['role'] === 'admin' ? 'admin-dashboard.php' : 'customer-dashboard.php'; ?>"><?php echo $dashboard; ?></a></li>
                     <li>
-                        <?php if (isset($_SESSION['user'])): ?>
-                            <a href="<?php echo $_SESSION['user']['role'] === 'admin' ? 'admin-dashboard.php' : 'customer-dashboard.php'; ?>">
-                                Dashboard
+                        <a href="logout.php" style="color: #ff7f50;">
+                            <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
+                        </a>
+                    </li>
+                <?php endif; ?>
+
+                <li class="language-selector">
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                    <div class="language-settings-dropdown">
+                        <div class="settings-section">
+                            <h4><?php echo $themeText; ?></h4>
+                            <a href="#" class="theme-option" data-theme="light">
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                <?php if ($darkMode == 'light'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
                             </a>
-                        <?php else: ?>
-                            <a href="loginPage.php">Login</a>
+                            <a href="#" class="theme-option" data-theme="dark">
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                <?php if ($darkMode == 'dark'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                        </div>
+                        <div class="settings-section">
+                            <h4><?php echo $fontSizeText; ?></h4>
+                            <div class="font-controls">
+                                <button class="font-btn" id="font-decrease">A-</button>
+                                <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                <button class="font-btn" id="font-increase">A+</button>
+                                <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
+                            </div>
+                        </div>
+                        <div class="settings-section">
+                            <h4><?php echo $languageText; ?></h4>
+                            <a href="#" class="language-option" data-lang="en">
+                                <i class="fas fa-language"></i> English
+                                <?php if ($language == 'en'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="es">
+                                <i class="fas fa-language"></i> Español
+                                <?php if ($language == 'es'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="fr">
+                                <i class="fas fa-language"></i> Français
+                                <?php if ($language == 'fr'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="de">
+                                <i class="fas fa-language"></i> Deutsch
+                                <?php if ($language == 'de'): ?><i class="fas fa-check active-indicator"></i><?php endif; ?>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+
+                <li class="basket-indicator">
+                    <a href="basket.php" id="basketLink">
+                        <i class="fas fa-shopping-basket"></i>
+                        <?php if ($basketCount > 0): ?>
+                            <span class="basket-count"><?php echo $basketCount; ?></span>
                         <?php endif; ?>
-                    </li>
-                    <li><a href="#">🌐︎</a></li>
-                    <li class="basket-indicator">
-                        <a href="basket.php" id="basketLink">
-                            <i class="fas fa-shopping-basket"></i>
-                            <?php if ($basketCount > 0): ?>
-                                <span class="basket-count"><?php echo $basketCount; ?></span>
-                            <?php endif; ?>
-                        </a>
-                    </li>
-                    <?php if (isset($_SESSION['user'])): ?>
-                    <li>
-                        <a href="logout.php" style="color: #ff4444;">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                </ul>
-            </nav>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</header>
+
+<div class="toast" id="toast"></div>
+
+<section class="basket-container">
+    <div class="basket-header">
+        <h1 class="basket-title">Your Basket</h1>
+        <p class="basket-subtitle">Review your selection and complete your booking</p>
+    </div>
+
+    <?php if (isset($errorMessage) && !empty($errorMessage)): ?>
+        <div class="alert alert-error">
+            <?php echo htmlspecialchars($errorMessage); ?>
         </div>
-    </header>
-
-    <div class="toast" id="toast"></div>
-
-    <section class="basket-container">
-        <div class="basket-header">
-            <h1 class="basket-title">Your Basket</h1>
-            <p class="basket-subtitle">Review your selection and complete your booking</p>
+    <?php endif; ?>
+    
+    <?php if (isset($successMessage) && !empty($successMessage)): ?>
+        <div class="alert alert-success">
+            <?php echo htmlspecialchars($successMessage); ?>
         </div>
+    <?php endif; ?>
 
-
-        <?php if (isset($successMessage)): ?>
-            <div class="alert alert-success">
-                <?php echo htmlspecialchars($successMessage); ?>
-            </div>
-        <?php endif; ?>
-        
-        <?php if (isset($errorMessage)): ?>
-            <div class="alert alert-error">
-                <?php echo htmlspecialchars($errorMessage); ?>
-            </div>
-        <?php endif; ?>
-
-
-        <div class="checkout-steps">
-            <div class="step <?php echo $currentStep == 1 ? 'active' : ($currentStep > 1 ? 'completed' : ''); ?>" data-step="1">
-                <div class="step-number">1</div>
-                <div class="step-label">Basket</div>
-            </div>
-            <div class="step <?php echo $currentStep == 2 ? 'active' : ($currentStep > 2 ? 'completed' : ''); ?>" data-step="2">
-                <div class="step-number">2</div>
-                <div class="step-label">Rental Details</div>
-            </div>
-            <div class="step <?php echo $currentStep == 3 ? 'active' : ($currentStep > 3 ? 'completed' : ''); ?>" data-step="3">
-                <div class="step-number">3</div>
-                <div class="step-label">Extras</div>
-            </div>
-            <div class="step <?php echo $currentStep == 4 ? 'active' : ($currentStep > 4 ? 'completed' : ''); ?>" data-step="4">
-                <div class="step-number">4</div>
-                <div class="step-label">Confirmation</div>
-            </div>
-            <div class="step <?php echo $currentStep == 5 ? 'active' : ($currentStep > 5 || $currentStep == 'success' ? 'completed' : ''); ?>" data-step="5">
-                <div class="step-number">5</div>
-                <div class="step-label">Payment</div>
-            </div>
+    <div class="checkout-steps">
+        <div class="step <?php echo $currentStep == 1 ? 'active' : ($currentStep > 1 ? 'completed' : ''); ?>" data-step="1">
+            <div class="step-number">1</div>
+            <div class="step-label">Basket</div>
         </div>
+        <div class="step <?php echo $currentStep == 2 ? 'active' : ($currentStep > 2 ? 'completed' : ''); ?>" data-step="2">
+            <div class="step-number">2</div>
+            <div class="step-label">Rental Details</div>
+        </div>
+        <div class="step <?php echo $currentStep == 3 ? 'active' : ($currentStep > 3 ? 'completed' : ''); ?>" data-step="3">
+            <div class="step-number">3</div>
+            <div class="step-label">Extras</div>
+        </div>
+        <div class="step <?php echo $currentStep == 4 ? 'active' : ($currentStep > 4 ? 'completed' : ''); ?>" data-step="4">
+            <div class="step-number">4</div>
+            <div class="step-label">Confirmation</div>
+        </div>
+        <div class="step <?php echo $currentStep == 5 ? 'active' : ($currentStep > 5 || $currentStep == 'success' ? 'completed' : ''); ?>" data-step="5">
+            <div class="step-number">5</div>
+            <div class="step-label">Payment</div>
+        </div>
+    </div>
 
-        <div class="checkout-content">
-
-            <div class="step-content <?php echo $currentStep == 1 ? 'active' : ''; ?>" id="step1">
-                <h2 class="section-title">Your Selected Cars</h2>
-                <div id="basketItems">
-                    <?php if (empty($basketItems)): ?>
-                        <div class="empty-basket">
-                            <i class="fas fa-shopping-basket"></i>
-                            <h3>Your basket is empty</h3>
-                            <p>Add some cars to your basket to get started!</p>
-                            <a href="cars.php" class="checkout-btn" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 20px;">Browse Cars</a>
-                        </div>
-                    <?php else: ?>
-                        <?php foreach ($basketItems as $item): ?>
-                            <div class="basket-item" data-id="<?php echo $item['item_id']; ?>">
-                                <div class="item-image">
-                                    <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model']); ?>">
+    <div class="checkout-content">
+        <!-- Step 1: Basket -->
+        <div class="step-content <?php echo $currentStep == 1 ? 'active' : ''; ?>" id="step1">
+            <h2 class="section-title">Your Selected Cars</h2>
+            <div id="basketItems">
+                <?php if (empty($basketItems)): ?>
+                    <div class="empty-basket">
+                        <i class="fas fa-shopping-basket"></i>
+                        <h3>Your basket is empty</h3>
+                        <p>Add some cars to your basket to get started!</p>
+                        <a href="cars.php" class="checkout-btn" style="display: inline-block; width: auto; padding: 12px 30px; margin-top: 20px;">Browse Cars</a>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($basketItems as $item): ?>
+                        <div class="basket-item" data-id="<?php echo $item['item_id']; ?>">
+                            <div class="item-image">
+                                <img src="<?php echo htmlspecialchars($item['image_url']); ?>" alt="<?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model']); ?>">
+                            </div>
+                            <div class="item-details">
+                                <h3><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model'] . ' (' . $item['year'] . ')'); ?></h3>
+                                <div class="item-specs">
+                                    <span><?php echo htmlspecialchars($item['type_name']); ?></span>
+                                    <span><?php echo htmlspecialchars($item['city_name']); ?></span>
                                 </div>
-                                <div class="item-details">
-                                    <h3><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model'] . ' (' . $item['year'] . ')'); ?></h3>
-                                    <div class="item-specs">
-                                        <span><?php echo htmlspecialchars($item['type_name']); ?></span>
-                                        <span><?php echo htmlspecialchars($item['city_name']); ?></span>
-                                    </div>
-                                    <div class="item-price">£<?php echo number_format($item['price_per_day'], 2); ?>/day</div>
-                                    <div class="item-specs">
-                                        <span>Rental Days: <?php echo $item['rental_days']; ?></span>
-                                        <span>Total: £<?php echo number_format($item['estimated_total'], 2); ?></span>
-                                    </div>
-                                    
-
-                                    <div class="rental-dates-form" id="datesForm-<?php echo $item['item_id']; ?>">
-                                        <form method="POST" class="date-inputs">
-                                            <input type="hidden" name="update_rental_dates" value="1">
-                                            <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
-                                            <div>
-                                                <label>Start Date:</label>
-                                                <input type="date" name="start_date" value="<?php echo $item['start_date']; ?>" required>
-                                            </div>
-                                            <div>
-                                                <label>End Date:</label>
-                                                <input type="date" name="end_date" value="<?php echo $item['end_date']; ?>" required>
-                                            </div>
-                                            <button type="submit" class="update-btn">
-                                                <i class="fas fa-save"></i> Update Dates
-                                            </button>
-                                        </form>
-                                    </div>
+                                <div class="item-price">£<?php echo number_format($item['price_per_day'], 2); ?>/day</div>
+                                <div class="rental-dates-info">
+                                    <?php echo date('d M Y', strtotime($item['start_date'])); ?> - 
+                                    <?php echo date('d M Y', strtotime($item['end_date'])); ?> 
+                                    (<?php echo $item['rental_days']; ?> day<?php echo $item['rental_days'] > 1 ? 's' : ''; ?>)
                                 </div>
-                                <div class="item-actions">
-                                    <button type="button" class="update-btn" onclick="toggleDatesForm(<?php echo $item['item_id']; ?>)">
-                                        <i class="fas fa-calendar-alt"></i> Update Dates
+                            </div>
+                            <div class="item-actions">
+                                <form method="POST" style="display: inline;">
+                                    <input type="hidden" name="remove_item" value="1">
+                                    <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
+                                    <button type="submit" class="remove-btn">
+                                        <i class="fas fa-trash"></i> Remove
                                     </button>
-                                    <form method="POST" style="display: inline;">
-                                        <input type="hidden" name="remove_item" value="1">
-                                        <input type="hidden" name="item_id" value="<?php echo $item['item_id']; ?>">
-                                        <button type="submit" class="remove-btn">
-                                            <i class="fas fa-trash"></i> Remove
-                                        </button>
-                                    </form>
-                                </div>
+                                </form>
                             </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+            <?php if (!empty($basketItems)): ?>
+                <div class="step-actions">
+                    <span></span>
+                    <a href="basket.php?step=2" class="btn-next" style="text-decoration: none; display: inline-block;">Continue to Rental Details</a>
                 </div>
-            </div>
+            <?php endif; ?>
+        </div>
 
-            <div class="step-content <?php echo $currentStep == 2 ? 'active' : ''; ?>" id="step2">
-                <h2 class="section-title">Rental Details</h2>
-                <form method="POST">
-                    <input type="hidden" name="save_rental_details" value="1">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="pickupLocation">Pick-up Location *</label>
-                            <select id="pickupLocation" name="pickup_location" required>
-                                <option value="">Select location</option>
-                                <?php foreach ($cities as $city): ?>
-                                    <option value="<?php echo $city['city_id']; ?>" <?php echo isset($_SESSION['rental_details']['pickup_location']) && $_SESSION['rental_details']['pickup_location'] == $city['city_id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($city['city_name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="dropoffLocation">Drop-off Location *</label>
-                            <select id="dropoffLocation" name="dropoff_location" required>
-                                <option value="">Select location</option>
-                                <?php foreach ($cities as $city): ?>
-                                    <option value="<?php echo $city['city_id']; ?>" <?php echo isset($_SESSION['rental_details']['dropoff_location']) && $_SESSION['rental_details']['dropoff_location'] == $city['city_id'] ? 'selected' : ''; ?>>
-                                        <?php echo htmlspecialchars($city['city_name']); ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+        <!-- Step 2: Rental Details -->
+        <div class="step-content <?php echo $currentStep == 2 ? 'active' : ''; ?>" id="step2">
+            <h2 class="section-title">Rental Details</h2>
+            
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-error" style="margin-bottom: 20px;">
+                    <?php echo htmlspecialchars($_SESSION['error']); ?>
+                </div>
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
+            
+            <form method="POST">
+                <input type="hidden" name="save_rental_details" value="1">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pickupLocation">Pick-up Location *</label>
+                        <select id="pickupLocation" name="pickup_location" required>
+                            <option value="">Select location</option>
+                            <?php foreach ($cities as $city): ?>
+                                <option value="<?php echo $city['city_id']; ?>" <?php echo isset($_SESSION['rental_details']['pickup_location']) && $_SESSION['rental_details']['pickup_location'] == $city['city_id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($city['city_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="pickupDate">Pick-up Date *</label>
-                            <input type="date" id="pickupDate" name="pickup_date" value="<?php echo isset($_SESSION['rental_details']['pickup_date']) ? $_SESSION['rental_details']['pickup_date'] : ''; ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="pickupTime">Pick-up Time *</label>
-                            <input type="time" id="pickupTime" name="pickup_time" value="<?php echo isset($_SESSION['rental_details']['pickup_time']) ? $_SESSION['rental_details']['pickup_time'] : '10:00'; ?>" required>
-                        </div>
+                    <div class="form-group">
+                        <label for="dropoffLocation">Drop-off Location *</label>
+                        <select id="dropoffLocation" name="dropoff_location" required>
+                            <option value="">Select location</option>
+                            <?php foreach ($cities as $city): ?>
+                                <option value="<?php echo $city['city_id']; ?>" <?php echo isset($_SESSION['rental_details']['dropoff_location']) && $_SESSION['rental_details']['dropoff_location'] == $city['city_id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($city['city_name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="dropoffDate">Drop-off Date *</label>
-                            <input type="date" id="dropoffDate" name="dropoff_date" value="<?php echo isset($_SESSION['rental_details']['dropoff_date']) ? $_SESSION['rental_details']['dropoff_date'] : ''; ?>" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="dropoffTime">Drop-off Time *</label>
-                            <input type="time" id="dropoffTime" name="dropoff_time" value="<?php echo isset($_SESSION['rental_details']['dropoff_time']) ? $_SESSION['rental_details']['dropoff_time'] : '10:00'; ?>" required>
-                        </div>
-                    </div>
-                    
-                    <div class="step-actions">
-                        <a href="basket.php?step=1" class="btn-back">Back to Basket</a>
-                        <button type="submit" class="btn-next">Continue to Extras</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="step-content <?php echo $currentStep == 3 ? 'active' : ''; ?>" id="step3">
-                <h2 class="section-title">Additional Services & Extras</h2>
-                <p style="margin-bottom: 30px; color: #666;">Enhance your rental experience with these optional extras</p>
+                </div>
                 
-                <form method="POST" id="extrasForm">
-                    <input type="hidden" name="save_extras" value="1">
-                    
-                    <div class="extras-grid" id="extrasGrid">
-                        <?php foreach ($extrasByCategory as $category => $categoryExtras): ?>
-                            <div class="extra-category">
-                                <div class="category-title"><?php echo htmlspecialchars($category); ?></div>
-                                
-                                <?php foreach ($categoryExtras as $extra): ?>
-                                    <div class="extra-option <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'selected' : ''; ?>" 
-                                         data-id="<?php echo $extra['extra_id']; ?>"
-                                         data-price="<?php echo $extra['price']; ?>"
-                                         data-unit="<?php echo $extra['unit']; ?>">
-                                        <div class="extra-header">
-                                            <div style="flex: 1;">
-                                                <div class="extra-name"><?php echo htmlspecialchars($extra['name']); ?></div>
-                                                <div class="extra-description"><?php echo htmlspecialchars($extra['description']); ?></div>
-                                            </div>
-                                            <div class="extra-price">
-                                                <div class="price-amount">£<?php echo number_format($extra['price'], 2); ?></div>
-                                                <div class="price-unit"><?php echo htmlspecialchars($extra['unit']); ?></div>
-                                            </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="pickupDate">Pick-up Date *</label>
+                        <input type="date" id="pickupDate" name="pickup_date" value="<?php echo isset($_SESSION['rental_details']['pickup_date']) ? $_SESSION['rental_details']['pickup_date'] : (isset($basketItems[0]['start_date']) ? $basketItems[0]['start_date'] : date('Y-m-d')); ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pickupTime">Pick-up Time *</label>
+                        <input type="time" id="pickupTime" name="pickup_time" value="<?php echo isset($_SESSION['rental_details']['pickup_time']) ? $_SESSION['rental_details']['pickup_time'] : '10:00'; ?>" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dropoffDate">Drop-off Date *</label>
+                        <input type="date" id="dropoffDate" name="dropoff_date" value="<?php echo isset($_SESSION['rental_details']['dropoff_date']) ? $_SESSION['rental_details']['dropoff_date'] : (isset($basketItems[0]['end_date']) ? $basketItems[0]['end_date'] : date('Y-m-d', strtotime('+1 day'))); ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dropoffTime">Drop-off Time *</label>
+                        <input type="time" id="dropoffTime" name="dropoff_time" value="<?php echo isset($_SESSION['rental_details']['dropoff_time']) ? $_SESSION['rental_details']['dropoff_time'] : '10:00'; ?>" required>
+                    </div>
+                </div>
+                
+                <div class="step-actions">
+                    <a href="basket.php?step=1" class="btn-back">Back to Basket</a>
+                    <button type="submit" class="btn-next">Continue to Extras</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 3: Extras -->
+        <div class="step-content <?php echo $currentStep == 3 ? 'active' : ''; ?>" id="step3">
+            <h2 class="section-title">Additional Services & Extras</h2>
+            <p style="margin-bottom: 30px; color: #666;">Enhance your rental experience with these optional extras</p>
+            
+            <form method="POST" id="extrasForm">
+                <input type="hidden" name="save_extras" value="1">
+                
+                <div class="extras-grid" id="extrasGrid">
+                    <?php foreach ($extrasByCategory as $category => $categoryExtras): ?>
+                        <div class="extra-category">
+                            <div class="category-title"><?php echo htmlspecialchars($category); ?></div>
+                            
+                            <?php foreach ($categoryExtras as $extra): ?>
+                                <div class="extra-option <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'selected' : ''; ?>" 
+                                     data-id="<?php echo $extra['extra_id']; ?>"
+                                     data-price="<?php echo $extra['price']; ?>"
+                                     data-unit="<?php echo $extra['unit']; ?>">
+                                    <div class="extra-header">
+                                        <div style="flex: 1;">
+                                            <div class="extra-name"><?php echo htmlspecialchars($extra['name']); ?></div>
+                                            <div class="extra-description"><?php echo htmlspecialchars($extra['description']); ?></div>
                                         </div>
-                                        <input type="checkbox" name="extras[]" value="<?php echo $extra['extra_id']; ?>" 
-                                               <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'checked' : ''; ?> 
-                                               style="display: none;">
+                                        <div class="extra-price">
+                                            <div class="price-amount">£<?php echo number_format($extra['price'], 2); ?></div>
+                                            <div class="price-unit"><?php echo htmlspecialchars($extra['unit']); ?></div>
+                                        </div>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                    
-                    <div class="step-actions">
-                        <a href="basket.php?step=2" class="btn-back">Back to Rental Details</a>
-                        <button type="submit" class="btn-next">Continue to Confirmation</button>
-                    </div>
-                </form>
-            </div>
-            <div class="step-content <?php echo $currentStep == 4 ? 'active' : ''; ?>" id="step4">
-                <h2 class="section-title">Booking Confirmation</h2>
-                <p style="margin-bottom: 25px; color: #666;">Please review your booking details before proceeding to payment</p>
-                
-                <div class="confirmation-details" style="margin-bottom: 30px;">
-                    <h3 style="color: var(--vivid-indigo); margin-bottom: 20px;">Booking Summary</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <div class="detail-group">
-                                <div class="detail-label">Pick-up Location</div>
-                                <div>
-                                    <?php 
-                                    $pickupCity = 'Not specified';
-                                    if (isset($_SESSION['rental_details']['pickup_location'])) {
-                                        foreach ($cities as $city) {
-                                            if ($city['city_id'] == $_SESSION['rental_details']['pickup_location']) {
-                                                $pickupCity = $city['city_name'];
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    echo htmlspecialchars($pickupCity);
-                                    ?>
-                                </div>
-                            </div>
-                            <div class="detail-group">
-                                <div class="detail-label">Pick-up Date & Time</div>
-                                <div>
-                                    <?php 
-                                    $pickupDateTime = 'Not specified';
-                                    if (isset($_SESSION['rental_details']['pickup_date'])) {
-                                        $pickupDateTime = htmlspecialchars($_SESSION['rental_details']['pickup_date']);
-                                        if (isset($_SESSION['rental_details']['pickup_time'])) {
-                                            $pickupDateTime .= ' ' . htmlspecialchars($_SESSION['rental_details']['pickup_time']);
-                                        }
-                                    }
-                                    echo $pickupDateTime;
-                                    ?>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="detail-group">
-                                <div class="detail-label">Drop-off Location</div>
-                                <div>
-                                    <?php 
-                                    $dropoffCity = 'Not specified';
-                                    if (isset($_SESSION['rental_details']['dropoff_location'])) {
-                                        foreach ($cities as $city) {
-                                            if ($city['city_id'] == $_SESSION['rental_details']['dropoff_location']) {
-                                                $dropoffCity = $city['city_name'];
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    echo htmlspecialchars($dropoffCity);
-                                    ?>
-                                </div>
-                            </div>
-                            <div class="detail-group">
-                                <div class="detail-label">Drop-off Date & Time</div>
-                                <div>
-                                    <?php 
-                                    $dropoffDateTime = 'Not specified';
-                                    if (isset($_SESSION['rental_details']['dropoff_date'])) {
-                                        $dropoffDateTime = htmlspecialchars($_SESSION['rental_details']['dropoff_date']);
-                                        if (isset($_SESSION['rental_details']['dropoff_time'])) {
-                                            $dropoffDateTime .= ' ' . htmlspecialchars($_SESSION['rental_details']['dropoff_time']);
-                                        }
-                                    }
-                                    echo $dropoffDateTime;
-                                    ?>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="detail-group">
-                        <div class="detail-label">Selected Cars & Pricing</div>
-                        <div style="margin-top: 10px;">
-                            <?php foreach ($basketItems as $item): ?>
-                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                                    <span><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model'] . ' (' . $item['year'] . ')'); ?></span>
-                                    <span style="font-weight: 600;">£<?php echo number_format($item['estimated_total'], 2); ?></span>
+                                    <input type="checkbox" name="extras[]" value="<?php echo $extra['extra_id']; ?>" 
+                                           <?php echo in_array($extra['extra_id'], $selectedExtras) ? 'checked' : ''; ?> 
+                                           style="display: none;">
                                 </div>
                             <?php endforeach; ?>
-                            
-                            <?php if ($extrasTotal > 0): ?>
-                                <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
-                                    <span>Additional Extras</span>
-                                    <span style="font-weight: 600;">£<?php echo number_format($extrasTotal, 2); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            
-                            <div style="display: flex; justify-content: space-between; padding: 12px 0; font-weight: 700; font-size: 1.1rem; color: var(--vivid-indigo);">
-                                <span>Total Amount</span>
-                                <span>£<?php echo number_format($grandTotal, 2); ?></span>
-                            </div>
                         </div>
-                    </div>
-                    
-                    <?php if (!empty($selectedExtras)): ?>
+                    <?php endforeach; ?>
+                </div>
+                
+                <div class="step-actions">
+                    <a href="basket.php?step=2" class="btn-back">Back to Rental Details</a>
+                    <button type="submit" class="btn-next">Continue to Confirmation</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 4: Confirmation -->
+        <div class="step-content <?php echo $currentStep == 4 ? 'active' : ''; ?>" id="step4">
+            <h2 class="section-title">Booking Confirmation</h2>
+            <p style="margin-bottom: 25px; color: #666;">Please review your booking details before proceeding to payment</p>
+            
+            <div class="confirmation-details" style="margin-bottom: 30px;">
+                <h3 style="color: var(--vivid-indigo); margin-bottom: 20px;">Booking Summary</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
                         <div class="detail-group">
-                            <div class="detail-label">Selected Extras</div>
+                            <div class="detail-label">Pick-up Location</div>
                             <div>
                                 <?php 
-                                $extraNames = [];
-                                foreach ($selectedExtras as $extraId) {
-                                    foreach ($extras as $extra) {
-                                        if ($extra['extra_id'] == $extraId) {
-                                            $extraNames[] = $extra['name'] . ' (£' . number_format($extra['price'], 2) . ')';
+                                $pickupCity = 'Not specified';
+                                if (isset($_SESSION['rental_details']['pickup_location'])) {
+                                    foreach ($cities as $city) {
+                                        if ($city['city_id'] == $_SESSION['rental_details']['pickup_location']) {
+                                            $pickupCity = $city['city_name'];
                                             break;
                                         }
                                     }
                                 }
-                                echo implode(', ', $extraNames);
+                                echo htmlspecialchars($pickupCity);
                                 ?>
                             </div>
                         </div>
-                    <?php endif; ?>
-                </div>
-                
-                <form method="POST" id="confirmationForm">
-                    <input type="hidden" name="save_confirmation" value="1">
+                        <div class="detail-group">
+                            <div class="detail-label">Pick-up Date & Time</div>
+                            <div>
+                                <?php 
+                                $pickupDateTime = 'Not specified';
+                                if (isset($_SESSION['rental_details']['pickup_date'])) {
+                                    $pickupDateTime = htmlspecialchars($_SESSION['rental_details']['pickup_date']);
+                                    if (isset($_SESSION['rental_details']['pickup_time'])) {
+                                        $pickupDateTime .= ' ' . htmlspecialchars($_SESSION['rental_details']['pickup_time']);
+                                    }
+                                }
+                                echo $pickupDateTime;
+                                ?>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div class="form-group">
-                        <label for="specialRequests">Special Requests (Optional)</label>
-                        <textarea id="specialRequests" name="special_requests" placeholder="Any special requirements or requests..." rows="4"><?php echo isset($_SESSION['special_requests']) ? htmlspecialchars($_SESSION['special_requests']) : ''; ?></textarea>
-                    </div>
-                    
-                    <div class="step-actions">
-                        <a href="basket.php?step=3" class="btn-back">Back to Extras</a>
-                        <button type="submit" class="btn-next">Proceed to Payment</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="step-content <?php echo $currentStep == 5 ? 'active' : ''; ?>" id="step5">
-                <h2 class="section-title">Payment Details</h2>
-                
-                <form method="POST" id="paymentForm">
-                    <input type="hidden" name="process_payment" value="1">
-                    
-                    <div class="payment-methods">
-                        <div class="payment-method" data-method="card">
-                            <div class="payment-icon">
-                                <i class="fas fa-credit-card"></i>
-                            </div>
-                            <div class="payment-name">Credit/Debit Card</div>
-                        </div>
-                       
-                    </div>
-                    
-                    <input type="hidden" name="payment_method" id="paymentMethod" required>
-                    
-                    <div id="cardPaymentForm" style="display: none; margin-top: 25px;">
-                        <div class="form-group">
-                            <label for="cardNumber">Card Number *</label>
-                            <input type="text" id="cardNumber" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="expiryDate">Expiry Date *</label>
-                                <input type="text" id="expiryDate" name="expiry_date" placeholder="MM/YY" maxlength="5">
-                            </div>
-                            <div class="form-group">
-                                <label for="cvv">CVV *</label>
-                                <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="3">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="cardholderName">Cardholder Name *</label>
-                            <input type="text" id="cardholderName" name="cardholder_name" placeholder="John Smith">
-                        </div>
-                    </div>
-                    
-                    <div class="step-actions">
-                        <a href="basket.php?step=4" class="btn-back">Back to Confirmation</a>
-                        <button type="submit" class="btn-next">Complete Booking</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="step-content <?php echo $currentStep == 'success' ? 'active' : ''; ?>" id="successStep">
-                <div class="success-message">
-                    <div class="success-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <h2 class="success-title">Booking Confirmed!</h2>
-                    <p class="success-text">Thank you for your booking. Your reservation has been confirmed and a confirmation email has been sent to you.</p>
-                    <?php if (isset($_SESSION['booking_confirmation'])): ?>
-                        <div class="confirmation-details">
-                            <div class="detail-group">
-                                <div class="detail-label">Booking Reference</div>
-                                <div>#<?php echo implode(', ', $_SESSION['booking_confirmation']['booking_ids']); ?></div>
-                            </div>
-                            <div class="detail-group">
-                                <div class="detail-label">Total Amount</div>
-                                <div>£<?php echo number_format($_SESSION['booking_confirmation']['total_amount'], 2); ?></div>
-                            </div>
-                            <div class="detail-group">
-                                <div class="detail-label">Pick-up</div>
-                                <div>
-                                    <?php 
-                                    $pickupCity = 'Not specified';
-                                    if (isset($_SESSION['booking_confirmation']['pickup_location'])) {
-                                        foreach ($cities as $city) {
-                                            if ($city['city_id'] == $_SESSION['booking_confirmation']['pickup_location']) {
-                                                $pickupCity = $city['city_name'];
-                                                break;
-                                            }
+                        <div class="detail-group">
+                            <div class="detail-label">Drop-off Location</div>
+                            <div>
+                                <?php 
+                                $dropoffCity = 'Not specified';
+                                if (isset($_SESSION['rental_details']['dropoff_location'])) {
+                                    foreach ($cities as $city) {
+                                        if ($city['city_id'] == $_SESSION['rental_details']['dropoff_location']) {
+                                            $dropoffCity = $city['city_name'];
+                                            break;
                                         }
                                     }
-                                    echo htmlspecialchars($pickupCity) . ' - ' . 
-                                         htmlspecialchars($_SESSION['booking_confirmation']['pickup_date'] ?? '') . ' ' . 
-                                         htmlspecialchars($_SESSION['booking_confirmation']['pickup_time'] ?? '');
-                                    ?>
-                                </div>
+                                }
+                                echo htmlspecialchars($dropoffCity);
+                                ?>
                             </div>
                         </div>
-                    <?php endif; ?>
-                    <div class="step-actions" style="justify-content: center;">
-                        <a href="customer-dashboard.php" class="btn-next">View My Bookings</a>
-                        <a href="cars.php" class="btn-back">Book Another Car</a>
+                        <div class="detail-group">
+                            <div class="detail-label">Drop-off Date & Time</div>
+                            <div>
+                                <?php 
+                                $dropoffDateTime = 'Not specified';
+                                if (isset($_SESSION['rental_details']['dropoff_date'])) {
+                                    $dropoffDateTime = htmlspecialchars($_SESSION['rental_details']['dropoff_date']);
+                                    if (isset($_SESSION['rental_details']['dropoff_time'])) {
+                                        $dropoffDateTime .= ' ' . htmlspecialchars($_SESSION['rental_details']['dropoff_time']);
+                                    }
+                                }
+                                echo $dropoffDateTime;
+                                ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-
-            <div class="basket-summary">
-                <h2 class="section-title">
-                    <?php echo $currentStep == 'success' ? 'Booking Complete' : 'Booking Summary'; ?>
-                </h2>
-                <div id="summaryContent">
-                    <?php if ($currentStep == 'success' && isset($_SESSION['booking_confirmation'])): ?>
-                        
-                        <div class="summary-row">
-                            <span>Status</span>
-                            <span style="color: #2ecc71; font-weight: 600;">Confirmed</span>
-                        </div>
-                        <div class="summary-row">
-                            <span>Booking Reference</span>
-                            <span>#<?php echo implode(', ', $_SESSION['booking_confirmation']['booking_ids']); ?></span>
-                        </div>
-                        <div class="summary-row total">
-                            <span>Total Paid</span>
-                            <span>£<?php echo number_format($_SESSION['booking_confirmation']['total_amount'], 2); ?></span>
-                        </div>
-                    <?php elseif (!empty($basketItems)): ?>
-                        
+                
+                <div class="detail-group">
+                    <div class="detail-label">Selected Cars & Pricing</div>
+                    <div style="margin-top: 10px;">
                         <?php foreach ($basketItems as $item): ?>
-                            <div class="summary-row">
-                                <span><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model']); ?></span>
-                                <span>£<?php echo number_format($item['estimated_total'], 2); ?></span>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                                <span><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model'] . ' (' . $item['year'] . ')'); ?></span>
+                                <span style="font-weight: 600;">£<?php echo number_format($item['estimated_total'], 2); ?></span>
                             </div>
                         <?php endforeach; ?>
                         
                         <?php if ($extrasTotal > 0): ?>
-                            <div class="summary-row">
-                                <span>Extras</span>
-                                <span>£<?php echo number_format($extrasTotal, 2); ?></span>
+                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee;">
+                                <span>Additional Extras</span>
+                                <span style="font-weight: 600;">£<?php echo number_format($extrasTotal, 2); ?></span>
                             </div>
                         <?php endif; ?>
                         
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; font-weight: 700; font-size: 1.1rem; color: var(--vivid-indigo);">
+                            <span>Total Amount</span>
+                            <span>£<?php echo number_format($grandTotal, 2); ?></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <?php if (!empty($selectedExtras)): ?>
+                    <div class="detail-group">
+                        <div class="detail-label">Selected Extras</div>
+                        <div>
+                            <?php 
+                            $extraNames = [];
+                            foreach ($selectedExtras as $extraId) {
+                                foreach ($extras as $extra) {
+                                    if ($extra['extra_id'] == $extraId) {
+                                        $extraNames[] = $extra['name'] . ' (£' . number_format($extra['price'], 2) . ')';
+                                        break;
+                                    }
+                                }
+                            }
+                            echo implode(', ', $extraNames);
+                            ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+            
+            <form method="POST" id="confirmationForm">
+                <input type="hidden" name="save_confirmation" value="1">
+                
+                <div class="form-group">
+                    <label for="specialRequests">Special Requests (Optional)</label>
+                    <textarea id="specialRequests" name="special_requests" placeholder="Any special requirements or requests..." rows="4"><?php echo isset($_SESSION['special_requests']) ? htmlspecialchars($_SESSION['special_requests']) : ''; ?></textarea>
+                </div>
+                
+                <div class="step-actions">
+                    <a href="basket.php?step=3" class="btn-back">Back to Extras</a>
+                    <button type="submit" class="btn-next">Proceed to Payment</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 5: Payment -->
+        <div class="step-content <?php echo $currentStep == 5 ? 'active' : ''; ?>" id="step5">
+            <h2 class="section-title">Payment Details</h2>
+            
+            <?php if (isset($_SESSION['error'])): ?>
+                <div class="alert alert-error" style="margin-bottom: 20px;">
+                    <?php echo htmlspecialchars($_SESSION['error']); ?>
+                </div>
+                <?php unset($_SESSION['error']); ?>
+            <?php endif; ?>
+            
+            <form method="POST" id="paymentForm">
+                <input type="hidden" name="process_payment" value="1">
+                
+                <div class="payment-methods">
+                    <div class="payment-method <?php echo (!isset($_POST['payment_method']) || $_POST['payment_method'] == 'card') ? 'selected' : ''; ?>" data-method="card">
+                        <div class="payment-icon">
+                            <i class="fas fa-credit-card"></i>
+                        </div>
+                        <div class="payment-name">Credit/Debit Card</div>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="payment_method" id="paymentMethod" value="card" required>
+                
+                <div id="cardPaymentForm" style="display: block; margin-top: 25px;">
+                    <div class="form-group">
+                        <label for="cardNumber">Card Number *</label>
+                        <input type="text" id="cardNumber" name="card_number" placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="expiryDate">Expiry Date *</label>
+                            <input type="text" id="expiryDate" name="expiry_date" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label for="cvv">CVV *</label>
+                            <input type="text" id="cvv" name="cvv" placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="cardholderName">Cardholder Name *</label>
+                        <input type="text" id="cardholderName" name="cardholder_name" placeholder="John Smith">
+                    </div>
+                </div>
+                
+                <div class="step-actions">
+                    <a href="basket.php?step=4" class="btn-back">Back to Confirmation</a>
+                    <button type="submit" class="btn-next">Complete Booking</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Step -->
+        <div class="step-content <?php echo $currentStep == 'success' ? 'active' : ''; ?>" id="successStep">
+            <div class="success-message">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 class="success-title">Booking Confirmed!</h2>
+                <p class="success-text">Thank you for your booking. Your reservation has been confirmed and a confirmation email has been sent to you.</p>
+                <?php if (isset($_SESSION['booking_confirmation'])): ?>
+                    <div class="confirmation-details">
+                        <div class="detail-group">
+                            <div class="detail-label">Booking Reference</div>
+                            <div>#<?php echo implode(', ', $_SESSION['booking_confirmation']['booking_ids']); ?></div>
+                        </div>
+                        <div class="detail-group">
+                            <div class="detail-label">Total Amount</div>
+                            <div>£<?php echo number_format($_SESSION['booking_confirmation']['total_amount'], 2); ?></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                <div class="step-actions" style="justify-content: center;">
+                    <a href="customer-dashboard.php" class="btn-next">View My Bookings</a>
+                    <a href="cars.php" class="btn-back">Book Another Car</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Basket Summary -->
+        <div class="basket-summary">
+            <h2 class="section-title">
+                <?php echo $currentStep == 'success' ? 'Booking Complete' : 'Booking Summary'; ?>
+            </h2>
+            <div id="summaryContent">
+                <?php if ($currentStep == 'success' && isset($_SESSION['booking_confirmation'])): ?>
+                    <div class="summary-row">
+                        <span>Status</span>
+                        <span style="color: #2ecc71; font-weight: 600;">Confirmed</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Booking Reference</span>
+                        <span>#<?php echo implode(', ', $_SESSION['booking_confirmation']['booking_ids']); ?></span>
+                    </div>
+                    <div class="summary-row total">
+                        <span>Total Paid</span>
+                        <span>£<?php echo number_format($_SESSION['booking_confirmation']['total_amount'], 2); ?></span>
+                    </div>
+                <?php elseif (!empty($basketItems)): ?>
+                    <?php foreach ($basketItems as $item): ?>
+                        <div class="summary-row">
+                            <span><?php echo htmlspecialchars($item['make_name'] . ' ' . $item['model']); ?></span>
+                            <span>
+                                <?php 
+                                if ($currentStep == 1) {
+                                    echo '£' . number_format($item['price_per_day'], 2) . '/day';
+                                } else {
+                                    echo '£' . number_format($item['estimated_total'], 2);
+                                }
+                                ?>
+                            </span>
+                        </div>
+                    <?php endforeach; ?>
+                    
+                    <?php if ($currentStep > 1 && $extrasTotal > 0): ?>
+                        <div class="summary-row">
+                            <span>Extras</span>
+                            <span>£<?php echo number_format($extrasTotal, 2); ?></span>
+                        </div>
+                    <?php endif; ?>
+                    
+                    <?php if ($currentStep > 1): ?>
                         <div class="summary-row total">
                             <span>Total</span>
                             <span>£<?php echo number_format($grandTotal, 2); ?></span>
                         </div>
-                    <?php else: ?>
-                        <p>Your basket is empty</p>
-                    <?php endif; ?>
-                </div>
-                
-                <?php if ($currentStep == 'success'): ?>
-                  
-                    <a href="customer-dashboard.php" class="checkout-btn">View My Bookings</a>
-                    <a href="cars.php" class="checkout-btn" style="margin-top: 10px; background: var(--vivid-indigo);">Book Another Car</a>
-                <?php elseif (!empty($basketItems)): ?>
-                
-                    <?php if ($currentStep == 1): ?>
-                        <a href="basket.php?step=2" class="checkout-btn">Proceed to Checkout</a>
-                    <?php else: ?>
-                        <a href="basket.php?step=1" class="checkout-btn">Back to Basket</a>
                     <?php endif; ?>
                 <?php else: ?>
-                    <button class="checkout-btn" disabled>Proceed to Checkout</button>
+                    <p>Your basket is empty</p>
                 <?php endif; ?>
             </div>
-        </div>
-    </section>
-
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Motiv, Car Rental</h3>
-                    <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="landing.php">Home</a></li>
-                        <li><a href="cars.php">Our Fleet</a></li>
-                        <li><a href="contact.php">Locations</a></li>
-                        <li><a href="#">Offers</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Contact Us</h3>
-                    <ul>
-                        <li>New Street Station, Birmingham</li>
-                        <li>0712345678</li>
-                        <li>info@motivcarrental.com</li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const currentStep = <?php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
             
-            const steps = document.querySelectorAll('.step');
-            steps.forEach((step, index) => {
-                const stepNumber = index + 1;
-                
-                if (stepNumber <= currentStep) {
-                    step.style.cursor = 'pointer';
-                    
-                    step.addEventListener('click', function() {
-                        window.location.href = 'basket.php?step=' + stepNumber;
-                    });
-                    
-                    step.addEventListener('mouseenter', function() {
-                        this.style.opacity = '0.7';
-                    });
-                    
-                    step.addEventListener('mouseleave', function() {
-                        this.style.opacity = '1';
-                    });
-                } else {
+            <?php if ($currentStep == 'success'): ?>
+                <a href="customer-dashboard.php" class="checkout-btn">View My Bookings</a>
+                <a href="cars.php" class="checkout-btn" style="margin-top: 10px; background: var(--vivid-indigo);">Book Another Car</a>
+            <?php elseif (!empty($basketItems)): ?>
+                <?php if ($currentStep == 1): ?>
+                    <a href="basket.php?step=2" class="checkout-btn">Proceed to Checkout</a>
+                <?php else: ?>
+                    <a href="basket.php?step=1" class="checkout-btn">Back to Basket</a>
+                <?php endif; ?>
+            <?php else: ?>
+                <button class="checkout-btn" disabled>Proceed to Checkout</button>
+            <?php endif; ?>
+        </div>
+    </div>
+</section>
 
-                    step.style.cursor = 'not-allowed';
-                    step.style.opacity = '0.6';
-                }
+<footer>
+    <div class="container">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>Motiv, Car Rental</h3>
+                <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="landing.php">Home</a></li>
+                    <li><a href="cars.php">Our Fleet</a></li>
+                    <li><a href="contact.php">Locations</a></li>
+                    <li><a href="#">Offers</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Us</h3>
+                <ul>
+                    <li>New Street Station, Birmingham</li>
+                    <li>0712345678</li>
+                    <li>info@motivcarrental.com</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentStep = <?php echo is_numeric($currentStep) ? $currentStep : 0; ?>;
+    
+    // Step navigation
+    const steps = document.querySelectorAll('.step');
+    steps.forEach((step, index) => {
+        const stepNumber = index + 1;
+        
+        if (stepNumber <= currentStep && currentStep != 'success') {
+            step.style.cursor = 'pointer';
+            
+            step.addEventListener('click', function() {
+                window.location.href = 'basket.php?step=' + stepNumber;
             });
             
-            const today = new Date().toISOString().split('T')[0];
-            const pickupDate = document.getElementById('pickupDate');
-            const dropoffDate = document.getElementById('dropoffDate');
-            
-            if (pickupDate) {
-                pickupDate.min = today;
-                pickupDate.addEventListener('change', function() {
-                    if (dropoffDate) {
-                        dropoffDate.min = this.value;
-                    }
-                });
-            }
-            
-            if (dropoffDate) {
-                dropoffDate.min = today;
-            }
-            
-            const paymentMethods = document.querySelectorAll('.payment-method');
-            const paymentMethodInput = document.getElementById('paymentMethod');
-            const cardPaymentForm = document.getElementById('cardPaymentForm');
-            
-            paymentMethods.forEach(method => {
-                method.addEventListener('click', function() {
-                    paymentMethods.forEach(m => m.classList.remove('selected'));
-                    this.classList.add('selected');
-                    const selectedMethod = this.getAttribute('data-method');
-                    paymentMethodInput.value = selectedMethod;
-                    
-                    if (cardPaymentForm) {
-                        cardPaymentForm.style.display = selectedMethod === 'card' ? 'block' : 'none';
-                    }
-                });
+            step.addEventListener('mouseenter', function() {
+                this.style.opacity = '0.7';
             });
             
-            const extrasGrid = document.getElementById('extrasGrid');
-            if (extrasGrid) {
-                extrasGrid.addEventListener('click', function(e) {
-                    const extraOption = e.target.closest('.extra-option');
-                    if (extraOption) {
-                        const checkbox = extraOption.querySelector('input[type="checkbox"]');
-                        
-                        if (extraOption.classList.contains('selected')) {
-                            extraOption.classList.remove('selected');
-                            checkbox.checked = false;
-                        } else {
-                            extraOption.classList.add('selected');
-                            checkbox.checked = true;
-                        }
-                    }
-                });
-            }
-            
-            const cardNumberInput = document.getElementById('cardNumber');
-            if (cardNumberInput) {
-                cardNumberInput.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-                    let matches = value.match(/\d{4,16}/g);
-                    let match = matches && matches[0] || '';
-                    let parts = [];
-                    
-                    for (let i = 0, len = match.length; i < len; i += 4) {
-                        parts.push(match.substring(i, i + 4));
-                    }
-                    
-                    if (parts.length) {
-                        e.target.value = parts.join(' ');
-                    } else {
-                        e.target.value = value;
-                    }
-                });
-            }
-            
-            const expiryDateInput = document.getElementById('expiryDate');
-            if (expiryDateInput) {
-                expiryDateInput.addEventListener('input', function(e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value.length >= 2) {
-                        e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
-                    }
-                });
-            }
-            
-            const paymentForm = document.getElementById('paymentForm');
-            if (paymentForm) {
-                paymentForm.addEventListener('submit', function(e) {
-                    const paymentMethod = paymentMethodInput.value;
-                    
-                    if (!paymentMethod) {
-                        e.preventDefault();
-                        alert('Please select a payment method');
-                        return;
-                    }
-                    
-                    if (paymentMethod === 'card') {
-                        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
-                        const expiryDate = document.getElementById('expiryDate').value;
-                        const cvv = document.getElementById('cvv').value;
-                        const cardholderName = document.getElementById('cardholderName').value;
-                        
-                        if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
-                            e.preventDefault();
-                            alert('Please fill in all card details');
-                            return;
-                        }
-                        
-                        if (cardNumber.length !== 16) {
-                            e.preventDefault();
-                            alert('Please enter a valid 16-digit card number');
-                            return;
-                        }
-                        
-                        if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
-                            e.preventDefault();
-                            alert('Please enter expiry date in MM/YY format');
-                            return;
-                        }
-                        
-                        if (cvv.length !== 3) {
-                            e.preventDefault();
-                            alert('Please enter a valid 3-digit CVV');
-                            return;
-                        }
-                    }
-                });
-            }
-
-            const basketLink = document.getElementById('basketLink');
-            if (basketLink) {
-                basketLink.addEventListener('click', function(e) {
-                    this.classList.add('animate');
-                    setTimeout(() => {
-                        this.classList.remove('animate');
-                    }, 600);
-                });
-            }
-
-            function showToast(message, type = 'success') {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.className = `toast ${type} show`;
-                
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 3000);
-            }
-
-            window.addToBasket = function(carId, carName) {
-                fetch('basket.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `add_to_basket=1&car_id=${carId}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(`${carName} added to basket!`, 'success');
-                        
-                        if (basketLink) {
-                            basketLink.classList.add('animate');
-                            setTimeout(() => {
-                                basketLink.classList.remove('animate');
-                            }, 600);
-                        }
-                        
-                        let basketCount = basketLink.querySelector('.basket-count');
-                        if (basketCount) {
-                            let count = parseInt(basketCount.textContent) + 1;
-                            basketCount.textContent = count;
-                        } else {
-                            basketCount = document.createElement('span');
-                            basketCount.className = 'basket-count';
-                            basketCount.textContent = '1';
-                            basketLink.appendChild(basketCount);
-                        }
-                    } else {
-                        showToast(data.message || 'Failed to add car to basket', 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast('Error adding car to basket', 'error');
-                });
-            };
-        });
-
-        function toggleDatesForm(itemId) {
-            const form = document.getElementById('datesForm-' + itemId);
-            form.classList.toggle('show');
+            step.addEventListener('mouseleave', function() {
+                this.style.opacity = '1';
+            });
+        } else if (currentStep == 'success') {
+            step.style.cursor = 'default';
+        } else {
+            step.style.cursor = 'not-allowed';
+            step.style.opacity = '0.6';
         }
-    </script>
+    });
+    
+    // Date validation
+    const today = new Date().toISOString().split('T')[0];
+    const pickupDate = document.getElementById('pickupDate');
+    const dropoffDate = document.getElementById('dropoffDate');
+    
+    if (pickupDate) {
+        pickupDate.min = today;
+        pickupDate.addEventListener('change', function() {
+            if (dropoffDate) {
+                dropoffDate.min = this.value;
+                // If dropoff date is less than pickup date, update it
+                if (dropoffDate.value && new Date(dropoffDate.value) < new Date(this.value)) {
+                    dropoffDate.value = this.value;
+                }
+            }
+        });
+    }
+    
+    if (dropoffDate) {
+        dropoffDate.min = today;
+    }
+    
+    // Payment method selection
+    const paymentMethods = document.querySelectorAll('.payment-method');
+    const paymentMethodInput = document.getElementById('paymentMethod');
+    const cardPaymentForm = document.getElementById('cardPaymentForm');
+    
+    paymentMethods.forEach(method => {
+        method.addEventListener('click', function() {
+            paymentMethods.forEach(m => m.classList.remove('selected'));
+            this.classList.add('selected');
+            const selectedMethod = this.getAttribute('data-method');
+            paymentMethodInput.value = selectedMethod;
+            
+            if (cardPaymentForm) {
+                cardPaymentForm.style.display = selectedMethod === 'card' ? 'block' : 'none';
+            }
+        });
+    });
+    
+    // Extras selection
+    const extrasGrid = document.getElementById('extrasGrid');
+    if (extrasGrid) {
+        extrasGrid.addEventListener('click', function(e) {
+            const extraOption = e.target.closest('.extra-option');
+            if (extraOption) {
+                const checkbox = extraOption.querySelector('input[type="checkbox"]');
+                
+                if (extraOption.classList.contains('selected')) {
+                    extraOption.classList.remove('selected');
+                    checkbox.checked = false;
+                } else {
+                    extraOption.classList.add('selected');
+                    checkbox.checked = true;
+                }
+            }
+        });
+    }
+    
+    // Card input formatting
+    const cardNumberInput = document.getElementById('cardNumber');
+    if (cardNumberInput) {
+        cardNumberInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let parts = [];
+            
+            for (let i = 0; i < value.length; i += 4) {
+                parts.push(value.substring(i, i + 4));
+            }
+            
+            if (parts.length) {
+                e.target.value = parts.join(' ');
+            } else {
+                e.target.value = value;
+            }
+        });
+    }
+    
+    const expiryDateInput = document.getElementById('expiryDate');
+    if (expiryDateInput) {
+        expiryDateInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                e.target.value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+        });
+    }
+    
+    // Payment form validation
+    const paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', function(e) {
+            const paymentMethod = paymentMethodInput.value;
+            
+            if (!paymentMethod) {
+                e.preventDefault();
+                alert('Please select a payment method');
+                return;
+            }
+            
+            if (paymentMethod === 'card') {
+                const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                const expiryDate = document.getElementById('expiryDate').value;
+                const cvv = document.getElementById('cvv').value;
+                const cardholderName = document.getElementById('cardholderName').value;
+                
+                if (!cardNumber || !expiryDate || !cvv || !cardholderName) {
+                    e.preventDefault();
+                    alert('Please fill in all card details');
+                    return;
+                }
+                
+                if (cardNumber.length !== 16) {
+                    e.preventDefault();
+                    alert('Please enter a valid 16-digit card number');
+                    return;
+                }
+                
+                if (!/^\d{2}\/\d{2}$/.test(expiryDate)) {
+                    e.preventDefault();
+                    alert('Please enter expiry date in MM/YY format');
+                    return;
+                }
+                
+                if (cvv.length !== 3) {
+                    e.preventDefault();
+                    alert('Please enter a valid 3-digit CVV');
+                    return;
+                }
+            }
+        });
+    }
+
+    const basketLink = document.getElementById('basketLink');
+    if (basketLink) {
+        basketLink.addEventListener('click', function(e) {
+            this.classList.add('animate');
+            setTimeout(() => {
+                this.classList.remove('animate');
+            }, 600);
+        });
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast ${type} show`;
+        
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+});
+
+// Accessibility controls
+let currentFontSize = <?php echo $fontSize; ?>;
+
+function updateFontSizeDisplay() {
+    const display = document.getElementById('font-size-display');
+    if (display) display.textContent = currentFontSize + '%';
+    document.documentElement.style.fontSize = currentFontSize + '%';
+    document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+}
+
+function setTheme(theme) {
+    document.body.setAttribute('data-theme', theme);
+    document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    location.reload();
+}
+
+function setLanguage(lang) {
+    document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateFontSizeDisplay();
+
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            setTheme(this.getAttribute('data-theme'));
+        });
+    });
+
+    const decreaseBtn = document.getElementById('font-decrease');
+    const increaseBtn = document.getElementById('font-increase');
+    const resetBtn = document.getElementById('font-reset');
+    if (decreaseBtn) decreaseBtn.addEventListener('click', function() {
+        if (currentFontSize > 70) { currentFontSize -= 10; updateFontSizeDisplay(); }
+    });
+    if (increaseBtn) increaseBtn.addEventListener('click', function() {
+        if (currentFontSize < 150) { currentFontSize += 10; updateFontSizeDisplay(); }
+    });
+    if (resetBtn) resetBtn.addEventListener('click', function() {
+        currentFontSize = 100; updateFontSizeDisplay();
+    });
+
+    document.querySelectorAll('.language-option').forEach(option => {
+        option.addEventListener('click', function(e) {
+            e.preventDefault();
+            setLanguage(this.getAttribute('data-lang'));
+        });
+    });
+});
+</script>
+
 </body>
 </html>
 <?php
-
 $conn->close();
-
 ?>
