@@ -993,7 +993,7 @@ if ($language == 'en') {
             </div>
 
             <div class="reset-note">
-                <strong>Note:</strong> This is for customer accounts only. For admin password reset, please contact support.
+                <strong>Note:</strong> This is for customer accounts only.
             </div>
         </div>
     </div>
