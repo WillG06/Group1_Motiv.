@@ -588,21 +588,39 @@ $fontSizeText = 'Font Size'; $resetText = 'Reset'; $languageText = 'Language';
 $home = 'Home'; $cars = 'Cars'; $contact = 'Contact';
 $dashboard = 'Dashboard'; $login = 'Login'; $logout = 'Logout';
 
+// About page content translations for footer
 if ($language == 'es') {
     $themeText = 'Tema'; $lightText = 'Claro'; $darkText = 'Oscuro';
     $fontSizeText = 'Tamaño de fuente'; $resetText = 'Reiniciar'; $languageText = 'Idioma';
     $home = 'Inicio'; $cars = 'Autos'; $contact = 'Contacto';
     $dashboard = 'Panel'; $login = 'Iniciar sesión'; $logout = 'Cerrar sesión';
+    $quickLinks = 'Enlaces rápidos';
+    $contactUs = 'Contáctenos';
+    $rightsReserved = 'Todos los derechos reservados.';
+    $footerTagline = 'Su socio de confianza para servicios de alquiler de autos en Birmingham y más allá.';
 } elseif ($language == 'fr') {
     $themeText = 'Thème'; $lightText = 'Clair'; $darkText = 'Sombre';
     $fontSizeText = 'Taille de police'; $resetText = 'Réinitialiser'; $languageText = 'Langue';
     $home = 'Accueil'; $cars = 'Voitures'; $contact = 'Contact';
     $dashboard = 'Tableau de bord'; $login = 'Connexion'; $logout = 'Déconnexion';
+    $quickLinks = 'Liens rapides';
+    $contactUs = 'Contactez-nous';
+    $rightsReserved = 'Tous droits réservés.';
+    $footerTagline = 'Votre partenaire de confiance pour les services de location de voitures à Birmingham et au-delà.';
 } elseif ($language == 'de') {
     $themeText = 'Design'; $lightText = 'Hell'; $darkText = 'Dunkel';
     $fontSizeText = 'Schriftgröße'; $resetText = 'Zurücksetzen'; $languageText = 'Sprache';
     $home = 'Startseite'; $cars = 'Autos'; $contact = 'Kontakt';
     $dashboard = 'Dashboard'; $login = 'Anmelden'; $logout = 'Abmelden';
+    $quickLinks = 'Schnelllinks';
+    $contactUs = 'Kontaktieren Sie uns';
+    $rightsReserved = 'Alle Rechte vorbehalten.';
+    $footerTagline = 'Ihr vertrauenswürdiger Partner für Autovermietungen in Birmingham und darüber hinaus.';
+} else {
+    $quickLinks = 'Quick Links';
+    $contactUs = 'Contact Us';
+    $rightsReserved = 'All rights reserved.';
+    $footerTagline = 'Your trusted partner for car rental services in Birmingham and beyond.';
 }
 
 // Handle any session errors that need to be displayed
@@ -723,8 +741,8 @@ nav ul li {
 nav ul li a {
     display: flex;
     align-items: center;
-    height: 100%;
-    padding: 0 12px;  
+    height: 87%;
+    padding: 8px 12px;  
     color: white;
     text-decoration: none;
     font-weight: 600;
@@ -1369,6 +1387,94 @@ nav ul li a:hover {
             background: #e74c3c;
         }
 
+        /* Footer Styles - Matching about.php */
+        footer {
+            background-color: var(--vivid-indigo);
+            color: #ffffff;
+            padding: 40px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--coral-red);
+        }
+
+        .footer-column p {
+            color: #ffffff;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-column ul li a {
+            color: #ffffff;
+            text-decoration: none;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--coral-red);
+            padding-left: 5px;
+        }
+
+        .footer-column ul li i {
+            margin-right: 10px;
+            color: var(--coral-red);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .copyright p {
+            color: #ffffff;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .footer-column h3::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
         @media (max-width: 992px) {
             .checkout-content {
                 grid-template-columns: 1fr;
@@ -1496,8 +1602,30 @@ nav ul li a:hover {
         [data-theme="dark"] p,
         [data-theme="dark"] .item-specs span,
         [data-theme="dark"] .detail-label,
-        [data-theme="dark"] .extra-description {
+        [data-theme="dark"] .extra-description,
+        [data-theme="dark"] .footer-column p,
+        [data-theme="dark"] .footer-column ul li {
             color: var(--text-secondary);
+        }
+
+        [data-theme="dark"] footer {
+            background-color: #222222;
+        }
+
+        [data-theme="dark"] .footer-column h3 {
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .footer-column ul li a {
+            color: #cccccc;
+        }
+
+        [data-theme="dark"] .footer-column ul li a:hover {
+            color: var(--coral-red);
+        }
+
+        [data-theme="dark"] .copyright p {
+            color: #cccccc;
         }
 
         [data-theme="dark"] .form-group input,
@@ -1515,7 +1643,7 @@ nav ul li a:hover {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-      /* Dropdown styles - matching main navigation */
+      /* Dropdown styles  */
 nav ul li.dropdown { 
     position: relative; 
     display: flex;
@@ -2279,19 +2407,19 @@ nav ul li.dropdown .dropdown-content a:hover {
         <div class="footer-content">
             <div class="footer-column">
                 <h3>Motiv, Car Rental</h3>
-                <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
+                <p><?php echo $footerTagline; ?></p>
             </div>
             <div class="footer-column">
-                <h3>Quick Links</h3>
+                <h3><?php echo $quickLinks; ?></h3>
                 <ul>
-                    <li><a href="landing.php">Home</a></li>
-                    <li><a href="cars.php">Our Fleet</a></li>
-                    <li><a href="contact.php">Locations</a></li>
-                    <li><a href="#">Offers</a></li>
+                    <li><a href="landing.php"><?php echo $home; ?></a></li>
+                    <li><a href="about.php">About Us</a></li>
+                    <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                    <li><a href="contact.php"><?php echo $contact; ?></a></li>
                 </ul>
             </div>
             <div class="footer-column">
-                <h3>Contact Us</h3>
+                <h3><?php echo $contactUs; ?></h3>
                 <ul>
                     <li>New Street Station, Birmingham</li>
                     <li>0712345678</li>
@@ -2300,7 +2428,7 @@ nav ul li.dropdown .dropdown-content a:hover {
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+            <p>&copy; 2025 Motiv Car Rental. <?php echo $rightsReserved; ?></p>
         </div>
     </div>
 </footer>
