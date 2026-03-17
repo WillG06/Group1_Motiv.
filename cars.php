@@ -746,7 +746,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         }
         
         .favorite-btn:hover i {
-            color: var(--coral-red);
+            color: #FF0000;
         }
         
         .basket-btn.active i {
