@@ -619,6 +619,8 @@ if (isset($_SESSION['error'])) {
     <title>Basket - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
     <style>
+
+        
         /* Extras */
         .extras-grid {
             display: flex;
@@ -675,6 +677,65 @@ if (isset($_SESSION['error'])) {
             margin-bottom: 15px;
             gap: 20px;
         }
+
+header {
+    background: linear-gradient(to right, var(--vivid-indigo), var(--dark-magenta));
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    height: 80px; 
+    display: flex;
+    align-items: center;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+nav {
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+nav ul {
+    display: flex;
+    gap: 25px;  
+    list-style: none;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+}
+
+nav ul li a {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 12px;  
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+nav ul li a:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
         
         .extra-name {
             font-weight: 700;
@@ -758,6 +819,7 @@ if (isset($_SESSION['error'])) {
         .step:hover {
             opacity: 0.8;
         }
+
 
         .basket-container {
             padding: 40px 0;
@@ -1240,24 +1302,25 @@ if (isset($_SESSION['error'])) {
             color: inherit;
             padding: 8px 12px;
             border-radius: 4px;
-            transition: all 0.3s ease;
+            transition: background-color 0.3s ease;
             position: relative;
         }
-        
+
         .basket-indicator a:hover {
             background-color: rgba(255, 255, 255, 0.1);
-            transform: scale(1.1);
         }
         
-        .basket-indicator a.animate {
-            animation: basketPulse 0.6s ease;
-        }
-        
-        @keyframes basketPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1.1); }
-        }
+.basket-indicator a.animate {
+    animation: basketPulse 0.6s ease;
+    transform-origin: center;
+    display: inline-block;
+}
+
+@keyframes basketPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
         
         .basket-count {
             background: var(--cobalt-blue);
@@ -1452,35 +1515,94 @@ if (isset($_SESSION['error'])) {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Nav dropdown */
-        nav ul li.dropdown { position: relative; }
-        nav ul li.dropdown .dropdown-content {
-            display: none; position: absolute;
-            background-color: white; min-width: 120px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            z-index: 1001; border-radius: 5px; overflow: hidden;
-            top: 100%; left: 0;
-        }
-        nav ul li.dropdown:hover .dropdown-content { display: block; }
-        nav ul li.dropdown .dropdown-content a {
-            color: #333; padding: 10px 14px; display: block;
-            transition: background-color 0.3s; border-bottom: 1px solid #f1f1f1;
-            font-size: 0.9rem; text-decoration: none; font-weight: normal;
-        }
-        nav ul li.dropdown .dropdown-content a:hover {
-            background-color: #f8f9fa; color: var(--vivid-indigo);
-        }
-        [data-theme="dark"] nav ul li.dropdown .dropdown-content {
-            background-color: #333333; border-color: #404040;
-        }
-        [data-theme="dark"] nav ul li.dropdown .dropdown-content a {
-            color: #fff; background-color: #333333; border-bottom-color: #404040;
-        }
-        [data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
-            background-color: #404040; color: var(--coral-red);
-        }
+      /* Dropdown styles - matching main navigation */
+nav ul li.dropdown { 
+    position: relative; 
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
 
-        /* Accessibility / language dropdown */
+nav ul li.dropdown .dropbtn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    height: 100%;
+    padding: 0 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s ease;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+nav ul li.dropdown .dropbtn i {
+    font-size: 12px;
+    margin-left: 3px;
+}
+
+nav ul li.dropdown .dropdown-content {
+    display: none; 
+    position: absolute;
+    background-color: white; 
+    min-width: 120px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    z-index: 1001; 
+    border-radius: 5px; 
+    overflow: hidden;
+    top: 100%; 
+    left: 0;
+    margin-top: 0;
+}
+
+nav ul li.dropdown:hover .dropdown-content { 
+    display: block; 
+}
+
+nav ul li.dropdown:hover .dropbtn {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+nav ul li.dropdown .dropdown-content a {
+    color: #333; 
+    padding: 10px 14px; 
+    display: block;
+    transition: background-color 0.3s; 
+    border-bottom: 1px solid #f1f1f1;
+    font-size: 0.9rem; 
+    text-decoration: none; 
+    font-weight: 600;  /* Changed from 'normal' to '600' to match main nav */
+    white-space: nowrap;
+}
+
+nav ul li.dropdown .dropdown-content a:last-child {
+    border-bottom: none;
+}
+
+nav ul li.dropdown .dropdown-content a:hover {
+    background-color: #f8f9fa; 
+    color: var(--vivid-indigo);
+}
+
+/* Dark mode styles */
+[data-theme="dark"] nav ul li.dropdown .dropdown-content {
+    background-color: #333333; 
+    border-color: #404040;
+}
+
+[data-theme="dark"] nav ul li.dropdown .dropdown-content a {
+    color: #fff; 
+    background-color: #333333; 
+    border-bottom-color: #404040;
+}
+
+[data-theme="dark"] nav ul li.dropdown .dropdown-content a:hover {
+    background-color: #404040; 
+    color: var(--coral-red);
+}
+
+        /* Accessibility / language dropdown  */
         .language-selector { position: relative; display: flex; align-items: center; }
         .language-selector > a {
             display: flex; align-items: center; justify-content: center;
@@ -1537,15 +1659,34 @@ if (isset($_SESSION['error'])) {
         [data-theme="dark"] .font-size-display { color: #fff; }
         .active-indicator { margin-left: auto; color: var(--vivid-indigo); font-size: 12px; }
 
-        /* Basket indicator */
-        .basket-indicator { position: relative; display: inline-block; }
-        .basket-count {
-            position: absolute; top: -8px; right: -8px;
-            background: var(--coral-red); color: white; border-radius: 50%;
-            width: 20px; height: 20px; display: flex; align-items: center;
-            justify-content: center; font-size: 0.7rem; font-weight: 600;
+        /* Basket indicator - Fixed for stability */
+        .basket-indicator { 
+            position: relative; 
+            display: flex; 
+            align-items: center; 
         }
-
+        .basket-indicator a {
+            display: flex;
+            align-items: center;
+            position: relative;
+            padding: 8px 12px;
+        }
+        .basket-count {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background: var(--coral-red);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 0;
+        }
     </style>
 </head>
 <body data-theme="<?php echo $darkMode; ?>">
@@ -1571,11 +1712,11 @@ if (isset($_SESSION['error'])) {
                     <li><a href="loginPage.php"><?php echo $login; ?></a></li>
                 <?php else: ?>
                     <li><a href="<?php echo $_SESSION['user']['role'] === 'admin' ? 'admin-dashboard.php' : 'customer-dashboard.php'; ?>"><?php echo $dashboard; ?></a></li>
-                    <li>
-                        <a href="logout.php" style="color: #ff7f50;">
-                            <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
-                        </a>
-                    </li>
+                <li>
+                    <a href="logout.php" style="color: #ff7f50; gap: 5px;">
+                      <i class="fas fa-sign-out-alt"></i> <?php echo $logout; ?>
+                    </a>
+                </li>
                 <?php endif; ?>
 
                 <li class="language-selector">
