@@ -1451,7 +1451,7 @@ if ($language == 'en') {
                 <div class="form-footer-links">
                     <div class="form-footer-row">
                         <span class="txt1">Forgot</span>
-                        <a class="txt2" href="forgotPassword.php">Username / Password?</a>
+                        <a class="txt2" href="forgotPassword.php">Password?</a>
                     </div>
 
                     <div class="form-footer-row">
