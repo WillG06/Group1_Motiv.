@@ -1453,7 +1453,7 @@ nav ul li a:hover {
             --vivid-indigo: #8C0050;
             --dark-magenta: #1800AD;
             --cobalt-blue: #004AAD;
-            --coral-red: #FF0000;
+            --coral-red: #FF7F50;
         }
 
         [data-theme="dark"] {
