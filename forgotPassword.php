@@ -147,7 +147,7 @@ if ($language == 'en') {
     $resetButton = 'Reset Password';
     $backToLogin = 'Back to Login';
     $customerReset = 'Customer Password Reset';
-} // Add other languages as needed
+} 
 ?>
 <!DOCTYPE html>
 <html lang="en">
