@@ -32,7 +32,6 @@ function getCarImages($conn, $carId) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_image'])) {
     $imageId = intval($_POST['image_id']);
     
-    // Get image path before deleting
     $getImageQuery = $conn->prepare("SELECT image_url FROM car_images WHERE image_id = ? AND car_id = ?");
     $getImageQuery->bind_param("ii", $imageId, $carId);
     $getImageQuery->execute();
@@ -42,12 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_image'])) {
         $imageData = $imageResult->fetch_assoc();
         $imagePath = $imageData['image_url'];
         
-        // Delete from database
         $deleteQuery = $conn->prepare("DELETE FROM car_images WHERE image_id = ? AND car_id = ?");
         $deleteQuery->bind_param("ii", $imageId, $carId);
         
         if ($deleteQuery->execute()) {
-            // Delete physical file
             if (file_exists($imagePath)) {
                 unlink($imagePath);
             }
@@ -73,110 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reorder_images'])) {
     $successMessage = "Image order updated successfully!";
 }
 
-// Handle adding new images
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_images'])) {
-    $uploadedImages = [];
-    $uploadErrors = [];
-    
-    // Get current image count
-    $currentImages = getCarImages($conn, $carId);
-    $currentCount = count($currentImages);
-    $maxFiles = 5;
-    
-    if (isset($_FILES['car_images']) && !empty($_FILES['car_images']['name'][0])) {
-        $uploadDir = 'uploads/cars/';
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-        }
-        
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
-        $files = $_FILES['car_images'];
-        
-        // Count how many files were actually selected
-        $fileCount = 0;
-        foreach ($files['name'] as $name) {
-            if (!empty($name)) $fileCount++;
-        }
-        
-        if ($currentCount + $fileCount > $maxFiles) {
-            $errorMessage = "You can have a maximum of $maxFiles images per car. You currently have $currentCount images and are trying to add $fileCount more.";
-        } else {
-            for ($i = 0; $i < count($files['name']); $i++) {
-                if (empty($files['name'][$i])) continue;
-                
-                $fileError = $files['error'][$i];
-                $tmpName = $files['tmp_name'][$i];
-                $originalName = $files['name'][$i];
-                
-                if ($fileError !== UPLOAD_ERR_OK) {
-                    $uploadErrors[] = "Error uploading file: $originalName. Error code: $fileError";
-                    continue;
-                }
-                
-                $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-                if (!in_array($fileExtension, $allowedExtensions)) {
-                    $uploadErrors[] = "File $originalName: Only JPG, JPEG, PNG, GIF, WebP & AVIF files are allowed.";
-                    continue;
-                }
-                
-                // Validate image
-                $check = getimagesize($tmpName);
-                if ($check === false) {
-                    $uploadErrors[] = "File $originalName is not a valid image.";
-                    continue;
-                }
-                
-                // Generate unique filename
-                $model = preg_replace('/[^a-zA-Z0-9]/', '_', $car['model'] ?? 'car');
-                $fileName = uniqid() . '_' . $model . '_' . ($i+1) . '.' . $fileExtension;
-                $targetPath = $uploadDir . $fileName;
-                
-                if (move_uploaded_file($tmpName, $targetPath)) {
-                    $uploadedImages[] = $targetPath;
-                } else {
-                    $uploadErrors[] = "Sorry, there was an error uploading $originalName.";
-                }
-            }
-        }
-    }
-    
-    if (!empty($uploadErrors)) {
-        $errorMessage = implode(" ", $uploadErrors);
-    } elseif (!empty($uploadedImages)) {
-        // Get the highest display order
-        $maxOrderQuery = $conn->prepare("SELECT COALESCE(MAX(display_order), 0) as max_order FROM car_images WHERE car_id = ?");
-        $maxOrderQuery->bind_param("i", $carId);
-        $maxOrderQuery->execute();
-        $maxOrderResult = $maxOrderQuery->get_result();
-        $maxOrderData = $maxOrderResult->fetch_assoc();
-        $nextOrder = $maxOrderData['max_order'] + 1;
-        $maxOrderQuery->close();
-        
-        // Insert new images
-        $imageInsertQuery = $conn->prepare("INSERT INTO car_images (car_id, image_url, display_order) VALUES (?, ?, ?)");
-        $displayOrder = $nextOrder;
-        $allSuccess = true;
-        
-        foreach ($uploadedImages as $imagePath) {
-            $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
-            if (!$imageInsertQuery->execute()) {
-                $errorMessage = "Error adding images: " . $conn->error;
-                $allSuccess = false;
-                break;
-            }
-            $displayOrder++;
-        }
-        $imageInsertQuery->close();
-        
-        if ($allSuccess && empty($errorMessage)) {
-            $successMessage = count($uploadedImages) . " image(s) added successfully!";
-            // Refresh car images
-            $carImages = getCarImages($conn, $carId);
-        }
-    }
-}
-
-// Get car details
+// Get car details first
 $carQuery = $conn->prepare("
     SELECT c.*, mk.make_name, ct.type_name, cs.status_name, ci.city_name
     FROM cars c
@@ -200,8 +94,8 @@ if (!$car) {
 // Get existing images for this car
 $carImages = getCarImages($conn, $carId);
 
-// Handle car details update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_details'])) {
+// Handle complete update (both car details and images)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
     $makeId = $_POST['make_id'];
     $model = trim($_POST['model']);
     $year = $_POST['year'];
@@ -214,6 +108,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_details'])
     $seats = !empty($_POST['seats']) ? $_POST['seats'] : null;
     $doors = !empty($_POST['doors']) ? $_POST['doors'] : null;
     
+    // Update car details first
     if (empty($model) || empty($year) || empty($pricePerDay)) {
         $errorMessage = "Please fill in all required fields.";
     } else {
@@ -231,7 +126,107 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_details'])
         );
         
         if ($updateQuery->execute()) {
+            $carDetailsUpdated = true;
+        } else {
+            $errorMessage = "Error updating car details: " . $conn->error;
+        }
+        $updateQuery->close();
+    }
+    
+    // Handle image uploads if any
+    $uploadedImages = [];
+    $uploadErrors = [];
+    
+    if (isset($_FILES['car_images']) && !empty($_FILES['car_images']['name'][0])) {
+        $uploadDir = 'uploads/cars/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+        
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+        $maxFiles = 5;
+        $files = $_FILES['car_images'];
+        
+        $currentCount = count($carImages);
+        $fileCount = 0;
+        foreach ($files['name'] as $name) {
+            if (!empty($name)) $fileCount++;
+        }
+        
+        if ($currentCount + $fileCount > $maxFiles) {
+            $uploadErrors[] = "Maximum $maxFiles images allowed. You currently have $currentCount images.";
+        } else {
+            for ($i = 0; $i < count($files['name']); $i++) {
+                if (empty($files['name'][$i])) continue;
+                
+                $fileError = $files['error'][$i];
+                $tmpName = $files['tmp_name'][$i];
+                $originalName = $files['name'][$i];
+                
+                if ($fileError !== UPLOAD_ERR_OK) {
+                    $uploadErrors[] = "Error uploading file: $originalName";
+                    continue;
+                }
+                
+                $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                if (!in_array($fileExtension, $allowedExtensions)) {
+                    $uploadErrors[] = "File $originalName: Invalid format.";
+                    continue;
+                }
+                
+                $check = getimagesize($tmpName);
+                if ($check === false) {
+                    $uploadErrors[] = "File $originalName is not a valid image.";
+                    continue;
+                }
+                
+                $fileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $model) . '_' . ($i+1) . '.' . $fileExtension;
+                $targetPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $uploadedImages[] = $targetPath;
+                } else {
+                    $uploadErrors[] = "Error uploading $originalName.";
+                }
+            }
+        }
+        
+        // Insert new images if any
+        if (!empty($uploadedImages)) {
+            $maxOrderQuery = $conn->prepare("SELECT COALESCE(MAX(display_order), 0) as max_order FROM car_images WHERE car_id = ?");
+            $maxOrderQuery->bind_param("i", $carId);
+            $maxOrderQuery->execute();
+            $maxOrderResult = $maxOrderQuery->get_result();
+            $maxOrderData = $maxOrderResult->fetch_assoc();
+            $nextOrder = $maxOrderData['max_order'] + 1;
+            $maxOrderQuery->close();
+            
+            $imageInsertQuery = $conn->prepare("INSERT INTO car_images (car_id, image_url, display_order) VALUES (?, ?, ?)");
+            $displayOrder = $nextOrder;
+            
+            foreach ($uploadedImages as $imagePath) {
+                $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
+                if (!$imageInsertQuery->execute()) {
+                    $uploadErrors[] = "Error inserting image into database";
+                    break;
+                }
+                $displayOrder++;
+            }
+            $imageInsertQuery->close();
+        }
+    }
+    
+    // Set final message
+    if (empty($errorMessage)) {
+        if (!empty($uploadErrors)) {
+            $errorMessage = implode(" ", $uploadErrors);
+        } elseif (isset($carDetailsUpdated)) {
             $successMessage = "Car details updated successfully!";
+            if (!empty($uploadedImages)) {
+                $successMessage .= " " . count($uploadedImages) . " image(s) added.";
+            }
+            // Refresh car images
+            $carImages = getCarImages($conn, $carId);
             // Refresh car data
             $carQuery = $conn->prepare("
                 SELECT c.*, mk.make_name, ct.type_name, cs.status_name, ci.city_name
@@ -247,10 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_details'])
             $carResult = $carQuery->get_result();
             $car = $carResult->fetch_assoc();
             $carQuery->close();
-        } else {
-            $errorMessage = "Error updating car: " . $conn->error;
         }
-        $updateQuery->close();
     }
 }
 
@@ -288,9 +280,43 @@ while ($city = $citiesQuery->fetch_assoc()) {
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --footer-bg: #8C0050;
+            --footer-text: #ecf0f1;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --footer-bg: #222222;
+            --footer-text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         .edit-car-container {
             padding: 40px 0;
-            background-color: #f5f5f5;
+            background-color: var(--bg-secondary);
             min-height: 100vh;
         }
         
@@ -304,10 +330,11 @@ while ($city = $citiesQuery->fetch_assoc()) {
         .edit-car-content {
             max-width: 900px;
             margin: 0 auto;
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px var(--shadow-color);
+            border: 1px solid var(--border-color);
         }
         
         .back-button {
@@ -329,7 +356,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
             font-size: 1.3rem;
             margin: 25px 0 20px 0;
             padding-bottom: 10px;
-            border-bottom: 2px solid #eee;
+            border-bottom: 2px solid var(--border-color);
         }
         
         .section-title:first-of-type {
@@ -346,16 +373,16 @@ while ($city = $citiesQuery->fetch_assoc()) {
         
         .image-card {
             position: relative;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             overflow: hidden;
-            background: #f9f9f9;
+            background: var(--bg-secondary);
             transition: transform 0.2s;
         }
         
         .image-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px var(--shadow-color);
         }
         
         .image-card img {
@@ -429,23 +456,23 @@ while ($city = $citiesQuery->fetch_assoc()) {
         
         .image-card.drag-over {
             border: 2px dashed var(--cobalt-blue);
-            background: #f0f8ff;
+            background: rgba(0, 74, 173, 0.1);
         }
         
         .image-info {
             padding: 8px;
             text-align: center;
             font-size: 12px;
-            color: #666;
-            background: white;
+            color: var(--text-secondary);
+            background: var(--card-bg);
         }
         
         .add-images-section {
-            margin: 20px 0;
+            margin: 20px 0 30px;
             padding: 20px;
-            background: #f8f9fa;
+            background: var(--bg-secondary);
             border-radius: 8px;
-            border: 1px dashed #ddd;
+            border: 1px dashed var(--border-color);
         }
         
         .image-preview-container {
@@ -459,7 +486,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
             position: relative;
             width: 80px;
             height: 80px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             overflow: hidden;
         }
@@ -488,7 +515,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
         }
         
         .reorder-section {
-            background: #f8f9fa;
+            background: var(--bg-secondary);
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
@@ -522,10 +549,12 @@ while ($city = $citiesQuery->fetch_assoc()) {
         .form-group textarea {
             width: 100%;
             padding: 10px 12px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 1rem;
             font-family: inherit;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
         }
         
         .form-group input:focus,
@@ -536,13 +565,13 @@ while ($city = $citiesQuery->fetch_assoc()) {
         }
         
         .btn-primary, .btn-secondary, .btn-danger {
-            padding: 10px 20px;
+            padding: 12px 24px;
             border-radius: 6px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
             border: none;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .btn-primary {
@@ -552,6 +581,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
         
         .btn-primary:hover {
             background: var(--dark-magenta);
+            transform: translateY(-2px);
         }
         
         .btn-secondary {
@@ -605,23 +635,26 @@ while ($city = $citiesQuery->fetch_assoc()) {
             border: 1px solid #ffeeba;
         }
         
-        .current-images-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
         .image-count {
             font-size: 14px;
-            color: #666;
+            color: var(--text-secondary);
+            margin-left: 10px;
         }
         
         .drag-instruction {
             font-size: 12px;
-            color: #999;
+            color: var(--text-secondary);
             text-align: center;
             margin-top: 10px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
         }
         
         @media (max-width: 768px) {
@@ -636,10 +669,20 @@ while ($city = $citiesQuery->fetch_assoc()) {
             .image-gallery {
                 grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
+            
+            .form-actions {
+                flex-direction: column-reverse;
+            }
+            
+            .form-actions button,
+            .form-actions a {
+                width: 100%;
+                text-align: center;
+            }
         }
     </style>
 </head>
-<body>
+<body data-theme="<?php echo isset($darkMode) ? $darkMode : 'light'; ?>">
 
 <header>
     <div class="container header-content">
@@ -686,13 +729,14 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 </div>
             <?php endif; ?>
             
-            <!-- Car Details Form (FIRST) -->
-            <h2 class="section-title">
-                <i class="fas fa-car"></i> Car Details
-            </h2>
-            
-            <form method="POST">
-                <input type="hidden" name="update_car_details" value="1">
+            <!-- Combined Form - Updates Both Car Details and Images -->
+            <form method="POST" enctype="multipart/form-data" id="editCarForm">
+                <input type="hidden" name="update_complete" value="1">
+                
+                <!-- Car Details Section -->
+                <h2 class="section-title">
+                    <i class="fas fa-car"></i> Car Details
+                </h2>
                 
                 <div class="form-row">
                     <div class="form-group">
@@ -782,22 +826,14 @@ while ($city = $citiesQuery->fetch_assoc()) {
                     <textarea id="description" name="description" rows="5" placeholder="Enter car description..."><?php echo htmlspecialchars($car['description']); ?></textarea>
                 </div>
                 
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <a href="admin-dashboard.php" class="btn-secondary">Cancel</a>
-                    <button type="submit" class="btn-primary">Update Car Details</button>
-                </div>
-            </form>
-            
-            <!-- Images Management Section (SECOND) -->
-            <h2 class="section-title">
-                <i class="fas fa-images"></i> Car Images
-                <span class="image-count">(<?php echo count($carImages); ?>/5 images)</span>
-            </h2>
-            
-            <?php if (!empty($carImages)): ?>
-                <div class="reorder-section">
-                    <form method="POST" id="reorderForm">
-                        <input type="hidden" name="reorder_images" value="1">
+                <!-- Images Management Section -->
+                <h2 class="section-title">
+                    <i class="fas fa-images"></i> Car Images
+                    <span class="image-count">(<?php echo count($carImages); ?>/5 images)</span>
+                </h2>
+                
+                <?php if (!empty($carImages)): ?>
+                    <div class="reorder-section">
                         <div class="image-gallery" id="imageGallery">
                             <?php foreach ($carImages as $image): ?>
                                 <div class="image-card" data-id="<?php echo $image['image_id']; ?>" data-order="<?php echo $image['display_order']; ?>">
@@ -825,37 +861,41 @@ while ($city = $citiesQuery->fetch_assoc()) {
                             <i class="fas fa-arrows-alt"></i> Drag and drop images to reorder them
                         </div>
                         <div style="margin-top: 15px; text-align: right;">
-                            <button type="submit" class="btn-primary btn-sm" id="saveOrderBtn">Save Image Order</button>
+                            <button type="submit" name="reorder_images" value="1" class="btn-primary btn-sm" id="saveOrderBtn">Save Image Order</button>
                         </div>
-                    </form>
-                </div>
-            <?php else: ?>
-                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
-                    <i class="fas fa-camera" style="font-size: 48px; color: #ccc;"></i>
-                    <p style="margin-top: 10px; color: #666;">No images uploaded yet. Add up to 5 images below.</p>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Add New Images Section -->
-            <?php if (count($carImages) < 5): ?>
-                <div class="add-images-section">
-                    <h3><i class="fas fa-plus-circle"></i> Add More Images (Max 5 total)</h3>
-                    <form method="POST" enctype="multipart/form-data" id="addImagesForm">
-                        <input type="hidden" name="add_images" value="1">
+                    </div>
+                <?php else: ?>
+                    <div style="text-align: center; padding: 40px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 20px;">
+                        <i class="fas fa-camera" style="font-size: 48px; color: #ccc;"></i>
+                        <p style="margin-top: 10px; color: var(--text-secondary);">No images uploaded yet. Add up to 5 images below.</p>
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Add New Images Section -->
+                <?php if (count($carImages) < 5): ?>
+                    <div class="add-images-section">
+                        <h3><i class="fas fa-plus-circle"></i> Add More Images (Max 5 total)</h3>
                         <div class="form-group">
                             <label for="car_images">Select Images (JPG, PNG, GIF, WebP, AVIF)</label>
                             <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
                             <small>You can select up to <?php echo 5 - count($carImages); ?> more images. Recommended: 800x600px</small>
                             <div id="image-preview-container" class="image-preview-container"></div>
                         </div>
-                        <button type="submit" class="btn-primary">Upload Images</button>
-                    </form>
+                    </div>
+                <?php else: ?>
+                    <div class="message info">
+                        <i class="fas fa-info-circle"></i> Maximum 5 images reached. Delete some images to add more.
+                    </div>
+                <?php endif; ?>
+                
+                <!-- Single Submit Button at the End -->
+                <div class="form-actions">
+                    <a href="admin-dashboard.php" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> Save All Changes
+                    </button>
                 </div>
-            <?php else: ?>
-                <div class="message info">
-                    <i class="fas fa-info-circle"></i> Maximum 5 images reached. Delete some images to add more.
-                </div>
-            <?php endif; ?>
+            </form>
         </div>
     </div>
 </section>
@@ -975,7 +1015,6 @@ while ($city = $citiesQuery->fetch_assoc()) {
             }
             
             if (dragSrcElement !== this) {
-                // Reorder the DOM elements
                 const parent = this.parentNode;
                 const allItems = [...parent.children];
                 const dragIndex = allItems.indexOf(dragSrcElement);
@@ -987,7 +1026,6 @@ while ($city = $citiesQuery->fetch_assoc()) {
                     this.parentNode.insertBefore(dragSrcElement, this);
                 }
                 
-                // Update order numbers
                 updateOrderNumbers();
             }
             
