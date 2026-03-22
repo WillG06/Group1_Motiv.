@@ -370,14 +370,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($extra['extra_id'] == $extraId) {
                                 if ($extra['unit'] === 'per day') {
                                     $itemExtrasTotal += ($extra['price'] * $item['rental_days']);
-                                } else {
-                                    $itemExtrasTotal += $extra['price'];
+                                $oneTimeExtrasCharged = [];
+
+                                foreach ($selectedExtras as $extraId) {
+                                    foreach ($extras as $extra) {
+                                        if ($extra['extra_id'] == $extraId) {
+                                            if ($extra['unit'] === 'per day') {
+                                                $itemExtrasTotal += ($extra['price'] * $item['rental_days']);
+                                            } elseif (!in_array($extraId, $oneTimeExtrasCharged)) {
+                                                $itemExtrasTotal += $extra['price'];
+                                                $oneTimeExtrasCharged[] = $extraId;
+                                            }
+                                            break;
+                                        }
+                                    }
                                 }
-                                break;
-                            }
-                        }
-                    }
-                }
                 
                 $extrasTotal += $itemExtrasTotal;
                 $itemTotal = $item['estimated_total'] + $itemExtrasTotal;
@@ -392,7 +399,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new Exception("Error preparing booking query: " . $conn->error);
                 }
                 
-                $bookingQuery->bind_param("iissddss", 
+                $bookingQuery->bind_param("iissddis", 
                     $userId, 
                     $item['car_id'], 
                     $item['start_date'], 
