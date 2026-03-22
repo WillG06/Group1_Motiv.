@@ -37,54 +37,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
     $statusId = $_POST['status_id'];
     $cityId = $_POST['city_id'];
     
-    $imageUrl = '';
-    if (isset($_FILES['car_image']) && $_FILES['car_image']['error'] === 0) {
+    // --- Multiple Image Upload Handling ---
+    $uploadedImages = []; // To store paths of successfully uploaded images
+    $uploadErrors = [];
+    
+    // Check if files were uploaded
+    if (isset($_FILES['car_images']) && !empty($_FILES['car_images']['name'][0])) {
         $uploadDir = 'uploads/cars/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
         
-        $fileExtension = strtolower(pathinfo($_FILES['car_image']['name'], PATHINFO_EXTENSION));
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $maxFiles = 5; // Maximum number of images
+        $files = $_FILES['car_images'];
         
-        if (in_array($fileExtension, $allowedExtensions)) {
-            $fileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $model) . '.' . $fileExtension;
-            $targetPath = $uploadDir . $fileName;
-            
-            $check = getimagesize($_FILES['car_image']['tmp_name']);
-            if ($check !== false) {
-                if (move_uploaded_file($_FILES['car_image']['tmp_name'], $targetPath)) {
-                    $imageUrl = $targetPath;
-                } else {
-                    $errorMessage = "Sorry, there was an error uploading your file.";
-                }
-            } else {
-                $errorMessage = "File is not an image.";
-            }
+        // Count how many files were actually selected (non-empty names)
+        $fileCount = 0;
+        foreach ($files['name'] as $name) {
+            if (!empty($name)) $fileCount++;
+        }
+        
+        if ($fileCount > $maxFiles) {
+            $errorMessage = "You can upload a maximum of 5 images.";
         } else {
-            $errorMessage = "Only JPG, JPEG, PNG & GIF files are allowed.";
+            for ($i = 0; $i < count($files['name']); $i++) {
+                if (empty($files['name'][$i])) continue;
+                
+                $fileError = $files['error'][$i];
+                $tmpName = $files['tmp_name'][$i];
+                $originalName = $files['name'][$i];
+                
+                if ($fileError !== UPLOAD_ERR_OK) {
+                    $uploadErrors[] = "Error uploading file: $originalName. Error code: $fileError";
+                    continue;
+                }
+                
+                $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+                if (!in_array($fileExtension, $allowedExtensions)) {
+                    $uploadErrors[] = "File $originalName: Only JPG, JPEG, PNG, GIF & WebP files are allowed.";
+                    continue;
+                }
+                
+                // Validate image
+                $check = getimagesize($tmpName);
+                if ($check === false) {
+                    $uploadErrors[] = "File $originalName is not a valid image.";
+                    continue;
+                }
+                
+                // Generate unique filename
+                $fileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $model) . '_' . ($i+1) . '.' . $fileExtension;
+                $targetPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($tmpName, $targetPath)) {
+                    $uploadedImages[] = $targetPath;
+                } else {
+                    $uploadErrors[] = "Sorry, there was an error uploading $originalName.";
+                }
+            }
         }
     }
     
     if (empty($model) || empty($year) || empty($pricePerDay)) {
         $errorMessage = "Please fill in all required fields.";
+    } elseif (!empty($uploadErrors)) {
+        $errorMessage = implode(" ", $uploadErrors);
     } else {
+        // First, insert the car without images to get the car_id
         $insertQuery = $conn->prepare("
             INSERT INTO cars (agent_id, make_id, model, year, type_id, price_per_day, 
-                             deposit_required, description, status_id, city_id, image_url)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             deposit_required, description, status_id, city_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $insertQuery->bind_param("iisiiidsiis", 
+        $insertQuery->bind_param("iisiiidsii", 
             $adminId, $makeId, $model, $year, $typeId, $pricePerDay, 
-            $depositRequired, $description, $statusId, $cityId, $imageUrl
+            $depositRequired, $description, $statusId, $cityId
         );
         
         if ($insertQuery->execute()) {
-            $successMessage = "Car added successfully! It will now appear in the listings.";
+            $carId = $insertQuery->insert_id;
+            $insertQuery->close();
+            
+            // Now insert the images into car_images table if table exists
+            if (!empty($uploadedImages)) {
+                // Check if car_images table exists
+                $tableCheck = $conn->query("SHOW TABLES LIKE 'car_images'");
+                if ($tableCheck->num_rows > 0) {
+                    $imageInsertQuery = $conn->prepare("INSERT INTO car_images (car_id, image_url, display_order) VALUES (?, ?, ?)");
+                    $displayOrder = 1;
+                    foreach ($uploadedImages as $imagePath) {
+                        $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
+                        if (!$imageInsertQuery->execute()) {
+                            $errorMessage = "Error adding images: " . $conn->error;
+                            break;
+                        }
+                        $displayOrder++;
+                    }
+                    $imageInsertQuery->close();
+                } else {
+                    // If table doesn't exist, store only first image in cars table (backward compatibility)
+                    $updateCarImage = $conn->prepare("UPDATE cars SET image_url = ? WHERE car_id = ?");
+                    $firstImage = $uploadedImages[0];
+                    $updateCarImage->bind_param("si", $firstImage, $carId);
+                    $updateCarImage->execute();
+                    $updateCarImage->close();
+                    $errorMessage = "Note: car_images table doesn't exist. Only one image was saved to the cars table.";
+                }
+            }
+            
+            // If no errors occurred during image insertion, set success message
+            if (empty($errorMessage) || strpos($errorMessage, 'Note:') !== false) {
+                $successMessage = "Car added successfully with " . count($uploadedImages) . " images!";
+                if (strpos($errorMessage, 'Note:') !== false) {
+                    $successMessage .= " " . $errorMessage;
+                    $errorMessage = '';
+                }
+            }
         } else {
             $errorMessage = "Error adding car: " . $conn->error;
+            $insertQuery->close();
         }
-        $insertQuery->close();
     }
 }
 
@@ -304,6 +377,10 @@ if ($customersQuery) {
     }
 }
 
+// Check if car_images table exists
+$tableExists = $conn->query("SHOW TABLES LIKE 'car_images'");
+$hasImageTable = ($tableExists && $tableExists->num_rows > 0);
+
 $carsData = [];
 $carsQuery = $conn->query("
     SELECT c.car_id, c.model, c.year, c.price_per_day, c.image_url, c.description,
@@ -319,6 +396,22 @@ $carsQuery = $conn->query("
 ");
 if ($carsQuery) {
     while ($car = $carsQuery->fetch_assoc()) {
+        // Fetch images for this car if table exists
+        $images = [];
+        if ($hasImageTable) {
+            $imageQuery = $conn->prepare("SELECT image_url FROM car_images WHERE car_id = ? ORDER BY display_order");
+            $imageQuery->bind_param("i", $car['car_id']);
+            $imageQuery->execute();
+            $imageResult = $imageQuery->get_result();
+            while ($img = $imageResult->fetch_assoc()) {
+                $images[] = $img['image_url'];
+            }
+            $imageQuery->close();
+        } elseif (!empty($car['image_url'])) {
+            // Fallback to single image from cars table
+            $images[] = $car['image_url'];
+        }
+        $car['images'] = $images;
         $carsData[] = $car;
     }
 }
@@ -455,6 +548,7 @@ if ($citiesQuery) {
     <title>Admin Dashboard - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ... (keep all existing styles) ... */
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -492,7 +586,6 @@ if ($citiesQuery) {
             background-color: rgba(255, 255, 255, 0.25);
         }
         
-        /* Language selector styles */
         .language-selector {
             position: relative;
             display: flex;
@@ -788,7 +881,6 @@ if ($citiesQuery) {
             background: #e0a800;
         }
         
-        /* Metrics Grid */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -877,7 +969,6 @@ if ($citiesQuery) {
             color: #e74c3c;
         }
         
-        /* Tables */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -989,7 +1080,6 @@ if ($citiesQuery) {
             gap: 15px;
         }
         
-        /* Quick Actions */
         .quick-actions {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1103,7 +1193,7 @@ if ($citiesQuery) {
             padding: 30px;
             border-radius: 12px;
             width: 90%;
-            max-width: 600px;
+            max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -1193,6 +1283,46 @@ if ($citiesQuery) {
             background: #ffebee;
             color: #c62828;
             border: 1px solid #ef9a9a;
+        }
+
+        /* Image preview container styles */
+        .image-preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .image-preview {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-preview .remove-image {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         [data-theme="dark"] {
@@ -1585,10 +1715,12 @@ if ($citiesQuery) {
                     </div>
                 </div>
                 
+                <!-- Multiple Image Upload Section -->
                 <div class="form-group">
-                    <label for="car_image">Car Image</label>
-                    <input type="file" id="car_image" name="car_image" accept="image/*">
-                    <small>Recommended: 800x600px, JPG, PNG, GIF or WebP format</small>
+                    <label for="car_images">Car Images (Up to 5 images)</label>
+                    <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
+                    <small>Recommended: 800x600px, JPG, PNG, GIF or WebP format. You can select up to 5 images.</small>
+                    <div id="image-preview-container" class="image-preview-container"></div>
                 </div>
                 
                 <div class="form-group">
@@ -1889,7 +2021,7 @@ if ($citiesQuery) {
                     <thead>
                         <tr>
                             <th>Car ID</th>
-                            <th>Image</th>
+                            <th>Images</th>
                             <th>Name</th>
                             <th>Type</th>
                             <th>Daily Rate</th>
@@ -1903,11 +2035,26 @@ if ($citiesQuery) {
                                 <tr>
                                     <td>#<?php echo $car['car_id']; ?></td>
                                     <td>
-                                        <?php if ($car['image_url']): ?>
-                                            <img src="<?php echo htmlspecialchars($car['image_url']); ?>" alt="<?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?>" style="width: 50px; height: 30px; object-fit: cover; border-radius: 4px;">
-                                        <?php else: ?>
-                                            <div style="width: 50px; height: 30px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #666;">No Image</div>
-                                        <?php endif; ?>
+                                        <div style="display: flex; gap: 5px;">
+                                            <?php if (!empty($car['images'])): ?>
+                                                <?php 
+                                                $displayCount = 0;
+                                                foreach ($car['images'] as $index => $img): 
+                                                    if ($displayCount < 2 && !empty($img)):
+                                                ?>
+                                                    <img src="<?php echo htmlspecialchars($img); ?>" alt="Car image" style="width: 40px; height: 30px; object-fit: cover; border-radius: 4px;">
+                                                <?php 
+                                                        $displayCount++;
+                                                    endif;
+                                                endforeach; 
+                                                ?>
+                                                <?php if (count($car['images']) > 2): ?>
+                                                    <span style="font-size: 12px;">+<?php echo count($car['images']) - 2; ?></span>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <div style="width: 40px; height: 30px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #666;">No Img</div>
+                                            <?php endif; ?>
+                                        </div>
                                     </td>
                                     <td><?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model'] . ' (' . $car['year'] . ')'); ?></td>
                                     <td><?php echo htmlspecialchars($car['type_name']); ?></td>
@@ -1921,7 +2068,7 @@ if ($citiesQuery) {
                                             <button class="btn-warning" onclick="updateCarStatus(<?php echo $car['car_id']; ?>, 2)">Mark Occupied</button>
                                         <?php endif; ?>
                                     </td>
-                                </tr>
+                                 </tr>
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
@@ -2144,149 +2291,90 @@ if ($citiesQuery) {
     </div>
 </footer>
 
-    <script>
-        let currentFontSize = <?php echo $fontSize; ?>;
-        let currentTheme = '<?php echo $darkMode; ?>';
-        let currentLanguage = '<?php echo $language; ?>';
+<script>
+    let currentFontSize = <?php echo $fontSize; ?>;
+    let currentTheme = '<?php echo $darkMode; ?>';
+    let currentLanguage = '<?php echo $language; ?>';
 
-        function updateFontSizeDisplay() {
-            const display = document.getElementById('font-size-display');
-            if (display) {
-                display.textContent = currentFontSize + '%';
-            }
-            document.documentElement.style.fontSize = currentFontSize + '%';
-            document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    function updateFontSizeDisplay() {
+        const display = document.getElementById('font-size-display');
+        if (display) {
+            display.textContent = currentFontSize + '%';
         }
+        document.documentElement.style.fontSize = currentFontSize + '%';
+        document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    }
 
-        function setTheme(theme) {
-            currentTheme = theme;
-            document.body.setAttribute('data-theme', theme);
-            document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
-            location.reload();
-        }
+    function setTheme(theme) {
+        currentTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
 
-        function setLanguage(lang) {
-            currentLanguage = lang;
-            document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
-            location.reload();
-        }
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            updateFontSizeDisplay();
-            
-            const themeOptions = document.querySelectorAll('.theme-option');
-            themeOptions.forEach(option => {
-                option.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const theme = this.getAttribute('data-theme');
-                    setTheme(theme);
-                });
-            });
-
-            const decreaseBtn = document.getElementById('font-decrease');
-            const increaseBtn = document.getElementById('font-increase');
-            const resetBtn = document.getElementById('font-reset');
-
-            if (decreaseBtn) {
-                decreaseBtn.addEventListener('click', function() {
-                    if (currentFontSize > 70) {
-                        currentFontSize -= 10;
-                        updateFontSizeDisplay();
-                    }
-                });
-            }
-
-            if (increaseBtn) {
-                increaseBtn.addEventListener('click', function() {
-                    if (currentFontSize < 150) {
-                        currentFontSize += 10;
-                        updateFontSizeDisplay();
-                    }
-                });
-            }
-
-            if (resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                    currentFontSize = 100;
-                    updateFontSizeDisplay();
-                });
-            }
-
-            const languageOptions = document.querySelectorAll('.language-option');
-            languageOptions.forEach(option => {
-                option.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const lang = this.getAttribute('data-lang');
-                    setLanguage(lang);
-                });
-            });
-
-            function showAddCarModal() {
-                document.getElementById('addCarModal').style.display = 'flex';
-            }
-            
-            function closeAddCarModal() {
-                document.getElementById('addCarModal').style.display = 'none';
-            }
-            
-            function showAddCityModal() {
-                document.getElementById('addCityModal').style.display = 'flex';
-            }
-            
-            function closeAddCityModal() {
-                document.getElementById('addCityModal').style.display = 'none';
-            }
-            
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.style.display = 'none';
-                    }
-                });
-            });
-
-            function switchTab(tabName) {
-                document.querySelectorAll('.admin-tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
-                
-                document.querySelectorAll('.admin-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                document.getElementById(tabName).classList.add('active');
-            }
-
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', function() {
-                    switchTab(this.getAttribute('data-tab'));
-                });
-            });
-            
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    document.querySelectorAll('.modal').forEach(modal => {
-                        modal.style.display = 'none';
-                    });
-                }
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFontSizeDisplay();
+        
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const theme = this.getAttribute('data-theme');
+                setTheme(theme);
             });
         });
 
-        function showAddCarModal() {
-            document.getElementById('addCarModal').style.display = 'flex';
+        const decreaseBtn = document.getElementById('font-decrease');
+        const increaseBtn = document.getElementById('font-increase');
+        const resetBtn = document.getElementById('font-reset');
+
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                if (currentFontSize > 70) {
+                    currentFontSize -= 10;
+                    updateFontSizeDisplay();
+                }
+            });
         }
-        
-        function closeAddCarModal() {
-            document.getElementById('addCarModal').style.display = 'none';
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                if (currentFontSize < 150) {
+                    currentFontSize += 10;
+                    updateFontSizeDisplay();
+                }
+            });
         }
-        
-        function showAddCityModal() {
-            document.getElementById('addCityModal').style.display = 'flex';
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                currentFontSize = 100;
+                updateFontSizeDisplay();
+            });
         }
-        
-        function closeAddCityModal() {
-            document.getElementById('addCityModal').style.display = 'none';
-        }
+
+        const languageOptions = document.querySelectorAll('.language-option');
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                setLanguage(lang);
+            });
+        });
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
 
         function switchTab(tabName) {
             document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -2300,89 +2388,187 @@ if ($citiesQuery) {
             document.getElementById(tabName).classList.add('active');
         }
 
-        function contactCustomer(email, name) {
-            const subject = 'Message from Motiv Car Hire';
-            const body = `Dear ${name},\n\n`;
-            const emailUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            window.location.href = emailUrl;
-        }
-
-        function editCar(carId) {
-            window.location.href = `edit-car.php?id=${carId}`;
-        }
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                switchTab(this.getAttribute('data-tab'));
+            });
+        });
         
-        function updateCarStatus(carId, newStatus) {
-            const statusText = newStatus == 1 ? 'available' : 'occupied';
-            if (confirm(`Are you sure you want to mark this car as ${statusText}?`)) {
-                fetch('update_car_status.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `car_id=${carId}&new_status=${newStatus}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showTemporaryMessage(data.message, 'success');
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 1000);
-                    } else {
-                        showTemporaryMessage(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showTemporaryMessage('Network error. Please try again.', 'error');
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
                 });
             }
-        }
+        });
 
-        function viewInquiry(inquiryId) {
-            window.location.href = `inquiry-details.php?id=${inquiryId}`;
+        // Image preview for multiple files
+        const imageInput = document.getElementById('car_images');
+        const previewContainer = document.getElementById('image-preview-container');
+        
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                previewContainer.innerHTML = '';
+                const files = Array.from(e.target.files);
+                
+                if (files.length > 5) {
+                    alert('You can only upload up to 5 images.');
+                    imageInput.value = '';
+                    return;
+                }
+                
+                files.forEach((file, index) => {
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            const previewDiv = document.createElement('div');
+                            previewDiv.className = 'image-preview';
+                            previewDiv.setAttribute('data-index', index);
+                            
+                            const img = document.createElement('img');
+                            img.src = ev.target.result;
+                            
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'remove-image';
+                            removeBtn.innerHTML = '×';
+                            removeBtn.onclick = function() {
+                                // Remove this preview and remove the file from the input
+                                const dt = new DataTransfer();
+                                const currentFiles = Array.from(imageInput.files);
+                                const filteredFiles = currentFiles.filter((f, i) => i !== index);
+                                filteredFiles.forEach(f => dt.items.add(f));
+                                imageInput.files = dt.files;
+                                // Re-trigger change event to refresh previews
+                                const event = new Event('change', { bubbles: true });
+                                imageInput.dispatchEvent(event);
+                            };
+                            
+                            previewDiv.appendChild(img);
+                            previewDiv.appendChild(removeBtn);
+                            previewContainer.appendChild(previewDiv);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
         }
+    });
 
-        function replyToInquiry(email, subject) {
-            const emailUrl = `mailto:${email}?subject=Re: ${encodeURIComponent(subject)}&body=Dear Customer,%0D%0A%0D%0AThank you for your inquiry. We appreciate your interest in Motiv Car Hire.%0D%0A%0D%0A`;
-            window.location.href = emailUrl;
-        }
+    function showAddCarModal() {
+        document.getElementById('addCarModal').style.display = 'flex';
+    }
+    
+    function closeAddCarModal() {
+        document.getElementById('addCarModal').style.display = 'none';
+        // Clear previews
+        const previewContainer = document.getElementById('image-preview-container');
+        if (previewContainer) previewContainer.innerHTML = '';
+        const imageInput = document.getElementById('car_images');
+        if (imageInput) imageInput.value = '';
+    }
+    
+    function showAddCityModal() {
+        document.getElementById('addCityModal').style.display = 'flex';
+    }
+    
+    function closeAddCityModal() {
+        document.getElementById('addCityModal').style.display = 'none';
+    }
 
-        function printReport() {
-            window.print();
-        }
+    function switchTab(tabName) {
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
+        
+        document.querySelectorAll('.admin-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(tabName).classList.add('active');
+    }
 
-        function showTemporaryMessage(message, type) {
-            const existingMsg = document.querySelector('.temp-message');
-            if (existingMsg) existingMsg.remove();
-            
-            const messageEl = document.createElement('div');
-            messageEl.className = `temp-message ${type}`;
-            messageEl.textContent = message;
-            messageEl.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                padding: 15px 20px;
-                border-radius: 8px;
-                z-index: 1000;
-                max-width: 300px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-                background: ${type === 'success' ? '#e8f5e9' : '#ffebee'};
-                color: ${type === 'success' ? '#2e7d32' : '#c62828'};
-                border: 1px solid ${type === 'success' ? '#a5d6a7' : '#ef9a9a'};
-            `;
-            
-            document.body.appendChild(messageEl);
-            
-            setTimeout(() => {
-                messageEl.remove();
-            }, 3000);
+    function contactCustomer(email, name) {
+        const subject = 'Message from Motiv Car Hire';
+        const body = `Dear ${name},\n\n`;
+        const emailUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+        window.location.href = emailUrl;
+    }
+
+    function editCar(carId) {
+        window.location.href = `edit-car.php?id=${carId}`;
+    }
+    
+    function updateCarStatus(carId, newStatus) {
+        const statusText = newStatus == 1 ? 'available' : 'occupied';
+        if (confirm(`Are you sure you want to mark this car as ${statusText}?`)) {
+            fetch('update_car_status.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `car_id=${carId}&new_status=${newStatus}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showTemporaryMessage(data.message, 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showTemporaryMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showTemporaryMessage('Network error. Please try again.', 'error');
+            });
         }
-    </script>
+    }
+
+    function viewInquiry(inquiryId) {
+        window.location.href = `inquiry-details.php?id=${inquiryId}`;
+    }
+
+    function replyToInquiry(email, subject) {
+        const emailUrl = `mailto:${email}?subject=Re: ${encodeURIComponent(subject)}&body=Dear Customer,%0D%0A%0D%0AThank you for your inquiry. We appreciate your interest in Motiv Car Hire.%0D%0A%0D%0A`;
+        window.location.href = emailUrl;
+    }
+
+    function printReport() {
+        window.print();
+    }
+
+    function showTemporaryMessage(message, type) {
+        const existingMsg = document.querySelector('.temp-message');
+        if (existingMsg) existingMsg.remove();
+        
+        const messageEl = document.createElement('div');
+        messageEl.className = `temp-message ${type}`;
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            background: ${type === 'success' ? '#e8f5e9' : '#ffebee'};
+            color: ${type === 'success' ? '#2e7d32' : '#c62828'};
+            border: 1px solid ${type === 'success' ? '#a5d6a7' : '#ef9a9a'};
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        setTimeout(() => {
+            messageEl.remove();
+        }, 3000);
+    }
+</script>
 </body>
 </html>
 <?php
 $conn->close();
 ?>
-
