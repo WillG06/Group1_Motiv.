@@ -304,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// Handle adding to basket - FIXED with proper customer_id handling
+// Handle adding to basket
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     if (!isset($_SESSION['user'])) {
         $_SESSION['error_message'] = 'Please login to add cars to your basket';
@@ -313,7 +313,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     }
     
     $carId = intval($_POST['car_id']);
-    // Get customer_id directly from session (customers table ID)
     $customerId = $_SESSION['user']['id'];
     
     try {
@@ -338,18 +337,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
             exit;
         }
         
-        // Get or create active basket for this customer
+        // Get or create active basket
         $basketQuery = $conn->prepare("SELECT basket_id FROM baskets WHERE customer_id = ? AND status = 'active'");
         $basketQuery->bind_param("i", $customerId);
         $basketQuery->execute();
         $basketResult = $basketQuery->get_result();
         
         if ($basketResult->num_rows === 0) {
-            // Create new basket
             $createBasketQuery = $conn->prepare("INSERT INTO baskets (customer_id, status) VALUES (?, 'active')");
             $createBasketQuery->bind_param("i", $customerId);
             if (!$createBasketQuery->execute()) {
-                throw new Exception('Failed to create basket: ' . $createBasketQuery->error);
+                throw new Exception('Failed to create basket');
             }
             $basketId = $createBasketQuery->insert_id;
             $createBasketQuery->close();
@@ -372,45 +370,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
         }
         $checkItemQuery->close();
         
-        // Use 1-day rental (today to tomorrow)
         $startDate = date('Y-m-d');
         $endDate = date('Y-m-d', strtotime('+1 day'));
         $estimatedTotal = floatval($carData['price_per_day']) * 1;
         $depositAmount = floatval($carData['deposit_required'] ?? 0);
         
-        // Insert into basket_items
         $insertItemQuery = $conn->prepare("
             INSERT INTO basket_items (
-                basket_id, 
-                car_id, 
-                start_date, 
-                end_date, 
-                deposit_amount, 
-                estimated_total
+                basket_id, car_id, start_date, end_date, deposit_amount, estimated_total
             ) VALUES (?, ?, ?, ?, ?, ?)
         ");
         
-        $insertItemQuery->bind_param(
-            "iissdd", 
-            $basketId, 
-            $carId, 
-            $startDate, 
-            $endDate, 
-            $depositAmount, 
-            $estimatedTotal
-        );
+        $insertItemQuery->bind_param("iissdd", $basketId, $carId, $startDate, $endDate, $depositAmount, $estimatedTotal);
         
         if ($insertItemQuery->execute()) {
             $_SESSION['success_message'] = 'Car added to basket successfully!';
         } else {
-            throw new Exception('Failed to add car to basket: ' . $insertItemQuery->error);
+            throw new Exception('Failed to add to basket');
         }
         
         $insertItemQuery->close();
         
     } catch (Exception $e) {
         error_log("Basket error: " . $e->getMessage());
-        $_SESSION['error_message'] = 'Error: ' . $e->getMessage();
+        $_SESSION['error_message'] = 'Error adding to basket';
     }
     
     header('Location: cars.php');
@@ -427,8 +410,8 @@ $searchCriteria = [
 ];
 
 $selectedCityId = $searchCriteria['pickup_location'] ?? '';
-
 $selectedCityName = '';
+
 if (!empty($selectedCityId)) {
     $cityNameQuery = $conn->prepare("SELECT city_name FROM cities WHERE city_id = ?");
     $cityNameQuery->bind_param("i", $selectedCityId);
@@ -471,7 +454,6 @@ if (!empty($selectedCityId)) {
 
 $cars = [];
 while ($car = $carsResult->fetch_assoc()) {
-    // Get all images for this car
     $car['images'] = getCarImages($conn, $car['car_id']);
     $cars[] = $car;
 }
@@ -531,7 +513,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Include all the CSS from the previous version */
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f8f9fa;
@@ -761,6 +742,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             z-index: 10;
         }
         
+        /* Car Card Styles */
         .car-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -820,11 +802,29 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         .favorite-btn i, .basket-btn i {
             font-size: 18px;
             color: #666;
-            transition: color 0.3s;
+            transition: all 0.3s ease;
         }
         
+        /* Heart button hover effect - turns red on hover */
+        .favorite-btn:hover i {
+            color: #FF0000;
+            transform: scale(1.1);
+        }
+        
+        /* Active (favorited) state - always red */
         .favorite-btn.active i {
             color: #FF0000;
+        }
+        
+        /* When active and hover, maintain red */
+        .favorite-btn.active:hover i {
+            color: #FF0000;
+            transform: scale(1.1);
+        }
+        
+        .basket-btn:hover i {
+            color: var(--cobalt-blue);
+            transform: scale(1.1);
         }
         
         .car-details {
@@ -1757,7 +1757,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                                 <button class="font-btn" id="font-decrease">A-</button>
                                 <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
                                 <button class="font-btn" id="font-increase">A+</button>
-                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button> 
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
                             </div>
                         </div>
 
@@ -2371,7 +2371,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                     images.push(slide.src);
                 });
             } else {
-                // Fallback to single image
                 const carImage = carCard.querySelector('.car-image img');
                 if (carImage) images.push(carImage.src);
             }
@@ -2401,7 +2400,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 modalAddToBasketBtn.textContent = '<?php echo $unavailableText; ?>';
             }
             
-            // Initialize modal carousel
             if (images.length > 0) {
                 initModalCarousel(images, 0);
                 document.getElementById('modalCarouselContainer').style.display = 'block';
@@ -2640,4 +2638,4 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 </html>
 <?php
 $conn->close();
-?> 
+?>
