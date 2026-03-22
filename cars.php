@@ -1757,7 +1757,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                                 <button class="font-btn" id="font-decrease">A-</button>
                                 <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
                                 <button class="font-btn" id="font-increase">A+</button>
-                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button> 
                             </div>
                         </div>
 
@@ -2640,4 +2640,4 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 </html>
 <?php
 $conn->close();
-?>
+?> 
