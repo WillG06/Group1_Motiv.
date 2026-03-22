@@ -2527,4 +2527,4 @@ while ($city = $citiesQuery->fetch_assoc()) {
 </html>
 <?php
 $conn->close();
-?>
+?> 
