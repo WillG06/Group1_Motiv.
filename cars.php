@@ -2,7 +2,9 @@
 session_start();
 require_once 'db.php';
 
+// Check if user is logged in as customer
 $is_logged_in = isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer';
+// The customer_id is directly stored in session as 'id' from the customers table
 $customer_id = $is_logged_in ? $_SESSION['user']['id'] : null;
 
 $darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
@@ -239,6 +241,33 @@ function isCarInFavorites($conn, $customer_id, $car_id) {
     return $is_favorite;
 }
 
+// Get all car images for a car
+function getCarImages($conn, $car_id) {
+    $images = [];
+    $stmt = $conn->prepare("SELECT image_url FROM car_images WHERE car_id = ? ORDER BY display_order");
+    $stmt->bind_param("i", $car_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $images[] = $row['image_url'];
+    }
+    $stmt->close();
+    
+    // If no images in car_images table, fall back to the main image_url
+    if (empty($images)) {
+        $stmt2 = $conn->prepare("SELECT image_url FROM cars WHERE car_id = ?");
+        $stmt2->bind_param("i", $car_id);
+        $stmt2->execute();
+        $result2 = $stmt2->get_result();
+        if ($row2 = $result2->fetch_assoc() && !empty($row2['image_url'])) {
+            $images[] = $row2['image_url'];
+        }
+        $stmt2->close();
+    }
+    
+    return $images;
+}
+
 // Handle favorite toggle via AJAX
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_favorite') {
     header('Content-Type: application/json');
@@ -275,7 +304,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     exit;
 }
 
-// Handle adding to basket - FIXED to use 1-day rental
+// Handle adding to basket - FIXED with proper customer_id handling
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     if (!isset($_SESSION['user'])) {
         $_SESSION['error_message'] = 'Please login to add cars to your basket';
@@ -284,7 +313,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
     }
     
     $carId = intval($_POST['car_id']);
-    $userId = $_SESSION['user']['id'];
+    // Get customer_id directly from session (customers table ID)
+    $customerId = $_SESSION['user']['id'];
     
     try {
         // Check if car exists and is available
@@ -308,16 +338,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
             exit;
         }
         
-        // Get or create active basket
+        // Get or create active basket for this customer
         $basketQuery = $conn->prepare("SELECT basket_id FROM baskets WHERE customer_id = ? AND status = 'active'");
-        $basketQuery->bind_param("i", $userId);
+        $basketQuery->bind_param("i", $customerId);
         $basketQuery->execute();
         $basketResult = $basketQuery->get_result();
         
         if ($basketResult->num_rows === 0) {
+            // Create new basket
             $createBasketQuery = $conn->prepare("INSERT INTO baskets (customer_id, status) VALUES (?, 'active')");
-            $createBasketQuery->bind_param("i", $userId);
-            $createBasketQuery->execute();
+            $createBasketQuery->bind_param("i", $customerId);
+            if (!$createBasketQuery->execute()) {
+                throw new Exception('Failed to create basket: ' . $createBasketQuery->error);
+            }
             $basketId = $createBasketQuery->insert_id;
             $createBasketQuery->close();
         } else {
@@ -339,13 +372,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
         }
         $checkItemQuery->close();
         
-        // FORCE 1-DAY RENTAL (today to tomorrow)
+        // Use 1-day rental (today to tomorrow)
         $startDate = date('Y-m-d');
         $endDate = date('Y-m-d', strtotime('+1 day'));
-        $estimatedTotal = $carData['price_per_day'] * 1; // 1 day
+        $estimatedTotal = floatval($carData['price_per_day']) * 1;
         $depositAmount = floatval($carData['deposit_required'] ?? 0);
         
-        // Insert into basket - FIXED: removed rental_days as it's a generated column
+        // Insert into basket_items
         $insertItemQuery = $conn->prepare("
             INSERT INTO basket_items (
                 basket_id, 
@@ -438,6 +471,8 @@ if (!empty($selectedCityId)) {
 
 $cars = [];
 while ($car = $carsResult->fetch_assoc()) {
+    // Get all images for this car
+    $car['images'] = getCarImages($conn, $car['car_id']);
     $cars[] = $car;
 }
 
@@ -482,7 +517,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     
     if ($basketResult->num_rows > 0) {
         $basketData = $basketResult->fetch_assoc();
-        $basketCount = $basketData['item_count'];
+        $basketCount = $basketData['item_count'] ?? 0;
     }
     $basketCountQuery->close();
 }
@@ -496,6 +531,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Include all the CSS from the previous version */
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f8f9fa;
@@ -509,7 +545,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             --vivid-indigo: #8C0050;
             --dark-magenta: #1800AD;
             --cobalt-blue: #004AAD;
-            --coral-red: #FF7F50 ;
+            --coral-red: #FF7F50;
         }
 
         [data-theme="dark"] {
@@ -524,39 +560,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             --footer-text: #ffffff;
         }
 
-        [data-theme="dark"] h1,
-        [data-theme="dark"] h2,
-        [data-theme="dark"] h3,
-        [data-theme="dark"] h4,
-        [data-theme="dark"] h5,
-        [data-theme="dark"] h6,
-        [data-theme="dark"] .car-listings-title,
-        [data-theme="dark"] .filter-section h3,
-        [data-theme="dark"] .car-name {
-            color: #ffffff !important;
-        }
-
-        [data-theme="dark"] p,
-        [data-theme="dark"] .car-specs,
-        [data-theme="dark"] .car-description,
-        [data-theme="dark"] .filter-option label,
-        [data-theme="dark"] .footer-column p,
-        [data-theme="dark"] .footer-column ul li {
-            color: #cccccc;
-        }
-
-        [data-theme="dark"] .car-card,
-        [data-theme="dark"] .filters-sidebar,
-        [data-theme="dark"] .no-cars-message,
-        [data-theme="dark"] .search-info {
-            background-color: #2d2d2d;
-            border-color: #404040;
-        }
-
-        [data-theme="dark"] .car-listings-container {
-            background-color: #1a1a1a;
-        }
-
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
@@ -564,11 +567,534 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        header, footer, .car-card, .filters-sidebar {
-            background-color: var(--card-bg);
+        /* Car Image Carousel Styles */
+        .car-image {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        .carousel-slides {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+        }
+        
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            z-index: 10;
+            font-size: 16px;
+        }
+        
+        .carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .carousel-btn.prev {
+            left: 10px;
+        }
+        
+        .carousel-btn.next {
+            right: 10px;
+        }
+        
+        .carousel-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .carousel-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .carousel-dot.active {
+            background: white;
+        }
+        
+        .image-counter {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
+        /* Modal Carousel Styles */
+        .modal-carousel-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .modal-carousel-slides {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.5s ease-in-out;
+        }
+        
+        .modal-carousel-slide {
+            min-width: 100%;
+            height: 100%;
+            flex-shrink: 0;
+        }
+        
+        .modal-carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .modal-carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s;
+            z-index: 10;
+            font-size: 18px;
+        }
+        
+        .modal-carousel-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+        
+        .modal-carousel-btn.prev {
+            left: 10px;
+        }
+        
+        .modal-carousel-btn.next {
+            right: 10px;
+        }
+        
+        .modal-carousel-dots {
+            position: absolute;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        
+        .modal-carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .modal-carousel-dot.active {
+            background: white;
+        }
+        
+        .modal-image-counter {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            z-index: 10;
+        }
+        
+        .car-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px var(--shadow-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+        
+        .car-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px var(--shadow-color);
+        }
+        
+        .booked-badge {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--coral-red);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 15;
+        }
+        
+        .car-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 15;
+        }
+        
+        .favorite-btn, .basket-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .favorite-btn:hover, .basket-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+        
+        .favorite-btn i, .basket-btn i {
+            font-size: 18px;
+            color: #666;
+            transition: color 0.3s;
+        }
+        
+        .favorite-btn.active i {
+            color: #FF0000;
+        }
+        
+        .car-details {
+            padding: 20px;
+        }
+        
+        .car-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .car-name {
+            font-size: 1.3rem;
+            font-weight: 600;
             color: var(--text-primary);
         }
-
+        
+        .car-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--vivid-indigo);
+        }
+        
+        .car-price span {
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-secondary);
+        }
+        
+        .car-specs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .car-spec {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .car-spec i {
+            width: 16px;
+            text-align: center;
+            color: var(--cobalt-blue);
+        }
+        
+        .status-available {
+            color: #2ecc71;
+            font-weight: 600;
+        }
+        
+        .status-occupied {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        
+        .car-description {
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+            line-height: 1.5;
+            font-size: 0.95rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .car-cta {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            width: 100%;
+        }
+        
+        .view-details-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: 1px solid var(--cobalt-blue);
+            background: transparent;
+            color: var(--cobalt-blue);
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .view-details-btn:hover {
+            background: rgba(0, 74, 173, 0.05);
+        }
+        
+        .book-now-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            border: none;
+            background: var(--cobalt-blue);
+            color: white;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .book-now-btn:hover {
+            background: var(--dark-magenta);
+        }
+        
+        .book-now-btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .car-cta form {
+            flex: 1;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+        
+        .car-cta form .book-now-btn {
+            width: 100%;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid var(--border-color);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--vivid-indigo);
+            margin: 0;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .car-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .car-detail-info h3 {
+            color: var(--vivid-indigo);
+            margin-bottom: 15px;
+        }
+        
+        .car-detail-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .car-detail-spec {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+        }
+        
+        .car-detail-spec i {
+            color: var(--cobalt-blue);
+            width: 20px;
+            text-align: center;
+        }
+        
+        .car-detail-description {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+        
+        .car-detail-price {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--vivid-indigo);
+            margin-bottom: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+        
+        .btn-secondary {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--border-color);
+        }
+        
+        .btn-primary {
+            padding: 10px 20px;
+            background: var(--cobalt-blue);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--dark-magenta);
+        }
+        
         .car-listings-container {
             padding: 40px 0;
             background-color: var(--bg-secondary);
@@ -662,234 +1188,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             gap: 25px;
         }
         
-        .car-card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 3px 10px var(--shadow-color);
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
-            border: 1px solid var(--border-color);
-        }
-        
-        .car-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px var(--shadow-color);
-        }
-        
-        .car-image {
-            height: 200px;
-            width: 100%;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .car-image img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
-        }
-        
-        .car-card:hover .car-image img {
-            transform: scale(1.05);
-        }
-        
-        .booked-badge {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: var(--coral-red);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            z-index: 2;
-        }
-        
-        .car-actions {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .favorite-btn, .basket-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: none;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .favorite-btn:hover, .basket-btn:hover {
-            background: white;
-            transform: scale(1.1);
-        }
-        
-        .favorite-btn i, .basket-btn i {
-            font-size: 18px;
-            color: #666;
-            transition: color 0.3s;
-        }
-        
-        .favorite-btn.active i {
-            color: #FF0000;
-        }
-        
-        .favorite-btn:hover i {
-            color: #FF0000;
-        }
-        
-        .basket-btn.active i {
-            color: var(--cobalt-blue);
-        }
-        
-        .car-details {
-            padding: 20px;
-        }
-        
-        .car-title {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 10px;
-        }
-        
-        .car-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        .car-price {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--vivid-indigo);
-        }
-        
-        .car-price span {
-            font-size: 0.9rem;
-            font-weight: 400;
-            color: var(--text-secondary);
-        }
-        
-        .car-specs {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-bottom: 15px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        .car-spec {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .car-spec i {
-            width: 16px;
-            text-align: center;
-            color: var(--cobalt-blue);
-        }
-        
-        .status-available {
-            color: #2ecc71;
-            font-weight: 600;
-        }
-        
-        .status-occupied {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        
-        .car-description {
-            color: var(--text-secondary);
-            margin-bottom: 15px;
-            line-height: 1.5;
-            font-size: 0.95rem;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        
-        /* Updated button styles - centered and full width */
-        .car-cta {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            width: 100%;
-        }
-        
-        .view-details-btn {
-            flex: 1;
-            padding: 12px 0;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            border: 1px solid var(--cobalt-blue);
-            background: transparent;
-            color: var(--cobalt-blue);
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .view-details-btn:hover {
-            background: rgba(0, 74, 173, 0.05);
-        }
-        
-        .book-now-btn {
-            flex: 1;
-            padding: 12px 0;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            border: none;
-            background: var(--cobalt-blue);
-            color: white;
-            display: inline-block;
-            width: 100%;
-        }
-        
-        .book-now-btn:hover {
-            background: var(--dark-magenta);
-        }
-        
-        .book-now-btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        /* Ensure the form doesn't affect the layout */
-        .car-cta form {
-            flex: 1;
-            display: flex;
-            margin: 0;
-            padding: 0;
-            width: 100%;
-        }
-        
-        .car-cta form .book-now-btn {
-            width: 100%;
-        }
-        
         .no-cars-message {
             grid-column: 1 / -1;
             text-align: center;
@@ -904,44 +1202,26 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             justify-content: center;
             min-height: 400px;
         }
-
+        
         .no-cars-message i {
             font-size: 64px;
             color: var(--vivid-indigo);
             margin-bottom: 20px;
             opacity: 0.5;
         }
-
+        
         .no-cars-message h3 {
             color: var(--vivid-indigo);
             margin-bottom: 15px;
             font-size: 1.8rem;
         }
-
+        
         .no-cars-message p {
             margin-bottom: 20px;
             color: var(--text-secondary);
             font-size: 1.1rem;
             max-width: 500px;
             line-height: 1.6;
-        }
-
-        [data-theme="dark"] .no-cars-message {
-            background: var(--card-bg);
-            border-color: var(--border-color);
-        }
-
-        [data-theme="dark"] .no-cars-message h3 {
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .no-cars-message p {
-            color: #cccccc;
-        }
-
-        [data-theme="dark"] .no-cars-message i {
-            color: #ffffff;
-            opacity: 0.7;
         }
         
         .search-info {
@@ -965,244 +1245,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         .search-info p {
             margin: 5px 0;
             color: var(--text-secondary);
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: var(--card-bg);
-            border-radius: 12px;
-            width: 90%;
-            max-width: 800px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            border: 1px solid var(--border-color);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 25px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .modal-title {
-            font-size: 1.5rem;
-            color: var(--vivid-indigo);
-            margin: 0;
-        }
-        
-        .close-modal {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-secondary);
-        }
-        
-        .modal-body {
-            padding: 25px;
-        }
-        
-        .car-detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-        }
-        
-        .car-detail-image {
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .car-detail-image img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        
-        .car-detail-info h3 {
-            color: var(--vivid-indigo);
-            margin-bottom: 15px;
-        }
-        
-        .car-detail-specs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .car-detail-spec {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--text-secondary);
-        }
-        
-        .car-detail-spec i {
-            color: var(--cobalt-blue);
-            width: 20px;
-            text-align: center;
-        }
-        
-        .car-detail-description {
-            margin-bottom: 25px;
-            line-height: 1.6;
-            color: var(--text-secondary);
-        }
-        
-        .car-detail-price {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: var(--vivid-indigo);
-            margin-bottom: 20px;
-        }
-        
-        .modal-footer {
-            padding: 20px 25px;
-            border-top: 1px solid var(--border-color);
-            display: flex;
-            justify-content: flex-end;
-            gap: 15px;
-        }
-        
-        .btn-secondary {
-            padding: 10px 20px;
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: var(--text-primary);
-        }
-        
-        .btn-secondary:hover {
-            background: var(--border-color);
-        }
-        
-        .btn-primary {
-            padding: 10px 20px;
-            background: var(--cobalt-blue);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background: var(--dark-magenta);
-        }
-        
-        .btn-primary:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-        }
-        
-        .login-prompt {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            background: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: 0 5px 15px var(--shadow-color);
-            padding: 15px;
-            width: 200px;
-            z-index: 10;
-            display: none;
-            border: 1px solid var(--border-color);
-        }
-        
-        .login-prompt p {
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            color: var(--text-primary);
-        }
-        
-        .login-prompt-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .login-prompt-buttons button {
-            flex: 1;
-            padding: 6px 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-        }
-        
-        .login-btn {
-            background: var(--cobalt-blue);
-            color: white;
-            border: none;
-        }
-        
-        .register-btn {
-            background: transparent;
-            border: 1px solid var(--cobalt-blue);
-            color: var(--cobalt-blue);
-        }
-        
-        .temp-message {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            max-width: 300px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .temp-message.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-            border: 1px solid #a5d6a7;
-        }
-        
-        .temp-message.error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-        }
-        
-        .basket-indicator {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .basket-count {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: var(--coral-red);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 600;
         }
         
         .search-box input {
@@ -1261,6 +1303,95 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             border: 1px solid #90caf9;
         }
         
+        .temp-message {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .temp-message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #a5d6a7;
+        }
+        
+        .temp-message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        
+        .basket-indicator {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .basket-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: var(--coral-red);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .login-prompt {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            padding: 15px;
+            width: 200px;
+            z-index: 10;
+            display: none;
+            border: 1px solid var(--border-color);
+        }
+        
+        .login-prompt p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+        
+        .login-prompt-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .login-prompt-buttons button {
+            flex: 1;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        
+        .login-btn {
+            background: var(--cobalt-blue);
+            color: white;
+            border: none;
+        }
+        
+        .register-btn {
+            background: transparent;
+            border: 1px solid var(--cobalt-blue);
+            color: var(--cobalt-blue);
+        }
+        
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -1301,7 +1432,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         nav ul li.dropdown {
             position: relative;
         }
-
+        
         nav ul li.dropdown .dropdown-content {
             display: none;
             position: absolute;
@@ -1314,11 +1445,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             top: 100%;
             left: 0;
         }
-
+        
         nav ul li.dropdown:hover .dropdown-content {
             display: block;
         }
-
+        
         nav ul li.dropdown .dropdown-content a {
             color: #333;
             padding: 10px 14px;
@@ -1327,18 +1458,18 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             border-bottom: 1px solid #f1f1f1;
             font-size: 0.9rem;
         }
-
+        
         nav ul li.dropdown .dropdown-content a:hover {
             background-color: #f8f9fa;
             color: var(--vivid-indigo);
         }
-
+        
         .language-selector {
             position: relative;
             display: flex;
             align-items: center;
         }
-
+        
         .language-selector > a {
             display: flex;
             align-items: center;
@@ -1350,11 +1481,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             line-height: 0;
             color: white;
         }
-
+        
         .language-selector:hover > a {
             background-color: rgba(255, 255, 255, 0.1);
         }
-
+        
         .language-settings-dropdown {
             display: none;
             position: absolute;
@@ -1368,30 +1499,30 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             z-index: 1000;
         }
-
+        
         [data-theme="dark"] .language-settings-dropdown {
             background-color: #333333;
             border-color: #404040;
             color: white;
         }
-
+        
         .language-selector:hover .language-settings-dropdown {
             display: block;
         }
-
+        
         .settings-section {
             padding: 12px 15px;
             border-bottom: 1px solid #e0e0e0;
         }
-
+        
         [data-theme="dark"] .settings-section {
             border-color: #404040;
         }
-
+        
         .settings-section:last-child {
             border-bottom: none;
         }
-
+        
         .settings-section h4 {
             margin: 0 0 8px 0;
             color: #333;
@@ -1400,11 +1531,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             letter-spacing: 0.5px;
             font-weight: 600;
         }
-
+        
         [data-theme="dark"] .settings-section h4 {
             color: #fff;
         }
-
+        
         .theme-option, .language-option {
             display: flex;
             align-items: center;
@@ -1416,34 +1547,34 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             margin-bottom: 2px;
             font-size: 14px;
         }
-
+        
         [data-theme="dark"] .theme-option, 
         [data-theme="dark"] .language-option {
             color: #fff;
         }
-
+        
         .theme-option:hover, .language-option:hover {
             background-color: #f1f1f1;
         }
-
+        
         [data-theme="dark"] .theme-option:hover, 
         [data-theme="dark"] .language-option:hover {
             background-color: #404040;
         }
-
+        
         .theme-option i, .language-option i {
             width: 18px;
             margin-right: 10px;
             color: var(--vivid-indigo);
             font-size: 14px;
         }
-
+        
         .font-controls {
             display: flex;
             align-items: center;
             gap: 6px;
         }
-
+        
         .font-btn {
             background: var(--vivid-indigo);
             color: white;
@@ -1459,11 +1590,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             align-items: center;
             justify-content: center;
         }
-
+        
         .font-btn:hover {
             background: var(--dark-magenta);
         }
-
+        
         .font-size-display {
             font-size: 14px;
             color: #333;
@@ -1471,18 +1602,70 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             text-align: center;
             font-weight: 600;
         }
-
+        
         [data-theme="dark"] .font-size-display {
             color: #fff;
         }
-
+        
         .active-indicator {
             margin-left: auto;
             color: var(--vivid-indigo);
             font-size: 12px;
         }
         
-        /* Responsive styles */
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column p {
+            color: var(--footer-text);
+            line-height: 1.6;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column ul li a {
+            color: var(--footer-text);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column ul li a:hover {
+            color: var(--coral-red);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .copyright p {
+            color: var(--footer-text);
+            font-size: 0.9rem;
+        }
+        
         @media (max-width: 992px) {
             .car-listings-content {
                 flex-direction: column;
@@ -1516,59 +1699,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 width: 100%;
             }
         }
-        
-        footer {
-            background-color: var(--footer-bg);
-            color: var(--footer-text);
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .footer-column h3 {
-            color: white;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .footer-column p {
-            color: var(--footer-text);
-            line-height: 1.6;
-        }
-
-        .footer-column ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .footer-column ul li {
-            margin-bottom: 10px;
-        }
-
-        .footer-column ul li a {
-            color: var(--footer-text);
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-
-        .footer-column ul li a:hover {
-            color: var(--coral-red);
-        }
-
-        .copyright {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .copyright p {
-            color: var(--footer-text);
-            font-size: 0.9rem;
-        }
     </style>
 </head>
 <body data-theme="<?php echo $darkMode; ?>">
@@ -1592,7 +1722,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 <li><a href="contact.php"><?php echo $contactText; ?></a></li>
 
                 <?php if (!isset($_SESSION['user'])): ?>
-                    
                     <li><a href="loginPage.php"><?php echo $loginText; ?></a></li>
                 <?php else: ?>
                     <li><a href="customer-dashboard.php"><?php echo $dashboardText; ?></a></li>
@@ -1782,9 +1911,29 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                              data-city-id="<?php echo $car['city_id']; ?>"
                              data-price="<?php echo $car['price_per_day']; ?>"
                              data-type="<?php echo strtolower($car['type_name']); ?>">
-                            <div class="car-image">
-                                <?php if ($car['image_url']): ?>
-                                    <img src="<?php echo htmlspecialchars($car['image_url']); ?>" alt="<?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?>">
+                            <div class="car-image" data-car-id="<?php echo $car['car_id']; ?>">
+                                <?php if (!empty($car['images'])): ?>
+                                    <div class="carousel-container" data-carousel-id="<?php echo $car['car_id']; ?>">
+                                        <div class="carousel-slides" id="carousel-slides-<?php echo $car['car_id']; ?>">
+                                            <?php foreach ($car['images'] as $index => $image): ?>
+                                                <div class="carousel-slide">
+                                                    <img src="<?php echo htmlspecialchars($image); ?>" alt="<?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?>">
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <?php if (count($car['images']) > 1): ?>
+                                            <button class="carousel-btn prev" data-carousel-id="<?php echo $car['car_id']; ?>">❮</button>
+                                            <button class="carousel-btn next" data-carousel-id="<?php echo $car['car_id']; ?>">❯</button>
+                                            <div class="carousel-dots" id="carousel-dots-<?php echo $car['car_id']; ?>">
+                                                <?php for ($i = 0; $i < count($car['images']); $i++): ?>
+                                                    <span class="carousel-dot <?php echo $i === 0 ? 'active' : ''; ?>" data-slide="<?php echo $i; ?>" data-carousel-id="<?php echo $car['car_id']; ?>"></span>
+                                                <?php endfor; ?>
+                                            </div>
+                                            <div class="image-counter">
+                                                <span class="current-slide">1</span>/<span class="total-slides"><?php echo count($car['images']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
                                 <?php else: ?>
                                     <img src="car-default.jpg" alt="<?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?>">
                                 <?php endif; ?>
@@ -1856,7 +2005,15 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             <input type="hidden" id="modalCarId" value="">
             <div class="car-detail-grid">
                 <div class="car-detail-image">
-                    <img id="modalCarImage" src="" alt="Car Image">
+                    <div id="modalCarouselContainer" class="modal-carousel-container">
+                        <div class="modal-carousel-slides" id="modalCarouselSlides"></div>
+                        <button class="modal-carousel-btn prev" id="modalPrevBtn">❮</button>
+                        <button class="modal-carousel-btn next" id="modalNextBtn">❯</button>
+                        <div class="modal-carousel-dots" id="modalCarouselDots"></div>
+                        <div class="modal-image-counter" id="modalImageCounter">
+                            <span id="modalCurrentSlide">1</span>/<span id="modalTotalSlides">1</span>
+                        </div>
+                    </div>
                     <div id="modalBookedBadge" class="booked-badge" style="display: none;"><?php echo $unavailableText; ?></div>
                 </div>
                 <div class="car-detail-info">
@@ -1950,12 +2107,126 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         noCarsSuggestion3: '<?php echo $noCarsSuggestion3; ?>'
     };
 
-    const carsGrid = document.getElementById('carsGrid');
-    const searchInput = document.getElementById('searchInput');
-    const applyFiltersBtn = document.getElementById('apply-filters');
-    const resetFiltersBtn = document.getElementById('reset-filters');
-    const carDetailModal = document.getElementById('carDetailModal');
-    const loginPrompt = document.getElementById('loginPrompt');
+    // Store car images data for modal
+    let modalCarImages = [];
+    let modalCurrentIndex = 0;
+
+    // Carousel functions
+    function initCarousel(carouselId, totalSlides) {
+        if (totalSlides <= 1) return;
+        
+        const slidesContainer = document.getElementById(`carousel-slides-${carouselId}`);
+        const prevBtn = document.querySelector(`.carousel-btn.prev[data-carousel-id="${carouselId}"]`);
+        const nextBtn = document.querySelector(`.carousel-btn.next[data-carousel-id="${carouselId}"]`);
+        const dots = document.querySelectorAll(`.carousel-dot[data-carousel-id="${carouselId}"]`);
+        const counter = document.querySelector(`.carousel-container[data-carousel-id="${carouselId}"] .image-counter .current-slide`);
+        
+        let currentSlide = 0;
+        
+        function updateCarousel() {
+            if (slidesContainer) {
+                slidesContainer.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+            if (dots.length > 0) {
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentSlide);
+                });
+            }
+            if (counter) {
+                counter.textContent = currentSlide + 1;
+            }
+        }
+        
+        if (prevBtn) {
+            prevBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateCarousel();
+            });
+        }
+        
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateCarousel();
+            });
+        }
+        
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentSlide = index;
+                updateCarousel();
+            });
+        });
+        
+        updateCarousel();
+    }
+
+    function initModalCarousel(images, startIndex = 0) {
+        const slidesContainer = document.getElementById('modalCarouselSlides');
+        const dotsContainer = document.getElementById('modalCarouselDots');
+        const prevBtn = document.getElementById('modalPrevBtn');
+        const nextBtn = document.getElementById('modalNextBtn');
+        const currentSlideSpan = document.getElementById('modalCurrentSlide');
+        const totalSlidesSpan = document.getElementById('modalTotalSlides');
+        
+        if (!slidesContainer) return;
+        
+        totalSlidesSpan.textContent = images.length;
+        modalCurrentIndex = startIndex;
+        
+        // Clear containers
+        slidesContainer.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        
+        // Create slides
+        images.forEach((image, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'modal-carousel-slide';
+            const img = document.createElement('img');
+            img.src = image;
+            img.alt = 'Car Image';
+            slide.appendChild(img);
+            slidesContainer.appendChild(slide);
+            
+            // Create dot
+            const dot = document.createElement('span');
+            dot.className = 'modal-carousel-dot' + (index === startIndex ? ' active' : '');
+            dot.setAttribute('data-slide', index);
+            dot.addEventListener('click', () => {
+                modalCurrentIndex = index;
+                updateModalCarousel();
+            });
+            dotsContainer.appendChild(dot);
+        });
+        
+        function updateModalCarousel() {
+            slidesContainer.style.transform = `translateX(-${modalCurrentIndex * 100}%)`;
+            currentSlideSpan.textContent = modalCurrentIndex + 1;
+            const dots = document.querySelectorAll('.modal-carousel-dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === modalCurrentIndex);
+            });
+        }
+        
+        function nextSlide() {
+            if (modalCurrentIndex < images.length - 1) {
+                modalCurrentIndex++;
+                updateModalCarousel();
+            }
+        }
+        
+        function prevSlide() {
+            if (modalCurrentIndex > 0) {
+                modalCurrentIndex--;
+                updateModalCarousel();
+            }
+        }
+        
+        if (prevBtn) prevBtn.onclick = prevSlide;
+        if (nextBtn) nextBtn.onclick = nextSlide;
+        
+        updateModalCarousel();
+    }
 
     function updateFontSizeDisplay() {
         const display = document.getElementById('font-size-display');
@@ -1991,9 +2262,7 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         
         let noCarsMessage = document.querySelector('.no-cars-message');
         
-        // If there are no visible cars and we don't have a no-cars message
         if (visibleCount === 0 && !noCarsMessage) {
-            // Create and show the no vehicles message without the button
             noCarsMessage = document.createElement('div');
             noCarsMessage.className = 'no-cars-message';
             noCarsMessage.innerHTML = `
@@ -2003,7 +2272,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             `;
             document.getElementById('carsGrid').appendChild(noCarsMessage);
         }
-        // If there are visible cars and we have a no-cars message, remove it
         else if (visibleCount > 0 && noCarsMessage) {
             noCarsMessage.remove();
         }
@@ -2044,7 +2312,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         const carCards = document.querySelectorAll('.car-card');
         
         carCards.forEach(card => {
-            // Only apply search filter if card isn't already hidden by other filters
             if (card.style.display !== 'none') {
                 const carName = card.querySelector('.car-name').textContent.toLowerCase();
                 const carDescription = card.querySelector('.car-description').textContent.toLowerCase();
@@ -2086,7 +2353,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         
         if (carCard) {
             const carName = carCard.querySelector('.car-name').textContent;
-            const carImage = carCard.querySelector('.car-image img').src;
             const carType = carCard.querySelector('.car-spec:nth-child(1) span').textContent;
             const carLocation = carCard.querySelector('.car-spec:nth-child(2) span').textContent;
             const carStatus = carCard.querySelector('.car-spec:nth-child(3) span').textContent;
@@ -2095,8 +2361,24 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             const carPrice = carCard.querySelector('.car-price').textContent;
             const isAvailable = carCard.getAttribute('data-status') === '1';
             
+            // Get all images for this car from the carousel
+            const carouselContainer = carCard.querySelector('.carousel-container');
+            let images = [];
+            
+            if (carouselContainer) {
+                const slides = carouselContainer.querySelectorAll('.carousel-slide img');
+                slides.forEach(slide => {
+                    images.push(slide.src);
+                });
+            } else {
+                // Fallback to single image
+                const carImage = carCard.querySelector('.car-image img');
+                if (carImage) images.push(carImage.src);
+            }
+            
+            modalCarImages = images;
+            
             document.getElementById('modalCarName').textContent = carName;
-            document.getElementById('modalCarImage').src = carImage;
             document.getElementById('modalCarType').textContent = carType;
             document.getElementById('modalCarLocation').textContent = carLocation;
             document.getElementById('modalCarYear').textContent = carYear;
@@ -2117,6 +2399,14 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
                 bookedBadge.style.display = 'block';
                 modalAddToBasketBtn.disabled = true;
                 modalAddToBasketBtn.textContent = '<?php echo $unavailableText; ?>';
+            }
+            
+            // Initialize modal carousel
+            if (images.length > 0) {
+                initModalCarousel(images, 0);
+                document.getElementById('modalCarouselContainer').style.display = 'block';
+            } else {
+                document.getElementById('modalCarouselContainer').style.display = 'none';
             }
             
             carDetailModal.style.display = 'flex';
@@ -2163,13 +2453,11 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             const result = await response.json();
             
             if (result.success) {
-                
                 if (result.is_favorite) {
                     button.classList.add('active');
                 } else {
                     button.classList.remove('active');
                 }
-                
                 showTemporaryMessage(result.message, 'success');
             } else {
                 showTemporaryMessage(result.message, 'error');
@@ -2188,7 +2476,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
         
         const button = event.currentTarget;
         const carId = button.getAttribute('data-id');
-        const carName = button.getAttribute('data-name');
         
         if (!currentUser) {
             showTemporaryMessage('Please login to add cars to basket', 'error');
@@ -2198,7 +2485,6 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             return;
         }
         
-        // Create and submit a form for the basket button
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = 'cars.php';
@@ -2237,6 +2523,15 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
 
     document.addEventListener('DOMContentLoaded', function() {
         updateFontSizeDisplay();
+        
+        // Initialize all carousels
+        document.querySelectorAll('.carousel-container').forEach(container => {
+            const carouselId = container.getAttribute('data-carousel-id');
+            const slides = container.querySelectorAll('.carousel-slide');
+            if (slides.length > 1) {
+                initCarousel(carouselId, slides.length);
+            }
+        });
         
         const themeOptions = document.querySelectorAll('.theme-option');
         themeOptions.forEach(option => {
@@ -2285,9 +2580,15 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
             });
         });
 
-        applyFiltersBtn.addEventListener('click', applyFilters);
-        resetFiltersBtn.addEventListener('click', resetFilters);
-        searchInput.addEventListener('input', handleSearch);
+        const applyFiltersBtn = document.getElementById('apply-filters');
+        const resetFiltersBtn = document.getElementById('reset-filters');
+        const searchInput = document.getElementById('searchInput');
+        const carDetailModal = document.getElementById('carDetailModal');
+        const loginPrompt = document.getElementById('loginPrompt');
+        
+        if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', applyFilters);
+        if (resetFiltersBtn) resetFiltersBtn.addEventListener('click', resetFilters);
+        if (searchInput) searchInput.addEventListener('input', handleSearch);
         
         document.querySelectorAll('.close-modal').forEach(button => {
             button.addEventListener('click', () => {
@@ -2329,8 +2630,9 @@ if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'customer') {
     });
 
     document.addEventListener('click', (e) => {
+        const loginPrompt = document.getElementById('loginPrompt');
         if (!e.target.closest('.favorite-btn') && !e.target.closest('.login-prompt')) {
-            loginPrompt.style.display = 'none';
+            if (loginPrompt) loginPrompt.style.display = 'none';
         }
     });
 </script>
