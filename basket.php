@@ -364,27 +364,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             foreach ($basketItemsForBooking as $item) {
                 // Calculate extras total for this item
                 $itemExtrasTotal = 0;
+                $oneTimeExtrasCharged = [];
                 if (!empty($selectedExtras)) {
                     foreach ($selectedExtras as $extraId) {
                         foreach ($extras as $extra) {
                             if ($extra['extra_id'] == $extraId) {
                                 if ($extra['unit'] === 'per day') {
                                     $itemExtrasTotal += ($extra['price'] * $item['rental_days']);
-                                $oneTimeExtrasCharged = [];
-
-                                foreach ($selectedExtras as $extraId) {
-                                    foreach ($extras as $extra) {
-                                        if ($extra['extra_id'] == $extraId) {
-                                            if ($extra['unit'] === 'per day') {
-                                                $itemExtrasTotal += ($extra['price'] * $item['rental_days']);
-                                            } elseif (!in_array($extraId, $oneTimeExtrasCharged)) {
-                                                $itemExtrasTotal += $extra['price'];
-                                                $oneTimeExtrasCharged[] = $extraId;
-                                            }
-                                            break;
-                                        }
-                                    }
+                                } elseif (!in_array($extraId, $oneTimeExtrasCharged)) {
+                                    $itemExtrasTotal += $extra['price'];
+                                    $oneTimeExtrasCharged[] = $extraId;
                                 }
+                                break;
+                            }
+                        }
+                    }
+                }
+                                
                 
                 $extrasTotal += $itemExtrasTotal;
                 $itemTotal = $item['estimated_total'] + $itemExtrasTotal;
