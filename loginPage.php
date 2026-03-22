@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $email = trim($_POST['email'] ?? '');
             $password = trim($_POST['password'] ?? '');
             $confirm_password = trim($_POST['confirm_password'] ?? '');
-            $driving_licence = trim($_POST['driving_licence'] ?? ''); // Added driving licence
+            $driving_licence = trim($_POST['driving_licence'] ?? '');
 
             if (empty($fullname) || empty($email) || empty($password) || empty($confirm_password) || empty($driving_licence)) {
                 $response['message'] = 'Please fill in all fields';
@@ -249,53 +249,213 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Get settings from cookies with defaults
 $darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
 $fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
 $language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
 
-// Language variables (keep all existing translations)
-if ($language == 'en') {
-    $themeText = 'Theme';
-    $lightText = 'Light';
-    $darkText = 'Dark';
-    $fontSizeText = 'Font Size';
-    $resetText = 'Reset';
-    $languageText = 'Language';
-    $home = 'Home';
-    $about = 'About';
-    $cars = 'Cars';
-    $contact = 'Contact';
-    $dashboard = 'Dashboard';
-    $login = 'Login';
-    $logout = 'Logout';
-    $footerTagline = 'Your trusted partner for car rental services in Birmingham and beyond.';
-    $quickLinks = 'Quick Links';
-    $contactUs = 'Contact Us';
-    $rightsReserved = 'All rights reserved.';
-    
-    // Add driving licence text
-    $drivingLicenceLabel = 'Driving Licence Number';
-    $drivingLicenceHint = 'Format: ABCDE123456AB12';
-} elseif ($language == 'es') {
-    // ... keep existing Spanish translations and add:
-    $drivingLicenceLabel = 'Número de Licencia de Conducir';
-    $drivingLicenceHint = 'Formato: ABCDE123456AB12';
-} elseif ($language == 'fr') {
-    // ... keep existing French translations and add:
-    $drivingLicenceLabel = 'Numéro de Permis de Conduire';
-    $drivingLicenceHint = 'Format: ABCDE123456AB12';
-} elseif ($language == 'de') {
-    // ... keep existing German translations and add:
-    $drivingLicenceLabel = 'Führerscheinnummer';
-    $drivingLicenceHint = 'Format: ABCDE123456AB12';
-}
+// Complete language translations
+$translations = [
+    'en' => [
+        'themeText' => 'Theme',
+        'lightText' => 'Light',
+        'darkText' => 'Dark',
+        'fontSizeText' => 'Font Size',
+        'resetText' => 'Reset',
+        'languageText' => 'Language',
+        'home' => 'Home',
+        'about' => 'About',
+        'cars' => 'Cars',
+        'contact' => 'Contact',
+        'dashboard' => 'Dashboard',
+        'login' => 'Login',
+        'logout' => 'Logout',
+        'footerTagline' => 'Your trusted partner for car rental services in Birmingham and beyond.',
+        'quickLinks' => 'Quick Links',
+        'contactUs' => 'Contact Us',
+        'rightsReserved' => 'All rights reserved.',
+        'drivingLicenceLabel' => 'Driving Licence Number',
+        'drivingLicenceHint' => 'Format: ABCDE123456AB12',
+        'welcomeBack' => 'Welcome back',
+        'signInMessage' => 'Sign in to manage your bookings',
+        'customerLoginTitle' => 'Customer Login',
+        'adminLoginTitle' => 'Admin Login',
+        'createAccountTitle' => 'Create Account',
+        'emailPlaceholder' => 'Email address',
+        'passwordPlaceholder' => 'Password',
+        'fullNamePlaceholder' => 'Full Name',
+        'confirmPasswordPlaceholder' => 'Confirm Password',
+        'forgotPassword' => 'Forgot Password?',
+        'createAccountLink' => 'Create your Account',
+        'alreadyHaveAccount' => 'Already have an account?',
+        'loginAsAdmin' => 'Login as Admin',
+        'loginAsCustomer' => 'Login as Customer',
+        'loginButton' => 'LOGIN',
+        'registerButton' => 'REGISTER',
+        'validEmailRequired' => 'Valid email is required',
+        'passwordRequired' => 'Password is required',
+        'fullNameRequired' => 'Full name is required',
+        'drivingLicenceRequired' => 'Driving licence format: ABCDE123456AB12',
+        'companyName' => 'Motiv, Car Rental',
+        'companyAddress' => 'New Street Station, Birmingham',
+        'companyPhone' => '0712345678',
+        'companyEmail' => 'info@motivcarrental.com',
+        'demoCredentialsHint' => 'Demo: customer@demo.com / demo123',
+        'adminDemoHint' => 'Admin: admin@motivcarrental.com / admin123'
+    ],
+    'es' => [
+        'themeText' => 'Tema',
+        'lightText' => 'Claro',
+        'darkText' => 'Oscuro',
+        'fontSizeText' => 'Tamaño de Fuente',
+        'resetText' => 'Restablecer',
+        'languageText' => 'Idioma',
+        'home' => 'Inicio',
+        'about' => 'Acerca de',
+        'cars' => 'Vehículos',
+        'contact' => 'Contacto',
+        'dashboard' => 'Panel',
+        'login' => 'Iniciar Sesión',
+        'logout' => 'Cerrar Sesión',
+        'footerTagline' => 'Su socio de confianza para servicios de alquiler de coches en Birmingham y más allá.',
+        'quickLinks' => 'Enlaces Rápidos',
+        'contactUs' => 'Contáctenos',
+        'rightsReserved' => 'Todos los derechos reservados.',
+        'drivingLicenceLabel' => 'Número de Licencia de Conducir',
+        'drivingLicenceHint' => 'Formato: ABCDE123456AB12',
+        'welcomeBack' => 'Bienvenido de nuevo',
+        'signInMessage' => 'Inicie sesión para gestionar sus reservas',
+        'customerLoginTitle' => 'Inicio de Sesión Cliente',
+        'adminLoginTitle' => 'Inicio de Sesión Administrador',
+        'createAccountTitle' => 'Crear Cuenta',
+        'emailPlaceholder' => 'Correo electrónico',
+        'passwordPlaceholder' => 'Contraseña',
+        'fullNamePlaceholder' => 'Nombre Completo',
+        'confirmPasswordPlaceholder' => 'Confirmar Contraseña',
+        'forgotPassword' => '¿Olvidó su Contraseña?',
+        'createAccountLink' => 'Crear su Cuenta',
+        'alreadyHaveAccount' => '¿Ya tiene una cuenta?',
+        'loginAsAdmin' => 'Iniciar como Administrador',
+        'loginAsCustomer' => 'Iniciar como Cliente',
+        'loginButton' => 'INICIAR SESIÓN',
+        'registerButton' => 'REGISTRARSE',
+        'validEmailRequired' => 'Se requiere un correo válido',
+        'passwordRequired' => 'Se requiere contraseña',
+        'fullNameRequired' => 'Se requiere nombre completo',
+        'drivingLicenceRequired' => 'Formato de licencia: ABCDE123456AB12',
+        'companyName' => 'Motiv, Alquiler de Coches',
+        'companyAddress' => 'Estación New Street, Birmingham',
+        'companyPhone' => '0712345678',
+        'companyEmail' => 'info@motivcarrental.com',
+        'demoCredentialsHint' => 'Demo: customer@demo.com / demo123',
+        'adminDemoHint' => 'Admin: admin@motivcarrental.com / admin123'
+    ],
+    'fr' => [
+        'themeText' => 'Thème',
+        'lightText' => 'Clair',
+        'darkText' => 'Sombre',
+        'fontSizeText' => 'Taille de Police',
+        'resetText' => 'Réinitialiser',
+        'languageText' => 'Langue',
+        'home' => 'Accueil',
+        'about' => 'À Propos',
+        'cars' => 'Voitures',
+        'contact' => 'Contact',
+        'dashboard' => 'Tableau de Bord',
+        'login' => 'Connexion',
+        'logout' => 'Déconnexion',
+        'footerTagline' => 'Votre partenaire de confiance pour la location de voitures à Birmingham et au-delà.',
+        'quickLinks' => 'Liens Rapides',
+        'contactUs' => 'Contactez-nous',
+        'rightsReserved' => 'Tous droits réservés.',
+        'drivingLicenceLabel' => 'Numéro de Permis de Conduire',
+        'drivingLicenceHint' => 'Format: ABCDE123456AB12',
+        'welcomeBack' => 'Bon retour',
+        'signInMessage' => 'Connectez-vous pour gérer vos réservations',
+        'customerLoginTitle' => 'Connexion Client',
+        'adminLoginTitle' => 'Connexion Administrateur',
+        'createAccountTitle' => 'Créer un Compte',
+        'emailPlaceholder' => 'Adresse e-mail',
+        'passwordPlaceholder' => 'Mot de passe',
+        'fullNamePlaceholder' => 'Nom Complet',
+        'confirmPasswordPlaceholder' => 'Confirmer le Mot de Passe',
+        'forgotPassword' => 'Mot de passe oublié ?',
+        'createAccountLink' => 'Créer votre Compte',
+        'alreadyHaveAccount' => 'Vous avez déjà un compte ?',
+        'loginAsAdmin' => 'Se connecter en tant qu\'Admin',
+        'loginAsCustomer' => 'Se connecter en tant que Client',
+        'loginButton' => 'CONNEXION',
+        'registerButton' => 'S\'INSCRIRE',
+        'validEmailRequired' => 'E-mail valide requis',
+        'passwordRequired' => 'Mot de passe requis',
+        'fullNameRequired' => 'Nom complet requis',
+        'drivingLicenceRequired' => 'Format du permis: ABCDE123456AB12',
+        'companyName' => 'Motiv, Location de Voitures',
+        'companyAddress' => 'Gare New Street, Birmingham',
+        'companyPhone' => '0712345678',
+        'companyEmail' => 'info@motivcarrental.com',
+        'demoCredentialsHint' => 'Démo: customer@demo.com / demo123',
+        'adminDemoHint' => 'Admin: admin@motivcarrental.com / admin123'
+    ],
+    'de' => [
+        'themeText' => 'Design',
+        'lightText' => 'Hell',
+        'darkText' => 'Dunkel',
+        'fontSizeText' => 'Schriftgröße',
+        'resetText' => 'Zurücksetzen',
+        'languageText' => 'Sprache',
+        'home' => 'Startseite',
+        'about' => 'Über uns',
+        'cars' => 'Fahrzeuge',
+        'contact' => 'Kontakt',
+        'dashboard' => 'Dashboard',
+        'login' => 'Anmelden',
+        'logout' => 'Abmelden',
+        'footerTagline' => 'Ihr vertrauenswürdiger Partner für Autovermietung in Birmingham und darüber hinaus.',
+        'quickLinks' => 'Schnelllinks',
+        'contactUs' => 'Kontaktieren Sie uns',
+        'rightsReserved' => 'Alle Rechte vorbehalten.',
+        'drivingLicenceLabel' => 'Führerscheinnummer',
+        'drivingLicenceHint' => 'Format: ABCDE123456AB12',
+        'welcomeBack' => 'Willkommen zurück',
+        'signInMessage' => 'Melden Sie sich an, um Ihre Buchungen zu verwalten',
+        'customerLoginTitle' => 'Kundenanmeldung',
+        'adminLoginTitle' => 'Admin-Anmeldung',
+        'createAccountTitle' => 'Konto erstellen',
+        'emailPlaceholder' => 'E-Mail-Adresse',
+        'passwordPlaceholder' => 'Passwort',
+        'fullNamePlaceholder' => 'Vollständiger Name',
+        'confirmPasswordPlaceholder' => 'Passwort bestätigen',
+        'forgotPassword' => 'Passwort vergessen?',
+        'createAccountLink' => 'Konto erstellen',
+        'alreadyHaveAccount' => 'Bereits ein Konto?',
+        'loginAsAdmin' => 'Als Admin anmelden',
+        'loginAsCustomer' => 'Als Kunde anmelden',
+        'loginButton' => 'ANMELDEN',
+        'registerButton' => 'REGISTRIEREN',
+        'validEmailRequired' => 'Gültige E-Mail erforderlich',
+        'passwordRequired' => 'Passwort erforderlich',
+        'fullNameRequired' => 'Vollständiger Name erforderlich',
+        'drivingLicenceRequired' => 'Führerscheinformat: ABCDE123456AB12',
+        'companyName' => 'Motiv, Autovermietung',
+        'companyAddress' => 'New Street Station, Birmingham',
+        'companyPhone' => '0712345678',
+        'companyEmail' => 'info@motivcarrental.com',
+        'demoCredentialsHint' => 'Demo: customer@demo.com / demo123',
+        'adminDemoHint' => 'Admin: admin@motivcarrental.com / admin123'
+    ]
+];
+
+// Set current language text
+$lang = $translations[$language] ?? $translations['en'];
+extract($lang);
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?php echo $language; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Motiv Car Hire</title>
+    <title><?php echo $customerLoginTitle; ?> - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -342,13 +502,18 @@ if ($language == 'en') {
             --link-color: #cc88bb;
         }
 
+        html {
+            font-size: <?php echo $fontSize; ?>%;
+        }
+
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            font-size: <?php echo $fontSize; ?>%;
             transition: background-color 0.3s ease, color 0.3s ease;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
+            margin: 0;
+            padding: 0;
         }
 
         .container {
@@ -357,7 +522,6 @@ if ($language == 'en') {
             padding: 0 20px;
         }
 
-        /* Header Styles */
         header {
             background: linear-gradient(to right, var(--vivid-indigo), var(--dark-magenta));
             color: white;
@@ -365,6 +529,7 @@ if ($language == 'en') {
             display: flex;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            width: 100%;
         }
 
         .header-content {
@@ -505,10 +670,10 @@ if ($language == 'en') {
             position: absolute;
             right: 0;
             top: 100%;
-            min-width: 200px;
+            min-width: 220px;
             background-color: white;
             border: 1px solid #e0e0e0;
-            border-radius: 6px;
+            border-radius: 8px;
             overflow: hidden;
             box-shadow: 0 8px 16px rgba(0,0,0,0.15);
             z-index: 1000;
@@ -560,6 +725,7 @@ if ($language == 'en') {
             border-radius: 4px;
             margin-bottom: 2px;
             font-size: 14px;
+            cursor: pointer;
         }
 
         [data-theme="dark"] .theme-option, 
@@ -577,27 +743,27 @@ if ($language == 'en') {
         }
 
         .theme-option i, .language-option i {
-            width: 18px;
+            width: 20px;
             margin-right: 10px;
-            color: var(--vivid-indigo);
             font-size: 14px;
         }
 
         .font-controls {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .font-btn {
             background: var(--vivid-indigo);
             color: white;
             border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 4px;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             transition: background 0.2s;
             display: flex;
@@ -627,7 +793,6 @@ if ($language == 'en') {
             font-size: 12px;
         }
 
-        /* Login Page Specific Styles */
         .login-section {
             background: linear-gradient(135deg, var(--bg-grad-a) 0%, var(--bg-grad-b) 100%);
             min-height: calc(100vh - 80px - 300px);
@@ -740,7 +905,7 @@ if ($language == 'en') {
 
         .input100 {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 14px;
+            font-size: 1rem;
             color: var(--input-text);
             width: 100%;
             height: 50px;
@@ -793,7 +958,6 @@ if ($language == 'en') {
             color: #d96817;
         }
 
-        /* Driving licence hint */
         .licence-hint {
             display: none;
             position: absolute;
@@ -861,7 +1025,7 @@ if ($language == 'en') {
         }
 
         .alert-mismatch::before {
-            content: "Passwords do not match";
+            content: "<?php echo addslashes($language == 'en' ? 'Passwords do not match' : ($language == 'es' ? 'Las contraseñas no coinciden' : ($language == 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwörter stimmen nicht überein'))); ?>";
         }
 
         @keyframes shake {
@@ -870,7 +1034,6 @@ if ($language == 'en') {
             75% { transform: translateX(5px); }
         }
 
-        /* Button container with animations */
         .login-btn-container {
             width: 100%;
             height: 50px;
@@ -903,7 +1066,6 @@ if ($language == 'en') {
             transition: opacity 0.3s;
         }
 
-        /* Animation elements container */
         .animation-container {
             position: absolute;
             top: 0;
@@ -964,7 +1126,6 @@ if ($language == 'en') {
             z-index: 4;
         }
 
-        /* Active state animations */
         .active.login-btn-container {
             animation: Container 3.5s forwards;
         }
@@ -1107,7 +1268,16 @@ if ($language == 'en') {
             color: #7799ee !important;
         }
 
-        /* Footer Styles */
+        .demo-hint {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-secondary);
+            background: var(--bg-secondary);
+            padding: 8px;
+            border-radius: 6px;
+        }
+
         footer {
             background-color: var(--footer-bg);
             color: var(--footer-text);
@@ -1344,24 +1514,24 @@ if ($language == 'en') {
         <div class="login-left">
             <img src="img-01.png" alt="Login">
             <p>
-                <strong>Welcome back</strong>
-                Sign in to manage your bookings
+                <strong><?php echo $welcomeBack; ?></strong>
+                <?php echo $signInMessage; ?>
             </p>
         </div>
 
         <div class="login-right">
             <form class="login100-form" id="authForm">
-                <span class="login-title" id="formTitle" style="margin-bottom: 29px; display: block;">Customer Login</span>
+                <span class="login-title" id="formTitle" style="margin-bottom: 29px; display: block;"><?php echo $customerLoginTitle; ?></span>
 
                 <!-- Login Fields -->
                 <div class="login-fields">
-                    <div class="input-wrap validate-input" data-validate="Valid email is required">
-                        <input class="input100" type="text" name="email" id="loginEmail" placeholder="Email address">
+                    <div class="input-wrap validate-input" data-validate="<?php echo $validEmailRequired; ?>">
+                        <input class="input100" type="text" name="email" id="loginEmail" placeholder="<?php echo $emailPlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-envelope"></i></span>
                     </div>
 
-                    <div class="input-wrap validate-input has-eye" data-validate="Password is required">
-                        <input class="input100" type="password" name="password" id="loginPassword" placeholder="Password">
+                    <div class="input-wrap validate-input has-eye" data-validate="<?php echo $passwordRequired; ?>">
+                        <input class="input100" type="password" name="password" id="loginPassword" placeholder="<?php echo $passwordPlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-lock"></i></span>
                         <button type="button" class="eye-toggle" data-target="loginPassword">
                             <i class="fa fa-eye"></i>
@@ -1369,40 +1539,37 @@ if ($language == 'en') {
                     </div>
                 </div>
 
-                <!-- Register Fields (with Driving Licence) -->
+                <!-- Register Fields -->
                 <div class="register-fields">
-                    <div class="input-wrap validate-input" data-validate="Full name is required">
-                        <input class="input100" type="text" id="regFullname" name="fullname" placeholder="Full Name">
+                    <div class="input-wrap validate-input" data-validate="<?php echo $fullNameRequired; ?>">
+                        <input class="input100" type="text" id="regFullname" name="fullname" placeholder="<?php echo $fullNamePlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-user"></i></span>
                     </div>
 
-                    <div class="input-wrap validate-input" data-validate="Valid email is required">
-                        <input class="input100" type="text" id="regEmail" name="reg_email" placeholder="Email address">
+                    <div class="input-wrap validate-input" data-validate="<?php echo $validEmailRequired; ?>">
+                        <input class="input100" type="text" id="regEmail" name="reg_email" placeholder="<?php echo $emailPlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-envelope"></i></span>
                     </div>
 
-                    <!-- Driving Licence Field with Hint -->
-                    <div class="input-wrap validate-input driving-wrap" data-validate="Driving licence format: ABCDE123456AB12">
-                        <input class="input100" type="text" id="regDriving" name="driving_licence" placeholder="Driving Licence Number">
+                    <div class="input-wrap validate-input driving-wrap" data-validate="<?php echo $drivingLicenceRequired; ?>">
+                        <input class="input100" type="text" id="regDriving" name="driving_licence" placeholder="<?php echo $drivingLicenceLabel; ?>">
                         <span class="symbol-input100"><i class="fa fa-id-card"></i></span>
                         <div class="licence-hint">
-                            Format:&nbsp;
-                            <span class="h-alpha">ABCDE</span><span class="h-num">123456</span><span class="h-alpha2">AB</span><span class="h-num2">12</span>
-                            &nbsp;—&nbsp;
+                            <?php echo $drivingLicenceHint; ?>&nbsp;—&nbsp;
                             <span class="h-alpha">5 letters</span> · <span class="h-num">6 digits</span> · <span class="h-alpha2">2 letters</span> · <span class="h-num2">2 digits</span>
                         </div>
                     </div>
 
-                    <div class="input-wrap validate-input has-eye" data-validate="Password is required">
-                        <input class="input100" type="password" id="regPassword" placeholder="Password">
+                    <div class="input-wrap validate-input has-eye" data-validate="<?php echo $passwordRequired; ?>">
+                        <input class="input100" type="password" id="regPassword" placeholder="<?php echo $passwordPlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-lock"></i></span>
                         <button type="button" class="eye-toggle" data-target="regPassword">
                             <i class="fa fa-eye"></i>
                         </button>
                     </div>
 
-                    <div class="input-wrap validate-input has-eye" data-validate="Confirm password">
-                        <input class="input100" type="password" id="confirmPassword" placeholder="Confirm Password">
+                    <div class="input-wrap validate-input has-eye" data-validate="<?php echo $confirmPasswordPlaceholder; ?>">
+                        <input class="input100" type="password" id="confirmPassword" placeholder="<?php echo $confirmPasswordPlaceholder; ?>">
                         <span class="symbol-input100"><i class="fa fa-lock"></i></span>
                         <button type="button" class="eye-toggle" data-target="confirmPassword">
                             <i class="fa fa-eye"></i>
@@ -1414,9 +1581,8 @@ if ($language == 'en') {
                 <input type="hidden" name="loginType" id="loginType" value="customer">
 
                 <div class="login-btn-container" id="submitBtn">
-                    <span class="btn-text" id="btnText">LOGIN</span>
+                    <span class="btn-text" id="btnText"><?php echo $loginButton; ?></span>
                     
-                    <!-- Animation container -->
                     <div class="animation-container">
                         <svg class="fingerprint fingerprint-base" width="40" height="40" viewBox="0 0 100 100">
                             <g class="fingerprint-out" fill="none" stroke-width="2" stroke-linecap="round">
@@ -1477,19 +1643,24 @@ if ($language == 'en') {
 
                 <div class="form-footer-links">
                     <div class="form-footer-row">
-                        <span class="txt1">Forgot</span>
-                        <a class="txt2" href="forgotPassword.php">Password?</a>
+                        <span class="txt1"><?php echo $forgotPassword; ?></span>
+                        <a class="txt2" href="forgotPassword.php"><?php echo $forgotPassword; ?></a>
                     </div>
 
                     <div class="form-footer-row">
                         <a class="txt2" href="#" id="toggleForm">
-                            Create your Account <i class="fa fa-long-arrow-right"></i>
+                            <?php echo $createAccountLink; ?> <i class="fa fa-long-arrow-right"></i>
                         </a>
                     </div>
 
                     <div class="form-footer-row">
-                        <a href="#" class="admin-toggle" id="adminToggle">Login as Admin</a>
+                        <a href="#" class="admin-toggle" id="adminToggle"><?php echo $loginAsAdmin; ?></a>
                     </div>
+                </div>
+                
+                <div class="demo-hint">
+                    <?php echo $demoCredentialsHint; ?><br>
+                    <?php echo $adminDemoHint; ?>
                 </div>
             </form>
         </div>
@@ -1500,7 +1671,7 @@ if ($language == 'en') {
     <div class="container">
         <div class="footer-content">
             <div class="footer-column">
-                <h3>Motiv, Car Rental</h3>
+                <h3><?php echo $companyName; ?></h3>
                 <p><?php echo $footerTagline; ?></p>
             </div>
             <div class="footer-column">
@@ -1515,9 +1686,9 @@ if ($language == 'en') {
             <div class="footer-column">
                 <h3><?php echo $contactUs; ?></h3>
                 <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> New Street Station, Birmingham</li>
-                    <li><i class="fas fa-phone"></i> 0712345678</li>
-                    <li><i class="fas fa-envelope"></i> info@motivcarrental.com</li>
+                    <li><i class="fas fa-map-marker-alt"></i> <?php echo $companyAddress; ?></li>
+                    <li><i class="fas fa-phone"></i> <?php echo $companyPhone; ?></li>
+                    <li><i class="fas fa-envelope"></i> <?php echo $companyEmail; ?></li>
                 </ul>
             </div>
         </div>
@@ -1531,6 +1702,20 @@ if ($language == 'en') {
 <script>
 (function($) {
     "use strict";
+
+    // Store translated strings for JavaScript
+    const translations = {
+        customerLoginTitle: '<?php echo addslashes($customerLoginTitle); ?>',
+        adminLoginTitle: '<?php echo addslashes($adminLoginTitle); ?>',
+        createAccountTitle: '<?php echo addslashes($createAccountTitle); ?>',
+        loginButton: '<?php echo addslashes($loginButton); ?>',
+        registerButton: '<?php echo addslashes($registerButton); ?>',
+        createAccountLink: '<?php echo addslashes($createAccountLink); ?>',
+        alreadyHaveAccount: '<?php echo addslashes($alreadyHaveAccount); ?>',
+        loginAsAdmin: '<?php echo addslashes($loginAsAdmin); ?>',
+        loginAsCustomer: '<?php echo addslashes($loginAsCustomer); ?>',
+        passwordMismatch: '<?php echo addslashes($language == 'en' ? 'Passwords do not match' : ($language == 'es' ? 'Las contraseñas no coinciden' : ($language == 'fr' ? 'Les mots de passe ne correspondent pas' : 'Passwörter stimmen nicht überein'))); ?>'
+    };
 
     // Form toggle between login and register
     document.addEventListener('DOMContentLoaded', function() {
@@ -1548,17 +1733,17 @@ if ($language == 'en') {
                 form.classList.toggle('register-mode');
 
                 if (form.classList.contains('register-mode')) {
-                    formTitle.textContent = 'Create Account';
-                    btnText.textContent = 'REGISTER';
-                    toggleLink.innerHTML = 'Already have an account? <i class="fa fa-long-arrow-left"></i>';
+                    formTitle.textContent = translations.createAccountTitle;
+                    btnText.textContent = translations.registerButton;
+                    toggleLink.innerHTML = translations.alreadyHaveAccount + ' <i class="fa fa-long-arrow-left"></i>';
                     formAction.value = 'register';
-                    adminToggle.style.display = 'none';
+                    if (adminToggle) adminToggle.style.display = 'none';
                 } else {
-                    formTitle.textContent = 'Customer Login';
-                    btnText.textContent = 'LOGIN';
-                    toggleLink.innerHTML = 'Create your Account <i class="fa fa-long-arrow-right"></i>';
+                    formTitle.textContent = translations.customerLoginTitle;
+                    btnText.textContent = translations.loginButton;
+                    toggleLink.innerHTML = translations.createAccountLink + ' <i class="fa fa-long-arrow-right"></i>';
                     formAction.value = 'login';
-                    adminToggle.style.display = 'block';
+                    if (adminToggle) adminToggle.style.display = 'block';
                 }
             });
         }
@@ -1570,12 +1755,12 @@ if ($language == 'en') {
                 if (!form.classList.contains('register-mode')) {
                     if (loginType.value === 'customer') {
                         loginType.value = 'admin';
-                        adminToggle.textContent = 'Login as Customer';
-                        formTitle.textContent = 'Admin Login';
+                        adminToggle.textContent = translations.loginAsCustomer;
+                        formTitle.textContent = translations.adminLoginTitle;
                     } else {
                         loginType.value = 'customer';
-                        adminToggle.textContent = 'Login as Admin';
-                        formTitle.textContent = 'Customer Login';
+                        adminToggle.textContent = translations.loginAsAdmin;
+                        formTitle.textContent = translations.customerLoginTitle;
                     }
                 }
             });
@@ -1588,10 +1773,10 @@ if ($language == 'en') {
                 const input = document.getElementById(targetId);
                 const icon = this.querySelector('i');
                 
-                if (input.type === 'password') {
+                if (input && input.type === 'password') {
                     input.type = 'text';
                     icon.classList.replace('fa-eye', 'fa-eye-slash');
-                } else {
+                } else if (input) {
                     input.type = 'password';
                     icon.classList.replace('fa-eye-slash', 'fa-eye');
                 }
@@ -1626,11 +1811,9 @@ if ($language == 'en') {
         const drivingInput = document.getElementById('regDriving');
         if (drivingInput) {
             drivingInput.addEventListener('input', function() {
-                const wrap = this.closest('.input-wrap');
                 const value = this.value.toUpperCase();
                 this.value = value;
                 
-                // Simple format validation (optional)
                 const licenceRegex = /^[A-Z9]{0,5}\d{0,6}[A-Z]{0,2}\d{0,2}$/i;
                 if (value.length > 0 && !licenceRegex.test(value)) {
                     this.style.borderColor = '#e05252';
@@ -1661,10 +1844,6 @@ if ($language == 'en') {
 
     function showValidate(input) {
         $(input).parent().addClass('alert-validate');
-    }
-
-    function hideValidate(input) {
-        $(input).parent().removeClass('alert-validate');
     }
 
     function validateAllInputs() {
@@ -1708,7 +1887,7 @@ if ($language == 'en') {
         });
     });
 
-    // Submit button with fixed animation positioning
+    // Submit button with animation
     $(document).ready(function() {
         const container = document.querySelector('.login-btn-container');
         if (!container) return;
@@ -1767,7 +1946,7 @@ if ($language == 'en') {
 
                 if (password !== confirmPassword) {
                     showResult(false);
-                    pendingAlert = 'Passwords do not match';
+                    pendingAlert = translations.passwordMismatch;
                     return;
                 }
 
@@ -1813,7 +1992,7 @@ if ($language == 'en') {
         });
     });
 
-    // Theme, font size, language settings
+    // Theme, font size, language settings - All working independently
     let currentFontSize = <?php echo $fontSize; ?>;
     let currentTheme = '<?php echo $darkMode; ?>';
     let currentLanguage = '<?php echo $language; ?>';
@@ -1831,32 +2010,43 @@ if ($language == 'en') {
         currentTheme = theme;
         document.body.setAttribute('data-theme', theme);
         document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        // Reload page to apply theme to all elements including new content
         location.reload();
     }
 
     function setLanguage(lang) {
+        if (currentLanguage === lang) return;
         currentLanguage = lang;
         document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        // Reload page to load all translated content
         location.reload();
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         updateFontSizeDisplay();
 
+        // Theme options
         const themeOptions = document.querySelectorAll('.theme-option');
         themeOptions.forEach(option => {
             option.addEventListener('click', function(e) {
                 e.preventDefault();
-                setTheme(this.getAttribute('data-theme'));
+                e.stopPropagation();
+                const theme = this.getAttribute('data-theme');
+                if (theme && theme !== currentTheme) {
+                    setTheme(theme);
+                }
             });
         });
 
+        // Font size controls
         const decreaseBtn = document.getElementById('font-decrease');
         const increaseBtn = document.getElementById('font-increase');
         const resetBtn = document.getElementById('font-reset');
 
         if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', function() {
+            decreaseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 if (currentFontSize > 70) {
                     currentFontSize -= 10;
                     updateFontSizeDisplay();
@@ -1865,7 +2055,9 @@ if ($language == 'en') {
         }
 
         if (increaseBtn) {
-            increaseBtn.addEventListener('click', function() {
+            increaseBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 if (currentFontSize < 150) {
                     currentFontSize += 10;
                     updateFontSizeDisplay();
@@ -1874,17 +2066,24 @@ if ($language == 'en') {
         }
 
         if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
+            resetBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 currentFontSize = 100;
                 updateFontSizeDisplay();
             });
         }
 
+        // Language options
         const languageOptions = document.querySelectorAll('.language-option');
         languageOptions.forEach(option => {
             option.addEventListener('click', function(e) {
                 e.preventDefault();
-                setLanguage(this.getAttribute('data-lang'));
+                e.stopPropagation();
+                const lang = this.getAttribute('data-lang');
+                if (lang && lang !== currentLanguage) {
+                    setLanguage(lang);
+                }
             });
         });
     });
