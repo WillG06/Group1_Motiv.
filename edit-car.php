@@ -170,6 +170,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_images'])) {
         
         if ($allSuccess && empty($errorMessage)) {
             $successMessage = count($uploadedImages) . " image(s) added successfully!";
+            // Refresh car images
+            $carImages = getCarImages($conn, $carId);
         }
     }
 }
@@ -425,6 +427,11 @@ while ($city = $citiesQuery->fetch_assoc()) {
             opacity: 0.5;
         }
         
+        .image-card.drag-over {
+            border: 2px dashed var(--cobalt-blue);
+            background: #f0f8ff;
+        }
+        
         .image-info {
             padding: 8px;
             text-align: center;
@@ -518,6 +525,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
             border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 1rem;
+            font-family: inherit;
         }
         
         .form-group input:focus,
@@ -589,6 +597,12 @@ while ($city = $citiesQuery->fetch_assoc()) {
             background: #ffebee;
             color: #c62828;
             border: 1px solid #ef9a9a;
+        }
+        
+        .message.info {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
         }
         
         .current-images-header {
@@ -672,76 +686,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 </div>
             <?php endif; ?>
             
-            <!-- Images Management Section -->
-            <h2 class="section-title">
-                <i class="fas fa-images"></i> Car Images
-                <span class="image-count">(<?php echo count($carImages); ?>/5 images)</span>
-            </h2>
-            
-            <?php if (!empty($carImages)): ?>
-                <div class="reorder-section">
-                    <form method="POST" id="reorderForm">
-                        <input type="hidden" name="reorder_images" value="1">
-                        <div class="image-gallery" id="imageGallery">
-                            <?php foreach ($carImages as $image): ?>
-                                <div class="image-card" data-id="<?php echo $image['image_id']; ?>" data-order="<?php echo $image['display_order']; ?>">
-                                    <img src="<?php echo htmlspecialchars($image['image_url']); ?>" alt="Car Image">
-                                    <div class="image-order"><?php echo $image['display_order']; ?></div>
-                                    <div class="image-actions">
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this image?');">
-                                            <input type="hidden" name="delete_image" value="1">
-                                            <input type="hidden" name="image_id" value="<?php echo $image['image_id']; ?>">
-                                            <button type="submit" class="delete-image-btn" title="Delete Image">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                    <div class="drag-handle" title="Drag to reorder">
-                                        <i class="fas fa-grip-vertical"></i>
-                                    </div>
-                                    <div class="image-info">
-                                        <input type="hidden" name="image_order[<?php echo $image['image_id']; ?>]" value="<?php echo $image['display_order']; ?>" class="order-input">
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                        <div class="drag-instruction">
-                            <i class="fas fa-arrows-alt"></i> Drag and drop images to reorder them
-                        </div>
-                        <div style="margin-top: 15px; text-align: right;">
-                            <button type="submit" class="btn-primary btn-sm" id="saveOrderBtn">Save Image Order</button>
-                        </div>
-                    </form>
-                </div>
-            <?php else: ?>
-                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
-                    <i class="fas fa-camera" style="font-size: 48px; color: #ccc;"></i>
-                    <p style="margin-top: 10px; color: #666;">No images uploaded yet. Add up to 5 images below.</p>
-                </div>
-            <?php endif; ?>
-            
-            <!-- Add New Images Section -->
-            <?php if (count($carImages) < 5): ?>
-                <div class="add-images-section">
-                    <h3><i class="fas fa-plus-circle"></i> Add More Images (Max 5 total)</h3>
-                    <form method="POST" enctype="multipart/form-data" id="addImagesForm">
-                        <input type="hidden" name="add_images" value="1">
-                        <div class="form-group">
-                            <label for="car_images">Select Images (JPG, PNG, GIF, WebP, AVIF)</label>
-                            <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
-                            <small>You can select up to <?php echo 5 - count($carImages); ?> more images. Recommended: 800x600px</small>
-                            <div id="image-preview-container" class="image-preview-container"></div>
-                        </div>
-                        <button type="submit" class="btn-primary">Upload Images</button>
-                    </form>
-                </div>
-            <?php else: ?>
-                <div class="message info" style="background: #fff3cd; color: #856404; border-color: #ffeeba;">
-                    <i class="fas fa-info-circle"></i> Maximum 5 images reached. Delete some images to add more.
-                </div>
-            <?php endif; ?>
-            
-            <!-- Car Details Form -->
+            <!-- Car Details Form (FIRST) -->
             <h2 class="section-title">
                 <i class="fas fa-car"></i> Car Details
             </h2>
@@ -837,11 +782,80 @@ while ($city = $citiesQuery->fetch_assoc()) {
                     <textarea id="description" name="description" rows="5" placeholder="Enter car description..."><?php echo htmlspecialchars($car['description']); ?></textarea>
                 </div>
                 
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 30px;">
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
                     <a href="admin-dashboard.php" class="btn-secondary">Cancel</a>
                     <button type="submit" class="btn-primary">Update Car Details</button>
                 </div>
             </form>
+            
+            <!-- Images Management Section (SECOND) -->
+            <h2 class="section-title">
+                <i class="fas fa-images"></i> Car Images
+                <span class="image-count">(<?php echo count($carImages); ?>/5 images)</span>
+            </h2>
+            
+            <?php if (!empty($carImages)): ?>
+                <div class="reorder-section">
+                    <form method="POST" id="reorderForm">
+                        <input type="hidden" name="reorder_images" value="1">
+                        <div class="image-gallery" id="imageGallery">
+                            <?php foreach ($carImages as $image): ?>
+                                <div class="image-card" data-id="<?php echo $image['image_id']; ?>" data-order="<?php echo $image['display_order']; ?>">
+                                    <img src="<?php echo htmlspecialchars($image['image_url']); ?>" alt="Car Image">
+                                    <div class="image-order"><?php echo $image['display_order']; ?></div>
+                                    <div class="image-actions">
+                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this image?');">
+                                            <input type="hidden" name="delete_image" value="1">
+                                            <input type="hidden" name="image_id" value="<?php echo $image['image_id']; ?>">
+                                            <button type="submit" class="delete-image-btn" title="Delete Image">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <div class="drag-handle" title="Drag to reorder">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </div>
+                                    <div class="image-info">
+                                        <input type="hidden" name="image_order[<?php echo $image['image_id']; ?>]" value="<?php echo $image['display_order']; ?>" class="order-input">
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="drag-instruction">
+                            <i class="fas fa-arrows-alt"></i> Drag and drop images to reorder them
+                        </div>
+                        <div style="margin-top: 15px; text-align: right;">
+                            <button type="submit" class="btn-primary btn-sm" id="saveOrderBtn">Save Image Order</button>
+                        </div>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div style="text-align: center; padding: 40px; background: #f8f9fa; border-radius: 8px; margin-bottom: 20px;">
+                    <i class="fas fa-camera" style="font-size: 48px; color: #ccc;"></i>
+                    <p style="margin-top: 10px; color: #666;">No images uploaded yet. Add up to 5 images below.</p>
+                </div>
+            <?php endif; ?>
+            
+            <!-- Add New Images Section -->
+            <?php if (count($carImages) < 5): ?>
+                <div class="add-images-section">
+                    <h3><i class="fas fa-plus-circle"></i> Add More Images (Max 5 total)</h3>
+                    <form method="POST" enctype="multipart/form-data" id="addImagesForm">
+                        <input type="hidden" name="add_images" value="1">
+                        <div class="form-group">
+                            <label for="car_images">Select Images (JPG, PNG, GIF, WebP, AVIF)</label>
+                            <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
+                            <small>You can select up to <?php echo 5 - count($carImages); ?> more images. Recommended: 800x600px</small>
+                            <div id="image-preview-container" class="image-preview-container"></div>
+                        </div>
+                        <button type="submit" class="btn-primary">Upload Images</button>
+                    </form>
+                </div>
+            <?php else: ?>
+                <div class="message info">
+                    <i class="fas fa-info-circle"></i> Maximum 5 images reached. Delete some images to add more.
+                </div>
+            <?php endif; ?>
         </div>
     </div>
 </section>
