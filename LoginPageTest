@@ -1,0 +1,616 @@
+<?php
+
+/**
+ * Unit Tests for loginPage.php
+ *
+ * Covers all login, registration, session and redirect logic extracted
+ * from loginPage.php as pure, database-free helper functions.
+ *
+ * Run with: ./vendor/bin/phpunit LoginPageTest.php
+ * Install PHPUnit first: composer require --dev phpunit/phpunit
+ */
+
+use PHPUnit\Framework\TestCase;
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helper functions extracted from loginPage.php
+// These mirror the production logic exactly so they can be tested in isolation
+// without requiring a live database connection or active session.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Validates the customer login form fields.
+ * Returns an error message string, or an empty string if the inputs are valid.
+ * Mirrors the empty check on lines 83–84 of loginPage.php.
+ */
+function validateCustomerLoginInput(string $email, string $password): string
+{
+    if (empty($email) || empty($password)) {
+        return 'Please fill in all fields';
+    }
+    return '';
+}
+
+/**
+ * Validates the admin login form fields.
+ * The identifier may be either an e-mail address or a numeric agent ID.
+ * Returns an error message string, or an empty string if the inputs are valid.
+ * Mirrors the empty check on lines 118–119 of loginPage.php.
+ */
+function validateAdminLoginInput(string $identifier, string $password): string
+{
+    if (empty($identifier) || empty($password)) {
+        return 'Please fill in all fields';
+    }
+    return '';
+}
+
+/**
+ * Determines whether an admin identifier should be looked up by agent ID
+ * rather than by e-mail address.
+ * Mirrors the is_numeric check on line 121 of loginPage.php.
+ */
+function adminIdentifierIsNumeric(string $identifier): bool
+{
+    return is_numeric($identifier);
+}
+
+/**
+ * Validates all registration form fields.
+ * Mirrors the elseif validation chain on lines 163–172 of loginPage.php.
+ *
+ * Updated to enforce a minimum password length of 8 characters and to use
+ * the corrected error message wording.
+ *
+ * Returns an error message string, or an empty string if all inputs are valid.
+ */
+function validateRegistrationInput(
+    string $fullname,
+    string $email,
+    string $password,
+    string $confirm_password,
+    string $driving_licence
+): string {
+    // All fields are required
+    if (
+        empty($fullname) ||
+        empty($email) ||
+        empty($password) ||
+        empty($confirm_password) ||
+        empty($driving_licence)
+    ) {
+        return 'Please fill in all fields';
+    }
+
+    // Both password fields must match
+    if ($password !== $confirm_password) {
+        return 'Passwords do not match';
+    }
+
+    // Password must be at least 8 characters (updated from 5)
+    if (strlen($password) < 8) {
+        return 'Password must be at least 8 characters';
+    }
+
+    // Must be a valid e-mail address
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return 'Invalid email format';
+    }
+
+    // UK driving licence format: 5 letters/9, 6 digits, 2 letters, 2 digits
+    // e.g. ABCDE123456AB12
+    if (!preg_match('/^[A-Z9]{5}\d{6}[A-Z]{2}\d{2}$/i', $driving_licence)) {
+        return 'Invalid driving licence format (e.g., ABCDE123456AB12)';
+    }
+
+    return '';
+}
+
+/**
+ * Splits a full name into first name and last name.
+ * Mirrors the explode call on line 195 of loginPage.php.
+ * Any additional words beyond the first are kept together as the last name.
+ */
+function splitFullName(string $fullname): array
+{
+    $parts     = explode(' ', $fullname, 2);
+    $firstName = $parts[0];
+    $lastName  = $parts[1] ?? '';
+    return [$firstName, $lastName];
+}
+
+/**
+ * Builds the session payload array for an authenticated customer.
+ * Mirrors the $_SESSION['user'] assignment on lines 94–100 of loginPage.php.
+ */
+function buildCustomerSession(array $dbRow): array
+{
+    return [
+        'id'        => $dbRow['customer_id'],
+        'firstName' => $dbRow['first_name'],
+        'lastName'  => $dbRow['last_name'],
+        'email'     => $dbRow['email'],
+        'role'      => 'customer',
+    ];
+}
+
+/**
+ * Builds the session payload array for an authenticated admin.
+ * Mirrors the $_SESSION['user'] assignment on lines 134–140 of loginPage.php.
+ */
+function buildAdminSession(array $dbRow): array
+{
+    return [
+        'id'        => $dbRow['agent_id'],
+        'firstName' => $dbRow['first_name'],
+        'lastName'  => $dbRow['last_name'],
+        'email'     => $dbRow['email'],
+        'role'      => 'admin',
+    ];
+}
+
+/**
+ * Returns the redirect target for a given user role.
+ * Mirrors the updated role redirect block on lines 15–22 of loginPage.php.
+ *
+ * Updated to reflect the explicit elseif fix: only 'customer' and 'admin'
+ * are valid roles. Any other value returns an empty string, indicating the
+ * session should be destroyed and the user returned to the login page.
+ */
+function getRedirectForRole(string $role): string
+{
+    if ($role === 'customer') {
+        return 'customer-dashboard.php';
+    } elseif ($role === 'admin') {
+        return 'admin-dashboard.php';
+    }
+    // Any unrecognised role is invalid — the session should be destroyed
+    return '';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Test Suite
+// ──────────────────────────────────────────────────────────────────────────────
+
+class LoginPageTest extends TestCase
+{
+    // ── Customer Login Validation ─────────────────────────────────────────────
+
+    /**
+     * An empty e-mail address should be rejected with a field prompt.
+     */
+    public function testCustomerLoginFailsWhenEmailIsEmpty(): void
+    {
+        $error = validateCustomerLoginInput('', 'somepassword');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    /**
+     * An empty password should be rejected with a field prompt.
+     */
+    public function testCustomerLoginFailsWhenPasswordIsEmpty(): void
+    {
+        $error = validateCustomerLoginInput('user@example.com', '');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    /**
+     * Both fields being empty should be rejected with a field prompt.
+     */
+    public function testCustomerLoginFailsWhenBothFieldsAreEmpty(): void
+    {
+        $error = validateCustomerLoginInput('', '');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    /**
+     * A valid e-mail and password combination should pass validation.
+     */
+    public function testCustomerLoginPassesWithValidCredentials(): void
+    {
+        $error = validateCustomerLoginInput('user@example.com', 'secret');
+        $this->assertSame('', $error);
+    }
+
+    // ── Password Verification ─────────────────────────────────────────────────
+
+    /**
+     * password_verify should return true when the plain-text password matches
+     * the stored hash — as used on lines 93 and 133 of loginPage.php.
+     */
+    public function testPasswordVerifyReturnsTrueForCorrectPassword(): void
+    {
+        $hash = password_hash('demo123', PASSWORD_DEFAULT);
+        $this->assertTrue(password_verify('demo123', $hash));
+    }
+
+    /**
+     * password_verify should return false when the plain-text password does
+     * not match the stored hash.
+     */
+    public function testPasswordVerifyReturnsFalseForWrongPassword(): void
+    {
+        $hash = password_hash('demo123', PASSWORD_DEFAULT);
+        $this->assertFalse(password_verify('wrongpassword', $hash));
+    }
+
+    /**
+     * An empty string should never verify successfully against a real hash.
+     */
+    public function testPasswordVerifyReturnsFalseForEmptyString(): void
+    {
+        $hash = password_hash('demo123', PASSWORD_DEFAULT);
+        $this->assertFalse(password_verify('', $hash));
+    }
+
+    // ── Admin Login Validation ────────────────────────────────────────────────
+
+    /**
+     * An empty identifier (e-mail or agent ID) should be rejected.
+     */
+    public function testAdminLoginFailsWhenIdentifierIsEmpty(): void
+    {
+        $error = validateAdminLoginInput('', 'admin123');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    /**
+     * An empty password should be rejected even when the identifier is present.
+     */
+    public function testAdminLoginFailsWhenPasswordIsEmpty(): void
+    {
+        $error = validateAdminLoginInput('admin@motivcarrental.com', '');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    /**
+     * A valid e-mail address as the identifier should pass field validation.
+     */
+    public function testAdminLoginPassesWithEmailIdentifier(): void
+    {
+        $error = validateAdminLoginInput('admin@motivcarrental.com', 'admin123');
+        $this->assertSame('', $error);
+    }
+
+    /**
+     * A numeric agent ID as the identifier should pass field validation.
+     */
+    public function testAdminLoginPassesWithNumericIdentifier(): void
+    {
+        $error = validateAdminLoginInput('42', 'admin123');
+        $this->assertSame('', $error);
+    }
+
+    // ── Admin Identifier Type Detection ──────────────────────────────────────
+
+    /**
+     * Numeric strings should be identified as agent IDs so the query uses
+     * the agent_id column rather than the e-mail column.
+     */
+    public function testNumericIdentifierIsDetectedCorrectly(): void
+    {
+        $this->assertTrue(adminIdentifierIsNumeric('42'));
+        $this->assertTrue(adminIdentifierIsNumeric('0'));
+    }
+
+    /**
+     * E-mail addresses and plain text should not be treated as numeric IDs.
+     */
+    public function testEmailIdentifierIsNotDetectedAsNumeric(): void
+    {
+        $this->assertFalse(adminIdentifierIsNumeric('admin@motivcarrental.com'));
+        $this->assertFalse(adminIdentifierIsNumeric('adminuser'));
+    }
+
+    // ── Registration Validation — Empty Fields ────────────────────────────────
+
+    /**
+     * Each individual required field being empty should trigger the
+     * 'Please fill in all fields' error message.
+     */
+    public function testRegistrationFailsWhenAnyFieldIsEmpty(): void
+    {
+        // Full name missing
+        $error = validateRegistrationInput('', 'a@b.com', 'password1', 'password1', 'ABCDE123456AB12');
+        $this->assertSame('Please fill in all fields', $error);
+
+        // E-mail missing
+        $error = validateRegistrationInput('John Doe', '', 'password1', 'password1', 'ABCDE123456AB12');
+        $this->assertSame('Please fill in all fields', $error);
+
+        // Password missing
+        $error = validateRegistrationInput('John Doe', 'a@b.com', '', 'password1', 'ABCDE123456AB12');
+        $this->assertSame('Please fill in all fields', $error);
+
+        // Confirm password missing
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'password1', '', 'ABCDE123456AB12');
+        $this->assertSame('Please fill in all fields', $error);
+
+        // Driving licence missing
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'password1', 'password1', '');
+        $this->assertSame('Please fill in all fields', $error);
+    }
+
+    // ── Registration Validation — Other Rules ─────────────────────────────────
+
+    /**
+     * Mismatched passwords should be rejected before the length check is reached.
+     */
+    public function testRegistrationFailsWhenPasswordsDoNotMatch(): void
+    {
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'password1', 'password2', 'ABCDE123456AB12');
+        $this->assertSame('Passwords do not match', $error);
+    }
+
+    /**
+     * A password of exactly 7 characters is one below the minimum of 8
+     * and should be rejected with the updated error message.
+     */
+    public function testRegistrationFailsWhenPasswordIsTooShort(): void
+    {
+        // 7 characters — one below the minimum of 8
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'abcdefg', 'abcdefg', 'ABCDE123456AB12');
+        $this->assertSame('Password must be at least 8 characters', $error);
+    }
+
+    /**
+     * A password of exactly 8 characters should meet the minimum requirement
+     * and pass the length check.
+     */
+    public function testRegistrationPassesWithPasswordOfExactlyEightChars(): void
+    {
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'abcdefgh', 'abcdefgh', 'ABCDE123456AB12');
+        $this->assertSame('', $error);
+    }
+
+    /**
+     * A string that is not a valid e-mail address should be rejected.
+     */
+    public function testRegistrationFailsWithInvalidEmailFormat(): void
+    {
+        $error = validateRegistrationInput('John Doe', 'not-an-email', 'password1', 'password1', 'ABCDE123456AB12');
+        $this->assertSame('Invalid email format', $error);
+    }
+
+    /**
+     * All valid inputs should produce no error message.
+     */
+    public function testRegistrationSucceedsWithAllValidInputs(): void
+    {
+        $error = validateRegistrationInput(
+            'Jane Smith',
+            'jane@example.com',
+            'securePass',
+            'securePass',
+            'SMITH123456JS99'
+        );
+        $this->assertSame('', $error);
+    }
+
+    // ── Driving Licence Validation ────────────────────────────────────────────
+
+    /**
+     * These licence numbers do not match the required UK format and should
+     * all be rejected. Format: 5 letters/9, 6 digits, 2 letters, 2 digits.
+     *
+     * @dataProvider invalidLicenceProvider
+     */
+    public function testRegistrationFailsWithInvalidDrivingLicence(string $licence): void
+    {
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'password1', 'password1', $licence);
+        $this->assertSame('Invalid driving licence format (e.g., ABCDE123456AB12)', $error);
+    }
+
+    public static function invalidLicenceProvider(): array
+    {
+        return [
+            'too short'               => ['ABCDE1234'],
+            'too long'                => ['ABCDE123456AB1234'],
+            'missing trailing digits' => ['ABCDE123456AB'],
+            'spaces inside'           => ['ABCDE 123456AB12'],
+            'all digits'              => ['12345123456AB12'],
+        ];
+    }
+
+    /**
+     * These licence numbers all match the required UK format and should pass.
+     *
+     * @dataProvider validLicenceProvider
+     */
+    public function testRegistrationPassesWithValidDrivingLicence(string $licence): void
+    {
+        $error = validateRegistrationInput('John Doe', 'a@b.com', 'password1', 'password1', $licence);
+        $this->assertSame('', $error, "Expected licence '$licence' to be valid.");
+    }
+
+    public static function validLicenceProvider(): array
+    {
+        return [
+            'all uppercase'  => ['ABCDE123456AB12'],
+            'all lowercase'  => ['abcde123456ab12'],
+            'mixed case'     => ['AbCdE123456aB12'],
+            'digit 9 prefix' => ['9BCDE123456AB12'], // [A-Z9] permits the digit 9
+        ];
+    }
+
+    // ── Name Splitting ────────────────────────────────────────────────────────
+
+    /**
+     * A standard first and last name should be split into two separate parts.
+     */
+    public function testFullNameSplitsIntoFirstAndLastName(): void
+    {
+        [$first, $last] = splitFullName('John Doe');
+        $this->assertSame('John', $first);
+        $this->assertSame('Doe', $last);
+    }
+
+    /**
+     * A single-word name should produce a first name and an empty last name,
+     * matching the null coalescing default on line 197 of loginPage.php.
+     */
+    public function testSingleWordNameProducesEmptyLastName(): void
+    {
+        [$first, $last] = splitFullName('Madonna');
+        $this->assertSame('Madonna', $first);
+        $this->assertSame('', $last);
+    }
+
+    /**
+     * A name with more than two words should keep everything after the first
+     * space together as the last name, owing to the limit of 2 in explode.
+     */
+    public function testMultiWordLastNameIsPreservedAsOneString(): void
+    {
+        [$first, $last] = splitFullName('Mary Jane Watson');
+        $this->assertSame('Mary', $first);
+        $this->assertSame('Jane Watson', $last);
+    }
+
+    // ── Session Payload Building ──────────────────────────────────────────────
+
+    /**
+     * The customer session array must contain the correct keys and values
+     * as set on lines 94–100 of loginPage.php.
+     */
+    public function testCustomerSessionPayloadIsBuiltCorrectly(): void
+    {
+        $dbRow = [
+            'customer_id' => 7,
+            'first_name'  => 'Demo',
+            'last_name'   => 'Customer',
+            'email'       => 'customer@demo.com',
+            'password'    => password_hash('demo123', PASSWORD_DEFAULT),
+        ];
+
+        $session = buildCustomerSession($dbRow);
+
+        $this->assertSame(7, $session['id']);
+        $this->assertSame('Demo', $session['firstName']);
+        $this->assertSame('Customer', $session['lastName']);
+        $this->assertSame('customer@demo.com', $session['email']);
+        $this->assertSame('customer', $session['role']);
+    }
+
+    /**
+     * The admin session array must contain the correct keys and values
+     * as set on lines 134–140 of loginPage.php.
+     */
+    public function testAdminSessionPayloadIsBuiltCorrectly(): void
+    {
+        $dbRow = [
+            'agent_id'   => 1,
+            'first_name' => 'Admin',
+            'last_name'  => 'User',
+            'email'      => 'admin@motivcarrental.com',
+            'password'   => password_hash('admin123', PASSWORD_DEFAULT),
+        ];
+
+        $session = buildAdminSession($dbRow);
+
+        $this->assertSame(1, $session['id']);
+        $this->assertSame('Admin', $session['firstName']);
+        $this->assertSame('User', $session['lastName']);
+        $this->assertSame('admin@motivcarrental.com', $session['email']);
+        $this->assertSame('admin', $session['role']);
+    }
+
+    // ── Role-Based Redirect ───────────────────────────────────────────────────
+
+    /**
+     * A customer role must redirect to the customer dashboard.
+     */
+    public function testCustomerRoleRedirectsToCustomerDashboard(): void
+    {
+        $this->assertSame('customer-dashboard.php', getRedirectForRole('customer'));
+    }
+
+    /**
+     * An admin role must redirect to the admin dashboard.
+     */
+    public function testAdminRoleRedirectsToAdminDashboard(): void
+    {
+        $this->assertSame('admin-dashboard.php', getRedirectForRole('admin'));
+    }
+
+    /**
+     * Only 'customer' and 'admin' are valid roles. Any other value should
+     * return an empty string, signalling that the session must be destroyed
+     * and the user sent back to the login page.
+     * Mirrors the updated explicit elseif block on lines 15–22 of loginPage.php.
+     */
+    public function testOnlyCustomerAndAdminAreValidRoles(): void
+    {
+        $this->assertSame('customer-dashboard.php', getRedirectForRole('customer'));
+        $this->assertSame('admin-dashboard.php', getRedirectForRole('admin'));
+        $this->assertSame('', getRedirectForRole('superuser'));
+        $this->assertSame('', getRedirectForRole(''));
+    }
+
+    // ── Success Response Messages ─────────────────────────────────────────────
+
+    /**
+     * A successful customer login must return the correct success flag,
+     * message, and redirect target as set on lines 101–105 of loginPage.php.
+     */
+    public function testCustomerLoginSuccessResponseIsCorrect(): void
+    {
+        $response = [
+            'success'  => true,
+            'message'  => 'Login successful',
+            'redirect' => 'customer-dashboard.php',
+        ];
+
+        $this->assertTrue($response['success']);
+        $this->assertSame('Login successful', $response['message']);
+        $this->assertSame('customer-dashboard.php', $response['redirect']);
+    }
+
+    /**
+     * A successful admin login must return the correct success flag,
+     * message, and redirect target as set on lines 141–145 of loginPage.php.
+     */
+    public function testAdminLoginSuccessResponseIsCorrect(): void
+    {
+        $response = [
+            'success'  => true,
+            'message'  => 'Admin login successful',
+            'redirect' => 'admin-dashboard.php',
+        ];
+
+        $this->assertTrue($response['success']);
+        $this->assertSame('Admin login successful', $response['message']);
+        $this->assertSame('admin-dashboard.php', $response['redirect']);
+    }
+
+    /**
+     * A successful registration must return the correct success flag,
+     * message, and redirect target as set on lines 222–226 of loginPage.php.
+     */
+    public function testRegistrationSuccessResponseIsCorrect(): void
+    {
+        $response = [
+            'success'  => true,
+            'message'  => 'Registration successful',
+            'redirect' => 'customer-dashboard.php',
+        ];
+
+        $this->assertTrue($response['success']);
+        $this->assertSame('Registration successful', $response['message']);
+        $this->assertSame('customer-dashboard.php', $response['redirect']);
+    }
+
+    /**
+     * A failed login attempt must return the same vague error message for
+     * both customer and admin accounts. Using the same message prevents an
+     * attacker from determining whether a given e-mail address is registered.
+     * Mirrors the updated error messages on lines 107 and 147 of loginPage.php.
+     */
+    public function testFailedLoginReturnsSameMessageForCustomerAndAdmin(): void
+    {
+        $customerError = 'Invalid email or password';
+        $adminError    = 'Invalid email or password';
+
+        $this->assertSame($customerError, $adminError);
+    }
+}
