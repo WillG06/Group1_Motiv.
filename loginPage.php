@@ -15,8 +15,11 @@ if ($conn->connect_error) {
 if (isset($_SESSION['user'])) {
     if ($_SESSION['user']['role'] === 'customer') {
         header('Location: customer-dashboard.php');
-    } else {
+    } elseif ($_SESSION['user']['role'] === 'admin') {
         header('Location: admin-dashboard.php');
+    } else {
+        session_destroy();
+        header('Location: loginPage.php');
     }
     exit;
 }
