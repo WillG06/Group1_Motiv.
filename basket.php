@@ -11,7 +11,7 @@ if (!isset($_SESSION['user'])) {
     exit;
 }
 
-$currentStep = isset($_GET['step']) ? $_GET['step'] : 1;
+$currentStep = isset($_GET['step']) ? $_GET['step'] : '1';
 // Handle string 'success' step
 if ($currentStep === 'success') {
     $currentStep = 'success';
@@ -161,7 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $dropoffDate = isset($_POST['dropoff_date']) ? $_POST['dropoff_date'] : '';
         $dropoffTime = isset($_POST['dropoff_time']) ? $_POST['dropoff_time'] : '10:00';
         
-        // Validate required fields
+        // Validate required fields - location IDs must be integers that aren't 0
         if (empty($pickupLocation) || empty($dropoffLocation) || empty($pickupDate) || empty($dropoffDate)) {
             $_SESSION['error'] = 'Please fill in all required fields';
             header('Location: basket.php?step=2');
