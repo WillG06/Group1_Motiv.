@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'redirect' => 'admin-dashboard.php'
                             ];
                         } else {
-                            $response['message'] = 'Invalid credentials';
+                            $response['message'] = 'Invalid email or password';
                         }
                     } else {
                         $response['message'] = 'Admin account not found';
