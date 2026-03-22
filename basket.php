@@ -1867,7 +1867,7 @@ nav ul li.dropdown .dropdown-content a:hover {
                                 <button class="font-btn" id="font-decrease">A-</button>
                                 <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
                                 <button class="font-btn" id="font-increase">A+</button>
-                                <button class="font-btn" id="font-reset"><?php echo $resetText; ?></button>
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
                             </div>
                         </div>
                         <div class="settings-section">
