@@ -164,8 +164,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $response['message'] = 'Please fill in all fields';
             } elseif ($password !== $confirm_password) {
                 $response['message'] = 'Passwords do not match';
-            } elseif (strlen($password) < 5) {
-                $response['message'] = 'Password must be at least 5 characters';
+            } elseif (strlen($password) < 8) {
+                $response['message'] = 'Password must be at least 8 characters';
             } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $response['message'] = 'Invalid email format';
             } elseif (!preg_match('/^[A-Z9]{5}\d{6}[A-Z]{2}\d{2}$/i', $driving_licence)) {
