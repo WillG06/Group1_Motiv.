@@ -319,7 +319,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (empty($basketItemsForBooking)) {
             $_SESSION['error'] = 'Your basket is empty or has already been processed!';
-            header('Location: basket.php?step=4');
+            header('Location: basket.php?step=1');
             exit;
         }
         
