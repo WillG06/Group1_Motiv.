@@ -9,7 +9,8 @@ $customer_id = $is_logged_in ? $_SESSION['user']['id'] : null;
 
 $darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
 $fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
-$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+$validLanguages = ['en', 'es', 'fr', 'de'];
+$language = isset($_COOKIE['language']) && in_array($_COOKIE['language'], $validLanguages) ? $_COOKIE['language'] : 'en';
 
 // Language variables for cars page
 $themeText = 'Theme';
@@ -259,7 +260,7 @@ function getCarImages($conn, $car_id) {
         $stmt2->bind_param("i", $car_id);
         $stmt2->execute();
         $result2 = $stmt2->get_result();
-        if ($row2 = $result2->fetch_assoc() && !empty($row2['image_url'])) {
+        if (($row2 = $result2->fetch_assoc()) && !empty($row2['image_url'])) {
             $images[] = $row2['image_url'];
         }
         $stmt2->close();
@@ -306,7 +307,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
 // Handle adding to basket
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
-    if (!isset($_SESSION['user'])) {
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'customer') {
         $_SESSION['error_message'] = 'Please login to add cars to your basket';
         header('Location: loginPage.php');
         exit;
@@ -331,7 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_basket'])) {
         $carData = $availableResult->fetch_assoc();
         $carAvailableQuery->close();
 
-        if ($carData['status_id'] != 1) {
+        if ((int)$carData['status_id'] !== 1) {
             $_SESSION['error_message'] = 'This car is no longer available for booking.';
             header('Location: cars.php');
             exit;
