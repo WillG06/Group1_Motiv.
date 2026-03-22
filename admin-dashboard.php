@@ -26,6 +26,7 @@ $adminId = $user['id'];
 $successMessage = '';
 $errorMessage = '';
 
+// Handle Add Car
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
     $makeId = $_POST['make_id'];
     $model = trim($_POST['model']);
@@ -36,23 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
     $description = trim($_POST['description']);
     $statusId = $_POST['status_id'];
     $cityId = $_POST['city_id'];
+    $seats = !empty($_POST['seats']) ? $_POST['seats'] : null;
+    $doors = !empty($_POST['doors']) ? $_POST['doors'] : null;
     
-    // --- Multiple Image Upload Handling ---
-    $uploadedImages = []; // To store paths of successfully uploaded images
+    // Multiple Image Upload Handling
+    $uploadedImages = [];
     $uploadErrors = [];
     
-    // Check if files were uploaded
     if (isset($_FILES['car_images']) && !empty($_FILES['car_images']['name'][0])) {
         $uploadDir = 'uploads/cars/';
         if (!is_dir($uploadDir)) {
             mkdir($uploadDir, 0755, true);
         }
         
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        $maxFiles = 5; // Maximum number of images
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+        $maxFiles = 5;
         $files = $_FILES['car_images'];
         
-        // Count how many files were actually selected (non-empty names)
         $fileCount = 0;
         foreach ($files['name'] as $name) {
             if (!empty($name)) $fileCount++;
@@ -69,31 +70,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
                 $originalName = $files['name'][$i];
                 
                 if ($fileError !== UPLOAD_ERR_OK) {
-                    $uploadErrors[] = "Error uploading file: $originalName. Error code: $fileError";
+                    $uploadErrors[] = "Error uploading file: $originalName";
                     continue;
                 }
                 
                 $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
                 if (!in_array($fileExtension, $allowedExtensions)) {
-                    $uploadErrors[] = "File $originalName: Only JPG, JPEG, PNG, GIF & WebP files are allowed.";
+                    $uploadErrors[] = "File $originalName: Invalid format.";
                     continue;
                 }
                 
-                // Validate image
                 $check = getimagesize($tmpName);
                 if ($check === false) {
                     $uploadErrors[] = "File $originalName is not a valid image.";
                     continue;
                 }
                 
-                // Generate unique filename
                 $fileName = uniqid() . '_' . preg_replace('/[^a-zA-Z0-9]/', '_', $model) . '_' . ($i+1) . '.' . $fileExtension;
                 $targetPath = $uploadDir . $fileName;
                 
                 if (move_uploaded_file($tmpName, $targetPath)) {
                     $uploadedImages[] = $targetPath;
                 } else {
-                    $uploadErrors[] = "Sorry, there was an error uploading $originalName.";
+                    $uploadErrors[] = "Error uploading $originalName.";
                 }
             }
         }
@@ -104,56 +103,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
     } elseif (!empty($uploadErrors)) {
         $errorMessage = implode(" ", $uploadErrors);
     } else {
-        // First, insert the car without images to get the car_id
         $insertQuery = $conn->prepare("
             INSERT INTO cars (agent_id, make_id, model, year, type_id, price_per_day, 
-                             deposit_required, description, status_id, city_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             deposit_required, description, status_id, city_id, seats, doors)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $insertQuery->bind_param("iisiiidsii", 
+        $insertQuery->bind_param("iisiiidsiiii", 
             $adminId, $makeId, $model, $year, $typeId, $pricePerDay, 
-            $depositRequired, $description, $statusId, $cityId
+            $depositRequired, $description, $statusId, $cityId, $seats, $doors
         );
         
         if ($insertQuery->execute()) {
             $carId = $insertQuery->insert_id;
             $insertQuery->close();
             
-            // Now insert the images into car_images table if table exists
             if (!empty($uploadedImages)) {
-                // Check if car_images table exists
-                $tableCheck = $conn->query("SHOW TABLES LIKE 'car_images'");
-                if ($tableCheck->num_rows > 0) {
-                    $imageInsertQuery = $conn->prepare("INSERT INTO car_images (car_id, image_url, display_order) VALUES (?, ?, ?)");
-                    $displayOrder = 1;
-                    foreach ($uploadedImages as $imagePath) {
-                        $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
-                        if (!$imageInsertQuery->execute()) {
-                            $errorMessage = "Error adding images: " . $conn->error;
-                            break;
-                        }
-                        $displayOrder++;
-                    }
-                    $imageInsertQuery->close();
-                } else {
-                    // If table doesn't exist, store only first image in cars table (backward compatibility)
-                    $updateCarImage = $conn->prepare("UPDATE cars SET image_url = ? WHERE car_id = ?");
-                    $firstImage = $uploadedImages[0];
-                    $updateCarImage->bind_param("si", $firstImage, $carId);
-                    $updateCarImage->execute();
-                    $updateCarImage->close();
-                    $errorMessage = "Note: car_images table doesn't exist. Only one image was saved to the cars table.";
+                $imageInsertQuery = $conn->prepare("INSERT INTO car_images (car_id, image_url, display_order) VALUES (?, ?, ?)");
+                $displayOrder = 1;
+                foreach ($uploadedImages as $imagePath) {
+                    $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
+                    $imageInsertQuery->execute();
+                    $displayOrder++;
                 }
+                $imageInsertQuery->close();
             }
             
-            // If no errors occurred during image insertion, set success message
-            if (empty($errorMessage) || strpos($errorMessage, 'Note:') !== false) {
-                $successMessage = "Car added successfully with " . count($uploadedImages) . " images!";
-                if (strpos($errorMessage, 'Note:') !== false) {
-                    $successMessage .= " " . $errorMessage;
-                    $errorMessage = '';
-                }
-            }
+            $successMessage = "Car added successfully with " . count($uploadedImages) . " images!";
         } else {
             $errorMessage = "Error adding car: " . $conn->error;
             $insertQuery->close();
@@ -161,6 +136,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_car'])) {
     }
 }
 
+// Handle Update Car Status
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_status'])) {
     $carId = $_POST['car_id'];
     $newStatus = $_POST['new_status'];
@@ -176,10 +152,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_car_status']))
     $updateQuery->close();
 }
 
+// Handle Cancel Booking
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking'])) {
     $bookingId = $_POST['booking_id'];
-    
-    error_log("Cancellation attempt for booking ID: " . $bookingId);
     
     $carQuery = $conn->prepare("SELECT car_id FROM bookings WHERE booking_id = ?");
     $carQuery->bind_param("i", $bookingId);
@@ -189,35 +164,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking'])) {
     if ($carResult->num_rows > 0) {
         $carData = $carResult->fetch_assoc();
         $carId = $carData['car_id'];
-        error_log("Found car ID: " . $carId);
-        
-        $statusQuery = $conn->prepare("SELECT booking_status_id, status_name FROM booking_status");
-        $statusQuery->execute();
-        $statusResult = $statusQuery->get_result();
-        
-        error_log("Available statuses in booking_status table:");
-        $statuses = [];
-        while ($status = $statusResult->fetch_assoc()) {
-            $statuses[] = $status;
-            error_log("ID: " . $status['booking_status_id'] . " - Name: '" . $status['status_name'] . "'");
-        }
         
         $cancelledStatusId = null;
-        $variations = ['cancelled', 'canceled', 'Cancelled', 'Canceled'];
+        $checkQuery = $conn->prepare("SELECT booking_status_id FROM booking_status WHERE status_name = 'cancelled'");
+        $checkQuery->execute();
+        $checkResult = $checkQuery->get_result();
         
-        foreach ($variations as $variation) {
-            $checkQuery = $conn->prepare("SELECT booking_status_id FROM booking_status WHERE status_name = ?");
-            $checkQuery->bind_param("s", $variation);
-            $checkQuery->execute();
-            $checkResult = $checkQuery->get_result();
-            
-            if ($checkResult->num_rows > 0) {
-                $cancelledStatusId = $checkResult->fetch_assoc()['booking_status_id'];
-                error_log("Found cancelled status with ID: " . $cancelledStatusId . " for variation: '" . $variation . "'");
-                break;
-            }
-            $checkQuery->close();
+        if ($checkResult->num_rows > 0) {
+            $cancelledStatusId = $checkResult->fetch_assoc()['booking_status_id'];
         }
+        $checkQuery->close();
         
         if ($cancelledStatusId) {
             $updateQuery = $conn->prepare("UPDATE bookings SET booking_status_id = ? WHERE booking_id = ?");
@@ -228,43 +184,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cancel_booking'])) {
                 $carUpdateQuery->bind_param("i", $carId);
                 $carUpdateQuery->execute();
                 $carUpdateQuery->close();
-                
-                $successMessage = "Booking cancelled successfully! The car is now available again.";
-                error_log("Booking cancelled successfully");
+                $successMessage = "Booking cancelled successfully!";
             } else {
                 $errorMessage = "Error cancelling booking: " . $conn->error;
-                error_log("Error updating booking: " . $conn->error);
             }
             $updateQuery->close();
         } else {
-            $errorMessage = "Cancelled status not found in booking_status table. Available statuses: " . implode(', ', array_column($statuses, 'status_name'));
-            error_log("Cancelled status not found");
+            $errorMessage = "Cancelled status not found.";
         }
-        $statusQuery->close();
     } else {
         $errorMessage = "Booking not found.";
-        error_log("Booking not found for ID: " . $bookingId);
     }
     $carQuery->close();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['add_city'])) {
-        $cityName = trim($_POST['city_name']);
-        $region = trim($_POST['region']);
-        
-        $insertQuery = $conn->prepare("INSERT INTO cities (city_name, region) VALUES (?, ?)");
-        $insertQuery->bind_param("ss", $cityName, $region);
-        
-        if ($insertQuery->execute()) {
-            $successMessage = "City added successfully!";
-        } else {
-            $errorMessage = "Error adding city: " . $conn->error;
-        }
-        $insertQuery->close();
+// Handle Add City
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_city'])) {
+    $cityName = trim($_POST['city_name']);
+    $region = trim($_POST['region']);
+    
+    $insertQuery = $conn->prepare("INSERT INTO cities (city_name, region) VALUES (?, ?)");
+    $insertQuery->bind_param("ss", $cityName, $region);
+    
+    if ($insertQuery->execute()) {
+        $successMessage = "City added successfully!";
+    } else {
+        $errorMessage = "Error adding city: " . $conn->error;
     }
+    $insertQuery->close();
 }
 
+// Handle Update Inquiry Status
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inquiry_status'])) {
     $inquiryId = $_POST['inquiry_id'];
     $newStatus = $_POST['new_status'];
@@ -280,6 +230,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inquiry_status
     $updateQuery->close();
 }
 
+// Get Statistics
 $stats = [];
 
 $revenueQuery = $conn->query("
@@ -288,18 +239,10 @@ $revenueQuery = $conn->query("
     WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) 
     AND YEAR(created_at) = YEAR(CURRENT_DATE())
 ");
-if ($revenueQuery) {
-    $stats['revenue'] = $revenueQuery->fetch_assoc()['total_revenue'];
-} else {
-    $stats['revenue'] = 0;
-}
+$stats['revenue'] = $revenueQuery ? $revenueQuery->fetch_assoc()['total_revenue'] : 0;
 
 $customersQuery = $conn->query("SELECT COUNT(*) as total_customers FROM customers");
-if ($customersQuery) {
-    $stats['customers'] = $customersQuery->fetch_assoc()['total_customers'];
-} else {
-    $stats['customers'] = 0;
-}
+$stats['customers'] = $customersQuery ? $customersQuery->fetch_assoc()['total_customers'] : 0;
 
 $bookingsQuery = $conn->query("
     SELECT COUNT(*) as monthly_bookings 
@@ -307,11 +250,7 @@ $bookingsQuery = $conn->query("
     WHERE MONTH(created_at) = MONTH(CURRENT_DATE()) 
     AND YEAR(created_at) = YEAR(CURRENT_DATE())
 ");
-if ($bookingsQuery) {
-    $stats['bookings'] = $bookingsQuery->fetch_assoc()['monthly_bookings'];
-} else {
-    $stats['bookings'] = 0;
-}
+$stats['bookings'] = $bookingsQuery ? $bookingsQuery->fetch_assoc()['monthly_bookings'] : 0;
 
 $inquiriesQuery = $conn->query("
     SELECT COUNT(*) as new_inquiries 
@@ -319,27 +258,12 @@ $inquiriesQuery = $conn->query("
     WHERE status = 'new' 
     AND DATE(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
 ");
-if ($inquiriesQuery) {
-    $stats['inquiries'] = $inquiriesQuery->fetch_assoc()['new_inquiries'];
-} else {
-    $stats['inquiries'] = 0;
-}
+$stats['inquiries'] = $inquiriesQuery ? $inquiriesQuery->fetch_assoc()['new_inquiries'] : 0;
 
 $carsQuery = $conn->query("SELECT COUNT(*) as total_cars FROM cars");
-if ($carsQuery) {
-    $stats['cars'] = $carsQuery->fetch_assoc()['total_cars'];
-} else {
-    $stats['cars'] = 0;
-}
+$stats['cars'] = $carsQuery ? $carsQuery->fetch_assoc()['total_cars'] : 0;
 
-$bookingStatuses = [];
-$statusQuery = $conn->query("SELECT booking_status_id, status_name FROM booking_status ORDER BY booking_status_id");
-if ($statusQuery) {
-    while ($status = $statusQuery->fetch_assoc()) {
-        $bookingStatuses[] = $status;
-    }
-}
-
+// Get Recent Bookings (Last 10)
 $recentBookings = [];
 $bookingsData = $conn->query("
     SELECT b.booking_id, b.start_date, b.end_date, b.total_cost, 
@@ -354,16 +278,14 @@ $bookingsData = $conn->query("
     ORDER BY b.created_at DESC
     LIMIT 10
 ");
-if ($bookingsData) {
-    while ($booking = $bookingsData->fetch_assoc()) {
-        $recentBookings[] = $booking;
-    }
+while ($booking = $bookingsData->fetch_assoc()) {
+    $recentBookings[] = $booking;
 }
 
+// Get Recent Customers (Last 10)
 $customersData = [];
 $customersQuery = $conn->query("
     SELECT c.customer_id, c.first_name, c.last_name, c.email, c.phone, c.created_at,
-           c.driving_license, c.address, c.postcode, c.date_of_birth,
            COUNT(b.booking_id) as total_rentals
     FROM customers c
     LEFT JOIN bookings b ON c.customer_id = b.customer_id
@@ -371,18 +293,26 @@ $customersQuery = $conn->query("
     ORDER BY c.created_at DESC
     LIMIT 10
 ");
-if ($customersQuery) {
-    while ($customer = $customersQuery->fetch_assoc()) {
-        $customersData[] = $customer;
-    }
+while ($customer = $customersQuery->fetch_assoc()) {
+    $customersData[] = $customer;
 }
 
 // Check if car_images table exists
-$tableExists = $conn->query("SHOW TABLES LIKE 'car_images'");
-$hasImageTable = ($tableExists && $tableExists->num_rows > 0);
+$tableCheck = $conn->query("SHOW TABLES LIKE 'car_images'");
+$hasImageTable = $tableCheck && $tableCheck->num_rows > 0;
+
+// Get ALL Cars with Pagination
+$totalCarsQuery = $conn->query("SELECT COUNT(*) as total FROM cars");
+$totalCars = $totalCarsQuery->fetch_assoc()['total'];
+
+// Pagination for Cars
+$page = isset($_GET['car_page']) ? intval($_GET['car_page']) : 1;
+$carsPerPage = 15;
+$offset = ($page - 1) * $carsPerPage;
+$totalPages = ceil($totalCars / $carsPerPage);
 
 $carsData = [];
-$carsQuery = $conn->query("
+$carsQuery = $conn->prepare("
     SELECT c.car_id, c.model, c.year, c.price_per_day, c.image_url, c.description,
            mk.make_name, ct.type_name, cs.status_name, cs.status_id,
            ci.city_name
@@ -392,30 +322,32 @@ $carsQuery = $conn->query("
     JOIN car_status cs ON c.status_id = cs.status_id
     JOIN cities ci ON c.city_id = ci.city_id
     ORDER BY c.created_at DESC
-    LIMIT 10
+    LIMIT ? OFFSET ?
 ");
-if ($carsQuery) {
-    while ($car = $carsQuery->fetch_assoc()) {
-        // Fetch images for this car if table exists
-        $images = [];
-        if ($hasImageTable) {
-            $imageQuery = $conn->prepare("SELECT image_url FROM car_images WHERE car_id = ? ORDER BY display_order");
-            $imageQuery->bind_param("i", $car['car_id']);
-            $imageQuery->execute();
-            $imageResult = $imageQuery->get_result();
-            while ($img = $imageResult->fetch_assoc()) {
-                $images[] = $img['image_url'];
-            }
-            $imageQuery->close();
-        } elseif (!empty($car['image_url'])) {
-            // Fallback to single image from cars table
-            $images[] = $car['image_url'];
-        }
-        $car['images'] = $images;
-        $carsData[] = $car;
-    }
-}
+$carsQuery->bind_param("ii", $carsPerPage, $offset);
+$carsQuery->execute();
+$carsResult = $carsQuery->get_result();
 
+while ($car = $carsResult->fetch_assoc()) {
+    $images = [];
+    if ($hasImageTable) {
+        $imageQuery = $conn->prepare("SELECT image_url FROM car_images WHERE car_id = ? ORDER BY display_order");
+        $imageQuery->bind_param("i", $car['car_id']);
+        $imageQuery->execute();
+        $imageResult = $imageQuery->get_result();
+        while ($img = $imageResult->fetch_assoc()) {
+            $images[] = $img['image_url'];
+        }
+        $imageQuery->close();
+    } elseif (!empty($car['image_url'])) {
+        $images[] = $car['image_url'];
+    }
+    $car['images'] = $images;
+    $carsData[] = $car;
+}
+$carsQuery->close();
+
+// Get Inquiries (Last 10)
 $inquiriesData = [];
 $inquiriesQuery = $conn->query("
     SELECT inquiry_id, name, email, phone, subject, message, created_at, status
@@ -423,12 +355,11 @@ $inquiriesQuery = $conn->query("
     ORDER BY created_at DESC
     LIMIT 10
 ");
-if ($inquiriesQuery) {
-    while ($inquiry = $inquiriesQuery->fetch_assoc()) {
-        $inquiriesData[] = $inquiry;
-    }
+while ($inquiry = $inquiriesQuery->fetch_assoc()) {
+    $inquiriesData[] = $inquiry;
 }
 
+// Get Cities Data
 $citiesData = [];
 $citiesQuery = $conn->query("
     SELECT ci.city_id, ci.city_name, ci.region,
@@ -443,12 +374,11 @@ $citiesQuery = $conn->query("
     GROUP BY ci.city_id
     ORDER BY monthly_revenue DESC
 ");
-if ($citiesQuery) {
-    while ($city = $citiesQuery->fetch_assoc()) {
-        $citiesData[] = $city;
-    }
+while ($city = $citiesQuery->fetch_assoc()) {
+    $citiesData[] = $city;
 }
 
+// Get Reports Data
 $reportsData = [];
 $monthlyRevenue = $conn->query("
     SELECT MONTH(created_at) as month, 
@@ -460,10 +390,8 @@ $monthlyRevenue = $conn->query("
     GROUP BY YEAR(created_at), MONTH(created_at)
     ORDER BY year, month
 ");
-if ($monthlyRevenue) {
-    while ($row = $monthlyRevenue->fetch_assoc()) {
-        $reportsData['monthly_revenue'][] = $row;
-    }
+while ($row = $monthlyRevenue->fetch_assoc()) {
+    $reportsData['monthly_revenue'][] = $row;
 }
 
 $topCars = $conn->query("
@@ -477,12 +405,11 @@ $topCars = $conn->query("
     ORDER BY total_revenue DESC
     LIMIT 5
 ");
-if ($topCars) {
-    while ($row = $topCars->fetch_assoc()) {
-        $reportsData['top_cars'][] = $row;
-    }
+while ($row = $topCars->fetch_assoc()) {
+    $reportsData['top_cars'][] = $row;
 }
 
+// Get Recent Activity
 $recentActivity = [];
 $activityQuery = $conn->query("
     (SELECT 'booking' as type, b.booking_id as id, CONCAT('New booking created for ', mk.make_name, ' ', c.model) as activity, b.created_at as timestamp
@@ -502,42 +429,33 @@ $activityQuery = $conn->query("
     ORDER BY timestamp DESC
     LIMIT 6
 ");
-if ($activityQuery) {
-    while ($activity = $activityQuery->fetch_assoc()) {
-        $recentActivity[] = $activity;
-    }
+while ($activity = $activityQuery->fetch_assoc()) {
+    $recentActivity[] = $activity;
 }
 
+// Get Dropdown Data
 $makes = [];
 $makesQuery = $conn->query("SELECT make_id, make_name FROM makes ORDER BY make_name");
-if ($makesQuery) {
-    while ($make = $makesQuery->fetch_assoc()) {
-        $makes[] = $make;
-    }
+while ($make = $makesQuery->fetch_assoc()) {
+    $makes[] = $make;
 }
 
 $carTypes = [];
 $typesQuery = $conn->query("SELECT type_id, type_name FROM car_types ORDER BY type_name");
-if ($typesQuery) {
-    while ($type = $typesQuery->fetch_assoc()) {
-        $carTypes[] = $type;
-    }
+while ($type = $typesQuery->fetch_assoc()) {
+    $carTypes[] = $type;
 }
 
 $carStatuses = [];
 $statusQuery = $conn->query("SELECT status_id, status_name FROM car_status ORDER BY status_name");
-if ($statusQuery) {
-    while ($status = $statusQuery->fetch_assoc()) {
-        $carStatuses[] = $status;
-    }
+while ($status = $statusQuery->fetch_assoc()) {
+    $carStatuses[] = $status;
 }
 
 $cities = [];
 $citiesQuery = $conn->query("SELECT city_id, city_name FROM cities ORDER BY city_name");
-if ($citiesQuery) {
-    while ($city = $citiesQuery->fetch_assoc()) {
-        $cities[] = $city;
-    }
+while ($city = $citiesQuery->fetch_assoc()) {
+    $cities[] = $city;
 }
 ?>
 <!DOCTYPE html>
@@ -547,8 +465,47 @@ if ($citiesQuery) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ... (keep all existing styles) ... */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f5f5;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --card-bg: #ffffff;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --footer-bg: #8C0050;
+            --footer-text: #ecf0f1;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #cccccc;
+            --card-bg: #333333;
+            --border-color: #404040;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --footer-bg: #222222;
+            --footer-text: #ffffff;
+            --vivid-indigo: #8C0050;
+            --dark-magenta: #1800AD;
+            --cobalt-blue: #004AAD;
+            --coral-red: #FF7F50;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -622,6 +579,12 @@ if ($citiesQuery) {
             z-index: 1000;
         }
 
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333;
+            border-color: #404040;
+            color: white;
+        }
+
         .language-selector:hover .language-settings-dropdown {
             display: block;
         }
@@ -629,6 +592,10 @@ if ($citiesQuery) {
         .settings-section {
             padding: 12px 15px;
             border-bottom: 1px solid #e0e0e0;
+        }
+
+        [data-theme="dark"] .settings-section {
+            border-color: #404040;
         }
 
         .settings-section:last-child {
@@ -644,6 +611,10 @@ if ($citiesQuery) {
             font-weight: 600;
         }
 
+        [data-theme="dark"] .settings-section h4 {
+            color: #fff;
+        }
+
         .theme-option, .language-option {
             display: flex;
             align-items: center;
@@ -657,14 +628,24 @@ if ($citiesQuery) {
             cursor: pointer;
         }
 
+        [data-theme="dark"] .theme-option, 
+        [data-theme="dark"] .language-option {
+            color: #fff;
+        }
+
         .theme-option:hover, .language-option:hover {
             background-color: #f1f1f1;
+        }
+
+        [data-theme="dark"] .theme-option:hover, 
+        [data-theme="dark"] .language-option:hover {
+            background-color: #404040;
         }
 
         .theme-option i, .language-option i {
             width: 18px;
             margin-right: 10px;
-            color: var(--vivid-indigo, #8C0050);
+            color: var(--vivid-indigo);
             font-size: 14px;
         }
 
@@ -675,7 +656,7 @@ if ($citiesQuery) {
         }
 
         .font-btn {
-            background: var(--vivid-indigo, #8C0050);
+            background: var(--vivid-indigo);
             color: white;
             border: none;
             width: 32px;
@@ -691,7 +672,7 @@ if ($citiesQuery) {
         }
 
         .font-btn:hover {
-            background: var(--dark-magenta, #1800AD);
+            background: var(--dark-magenta);
         }
 
         .font-size-display {
@@ -702,15 +683,19 @@ if ($citiesQuery) {
             font-weight: 600;
         }
 
+        [data-theme="dark"] .font-size-display {
+            color: #fff;
+        }
+
         .active-indicator {
             margin-left: auto;
-            color: var(--vivid-indigo, #8C0050);
+            color: var(--vivid-indigo);
             font-size: 12px;
         }
         
         .admin-container {
             padding: 40px 0;
-            background-color: #f5f5f5;
+            background-color: var(--bg-secondary);
             min-height: calc(100vh - 80px);
         }
         
@@ -749,9 +734,10 @@ if ($citiesQuery) {
         }
         
         .admin-nav {
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            box-shadow: 0 2px 10px var(--shadow-color);
             margin-bottom: 30px;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .nav-container {
@@ -773,7 +759,7 @@ if ($citiesQuery) {
             transition: all 0.3s;
             white-space: nowrap;
             font-weight: 600;
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .admin-tab.active {
@@ -798,11 +784,12 @@ if ($citiesQuery) {
         }
         
         .dashboard-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 30px;
             margin-bottom: 30px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px var(--shadow-color);
+            border: 1px solid var(--border-color);
         }
         
         .section-header {
@@ -811,7 +798,7 @@ if ($citiesQuery) {
             align-items: center;
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .section-title {
@@ -889,12 +876,13 @@ if ($citiesQuery) {
         }
         
         .metric-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 25px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px var(--shadow-color);
             transition: transform 0.3s;
             border-left: 4px solid var(--cobalt-blue);
+            border: 1px solid var(--border-color);
         }
         
         .metric-card:hover {
@@ -948,25 +936,9 @@ if ($citiesQuery) {
         }
         
         .metric-label {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1rem;
             font-weight: 600;
-        }
-        
-        .metric-change {
-            margin-top: 10px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .metric-change.positive {
-            color: #2ecc71;
-        }
-        
-        .metric-change.negative {
-            color: #e74c3c;
         }
         
         .data-table {
@@ -979,17 +951,17 @@ if ($citiesQuery) {
         .data-table td {
             padding: 15px;
             text-align: left;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .data-table th {
-            background: #f8f8f8;
+            background: var(--bg-secondary);
             color: var(--vivid-indigo);
             font-weight: 600;
         }
         
         .data-table tr:hover {
-            background: #f8f8f8;
+            background: var(--bg-secondary);
         }
         
         .status-badge {
@@ -1042,6 +1014,7 @@ if ($citiesQuery) {
         .action-buttons {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
         
         .form-group {
@@ -1060,11 +1033,13 @@ if ($citiesQuery) {
         .form-group textarea {
             width: 100%;
             padding: 12px 15px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 1rem;
             transition: border-color 0.3s;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: inherit;
+            background-color: var(--card-bg);
+            color: var(--text-primary);
         }
         
         .form-group input:focus,
@@ -1087,11 +1062,11 @@ if ($citiesQuery) {
         }
         
         .action-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 25px;
             text-align: center;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px var(--shadow-color);
             transition: transform 0.3s;
             cursor: pointer;
             border: 2px solid transparent;
@@ -1125,7 +1100,7 @@ if ($citiesQuery) {
         }
         
         .action-description {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.9rem;
         }
         
@@ -1138,7 +1113,7 @@ if ($citiesQuery) {
             align-items: center;
             gap: 15px;
             padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .activity-item:last-child {
@@ -1148,7 +1123,7 @@ if ($citiesQuery) {
         .activity-icon {
             width: 40px;
             height: 40px;
-            background: #f0f0f0;
+            background: var(--bg-secondary);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -1167,11 +1142,11 @@ if ($citiesQuery) {
         
         .activity-text {
             margin-bottom: 5px;
-            color: #333;
+            color: var(--text-primary);
         }
         
         .activity-time {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.8rem;
         }
         
@@ -1189,13 +1164,14 @@ if ($citiesQuery) {
         }
         
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 12px;
             width: 90%;
             max-width: 700px;
             max-height: 90vh;
             overflow-y: auto;
+            border: 1px solid var(--border-color);
         }
         
         .modal-header {
@@ -1204,7 +1180,7 @@ if ($citiesQuery) {
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .modal-title {
@@ -1218,9 +1194,9 @@ if ($citiesQuery) {
             border: none;
             font-size: 1.5rem;
             cursor: pointer;
-            color: #666;
+            color: var(--text-secondary);
         }
-
+        
         .report-summary {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1229,11 +1205,12 @@ if ($citiesQuery) {
         }
         
         .report-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px var(--shadow-color);
             border-left: 4px solid var(--cobalt-blue);
+            border: 1px solid var(--border-color);
         }
         
         .report-card h4 {
@@ -1246,7 +1223,7 @@ if ($citiesQuery) {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .report-item:last-child {
@@ -1254,14 +1231,14 @@ if ($citiesQuery) {
         }
         
         .report-label {
-            color: #666;
+            color: var(--text-secondary);
         }
         
         .report-value {
             font-weight: 600;
-            color: #333;
+            color: var(--text-primary);
         }
-
+        
         .temp-message {
             position: fixed;
             top: 20px;
@@ -1284,8 +1261,7 @@ if ($citiesQuery) {
             color: #c62828;
             border: 1px solid #ef9a9a;
         }
-
-        /* Image preview container styles */
+        
         .image-preview-container {
             display: flex;
             flex-wrap: wrap;
@@ -1297,7 +1273,7 @@ if ($citiesQuery) {
             position: relative;
             width: 80px;
             height: 80px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
             overflow: hidden;
         }
@@ -1324,156 +1300,101 @@ if ($citiesQuery) {
             align-items: center;
             justify-content: center;
         }
-
-        [data-theme="dark"] {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --text-primary: #ffffff;
-            --text-secondary: #cccccc;
-            --card-bg: #333333;
-            --border-color: #404040;
-            --shadow-color: rgba(0, 0, 0, 0.3);
-            --footer-bg: #222222;
-            --footer-text: #ffffff;
-            --vivid-indigo: #8C0050;
-            --dark-magenta: #1800AD;
-            --cobalt-blue: #004AAD;
-            --coral-red: #FF7F50;
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
         }
-
-        [data-theme="dark"] body {
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
+        
+        .pagination a, .pagination span {
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s;
         }
-
-        [data-theme="dark"] .admin-container {
-            background-color: var(--bg-secondary);
+        
+        .pagination a {
+            background: var(--bg-secondary);
+            color: var(--cobalt-blue);
+            border: 1px solid var(--border-color);
         }
-
-        [data-theme="dark"] .dashboard-section,
-        [data-theme="dark"] .metric-card,
-        [data-theme="dark"] .action-card,
-        [data-theme="dark"] .report-card,
-        [data-theme="dark"] .modal-content,
-        [data-theme="dark"] .admin-nav {
-            background-color: var(--card-bg);
-            color: var(--text-primary);
-            border-color: var(--border-color);
+        
+        .pagination a:hover {
+            background: var(--cobalt-blue);
+            color: white;
         }
-
-        [data-theme="dark"] .admin-tab {
+        
+        .pagination .current {
+            background: var(--cobalt-blue);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .pagination .dots {
             color: var(--text-secondary);
         }
-
-        [data-theme="dark"] .admin-tab.active {
-            color: #ffffff;
-            border-bottom-color: var(--coral-red);
+        
+        .info-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: var(--text-secondary);
         }
-
-        [data-theme="dark"] .admin-tab:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
+        
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
         }
-
-        [data-theme="dark"] .data-table th {
-            background-color: #404040;
-            color: #ffffff;
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
         }
-
-        [data-theme="dark"] .data-table td {
-            border-bottom-color: #404040;
-            color: #cccccc;
+        
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
         }
-
-        [data-theme="dark"] .data-table tr:hover {
-            background-color: #404040;
+        
+        .footer-column p {
+            color: var(--footer-text);
+            line-height: 1.6;
         }
-
-        [data-theme="dark"] .section-title,
-        [data-theme="dark"] .metric-value,
-        [data-theme="dark"] .metric-label,
-        [data-theme="dark"] .action-title,
-        [data-theme="dark"] .report-card h4,
-        [data-theme="dark"] .report-value,
-        [data-theme="dark"] .activity-text,
-        [data-theme="dark"] .modal-title {
-            color: #ffffff;
+        
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
         }
-
-        [data-theme="dark"] .report-label,
-        [data-theme="dark"] .activity-time,
-        [data-theme="dark"] .action-description {
-            color: #cccccc;
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
         }
-
-        [data-theme="dark"] .activity-icon {
-            background-color: #404040;
+        
+        .footer-column ul li a {
+            color: var(--footer-text);
+            text-decoration: none;
+            transition: color 0.3s ease;
         }
-
-        [data-theme="dark"] .activity-icon i {
+        
+        .footer-column ul li a:hover {
             color: var(--coral-red);
         }
-
-        [data-theme="dark"] .modal-header {
-            border-bottom-color: #404040;
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        [data-theme="dark"] .close-modal {
-            color: #cccccc;
-        }
-
-        [data-theme="dark"] .close-modal:hover {
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .form-group label {
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .form-group input,
-        [data-theme="dark"] .form-group select,
-        [data-theme="dark"] .form-group textarea {
-            background-color: #404040;
-            border-color: #555555;
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .form-group input:focus,
-        [data-theme="dark"] .form-group select:focus,
-        [data-theme="dark"] .form-group textarea:focus {
-            border-color: var(--coral-red);
-        }
-
-        [data-theme="dark"] .form-group input::placeholder,
-        [data-theme="dark"] .form-group textarea::placeholder {
-            color: #999999;
-        }
-
-        [data-theme="dark"] .language-settings-dropdown {
-            background-color: #333333;
-            border-color: #404040;
-        }
-
-        [data-theme="dark"] .settings-section {
-            border-color: #404040;
-        }
-
-        [data-theme="dark"] .settings-section h4 {
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .theme-option,
-        [data-theme="dark"] .language-option {
-            color: #ffffff;
-        }
-
-        [data-theme="dark"] .theme-option:hover,
-        [data-theme="dark"] .language-option:hover {
-            background-color: #404040;
-        }
-
-        [data-theme="dark"] .font-size-display {
-            color: #ffffff;
+        
+        .copyright p {
+            color: var(--footer-text);
+            font-size: 0.9rem;
         }
         
         @media (max-width: 992px) {
@@ -1540,7 +1461,6 @@ if ($citiesQuery) {
             }
         }
     </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body data-theme="<?php echo $darkMode; ?>">
 
@@ -1583,7 +1503,7 @@ if ($citiesQuery) {
                                 <button class="font-btn" id="font-decrease">A-</button>
                                 <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
                                 <button class="font-btn" id="font-increase">A+</button>
-                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button //improved reset button
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
                             </div>
                         </div>
 
@@ -1621,298 +1541,305 @@ if ($citiesQuery) {
     </div>
 </header>
 
-    <div class="modal" id="addCarModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add New Car</h3>
-                <button class="close-modal" onclick="closeAddCarModal()">&times;</button>
-            </div>
-            
-            <?php if (!empty($successMessage)): ?>
-                <div style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-                    <?php echo htmlspecialchars($successMessage); ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (!empty($errorMessage)): ?>
-                <div style="background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
-                    <?php echo htmlspecialchars($errorMessage); ?>
-                </div>
-            <?php endif; ?>
-            
-            <form method="POST" enctype="multipart/form-data" id="addCarForm">
-                <input type="hidden" name="add_car" value="1">
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="make_id">Make *</label>
-                        <select id="make_id" name="make_id" required>
-                            <option value="">Select Make</option>
-                            <?php foreach ($makes as $make): ?>
-                                <option value="<?php echo $make['make_id']; ?>">
-                                    <?php echo htmlspecialchars($make['make_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="model">Model *</label>
-                        <input type="text" id="model" name="model" required>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="year">Year *</label>
-                        <input type="number" id="year" name="year" min="2000" max="2030" value="<?php echo date('Y'); ?>" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="type_id">Type *</label>
-                        <select id="type_id" name="type_id" required>
-                            <option value="">Select Type</option>
-                            <?php foreach ($carTypes as $type): ?>
-                                <option value="<?php echo $type['type_id']; ?>">
-                                    <?php echo htmlspecialchars($type['type_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="price_per_day">Price Per Day (£) *</label>
-                        <input type="number" id="price_per_day" name="price_per_day" step="0.01" min="0" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="deposit_required">Deposit Required (£)</label>
-                        <input type="number" id="deposit_required" name="deposit_required" step="0.01" min="0">
-                    </div>
-                </div>
-                
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="status_id">Status *</label>
-                        <select id="status_id" name="status_id" required>
-                            <option value="">Select Status</option>
-                            <?php foreach ($carStatuses as $status): ?>
-                                <option value="<?php echo $status['status_id']; ?>">
-                                    <?php echo htmlspecialchars($status['status_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="city_id">City *</label>
-                        <select id="city_id" name="city_id" required>
-                            <option value="">Select City</option>
-                            <?php foreach ($cities as $city): ?>
-                                <option value="<?php echo $city['city_id']; ?>">
-                                    <?php echo htmlspecialchars($city['city_name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Multiple Image Upload Section -->
-                <div class="form-group">
-                    <label for="car_images">Car Images (Up to 5 images)</label>
-                    <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
-                    <small>Recommended: 800x600px, JPG, PNG, GIF or WebP format. You can select up to 5 images.</small>
-                    <div id="image-preview-container" class="image-preview-container"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="4" placeholder="Enter car description..."></textarea>
-                </div>
-                
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" onclick="closeAddCarModal()" class="btn-secondary">Cancel</button>
-                    <button type="submit" class="btn-primary">Add Car</button>
-                </div>
-            </form>
+<div class="modal" id="addCarModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add New Car</h3>
+            <button class="close-modal" onclick="closeAddCarModal()">&times;</button>
         </div>
-    </div>
-
-    <div class="modal" id="addCityModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Add New City</h3>
-                <button class="close-modal" onclick="closeAddCityModal()">&times;</button>
+        
+        <?php if (!empty($successMessage)): ?>
+            <div style="background: #e8f5e9; color: #2e7d32; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                <?php echo htmlspecialchars($successMessage); ?>
             </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($errorMessage)): ?>
+            <div style="background: #ffebee; color: #c62828; padding: 10px; border-radius: 6px; margin-bottom: 20px;">
+                <?php echo htmlspecialchars($errorMessage); ?>
+            </div>
+        <?php endif; ?>
+        
+        <form method="POST" enctype="multipart/form-data" id="addCarForm">
+            <input type="hidden" name="add_car" value="1">
             
-            <form method="POST" id="addCityForm">
-                <input type="hidden" name="add_city" value="1">
-                
+            <div class="form-row">
                 <div class="form-group">
-                    <label for="city_name">City Name *</label>
-                    <input type="text" id="city_name" name="city_name" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="region">Region *</label>
-                    <input type="text" id="region" name="region" required>
-                </div>
-                
-                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" onclick="closeAddCityModal()" class="btn-secondary">Cancel</button>
-                    <button type="submit" class="btn-primary">Add City</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <section class="admin-header">
-        <div class="admin-welcome">
-            <div class="welcome-text">
-                <h1>Admin Dashboard</h1>
-                <p>Manage your car rental business efficiently</p>
-            </div>
-            <div class="admin-id">Admin ID: <?php echo htmlspecialchars($user['memberId'] ?? $user['id']); ?></div>
-        </div>
-    </section>
-
-    <nav class="admin-nav">
-        <div class="nav-container">
-            <ul class="admin-tabs">
-                <li class="admin-tab active" data-tab="overview">Overview</li>
-                <li class="admin-tab" data-tab="bookings">Bookings</li>
-                <li class="admin-tab" data-tab="customers">Customers</li>
-                <li class="admin-tab" data-tab="cars">Car Fleet</li>
-                <li class="admin-tab" data-tab="inquiries">Customer Inquiries</li>
-                <li class="admin-tab" data-tab="cities">Cities</li>
-                <li class="admin-tab" data-tab="reports">Reports</li>
-            </ul>
-        </div>
-    </nav>
-
-    <div class="admin-container">
-        <div class="admin-content active" id="overview">
-            <div class="metrics-grid">
-                <div class="metric-card revenue">
-                    <div class="metric-value">£<?php echo number_format($stats['revenue'], 2); ?></div>
-                    <div class="metric-label">Total Revenue</div>
-                    <div class="metric-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>This month</span>
-                    </div>
-                </div>
-                
-                <div class="metric-card customers">
-                    <div class="metric-value"><?php echo $stats['customers']; ?></div>
-                    <div class="metric-label">Total Customers</div>
-                    <div class="metric-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>All time</span>
-                    </div>
-                </div>
-                
-                <div class="metric-card bookings">
-                    <div class="metric-value"><?php echo $stats['bookings']; ?></div>
-                    <div class="metric-label">Monthly Bookings</div>
-                    <div class="metric-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>This month</span>
-                    </div>
-                </div>
-                
-                <div class="metric-card inquiries">
-                    <div class="metric-value"><?php echo $stats['inquiries']; ?></div>
-                    <div class="metric-label">New Inquiries</div>
-                    <div class="metric-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>Last 30 days</span>
-                    </div>
-                </div>
-
-                <div class="metric-card cars">
-                    <div class="metric-value"><?php echo $stats['cars']; ?></div>
-                    <div class="metric-label">Total Cars</div>
-                    <div class="metric-change positive">
-                        <i class="fas fa-arrow-up"></i>
-                        <span>In fleet</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Quick Actions</h3>
-                </div>
-                <div class="quick-actions">
-                    <div class="action-card" onclick="showAddCarModal()">
-                        <div class="action-icon">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="action-title">Add New Car</div>
-                        <div class="action-description">Add a new vehicle to the fleet</div>
-                    </div>
-                    
-                    <div class="action-card" onclick="switchTab('bookings')">
-                        <div class="action-icon">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="action-title">View Bookings</div>
-                        <div class="action-description">Manage current reservations</div>
-                    </div>
-                    
-                    <div class="action-card" onclick="switchTab('inquiries')">
-                        <div class="action-icon">
-                            <i class="fas fa-envelope"></i>
-                        </div>
-                        <div class="action-title">Customer Inquiries</div>
-                        <div class="action-description">Respond to customer questions</div>
-                    </div>
-                    
-                    <div class="action-card" onclick="switchTab('reports')">
-                        <div class="action-icon">
-                            <i class="fas fa-chart-bar"></i>
-                        </div>
-                        <div class="action-title">Generate Reports</div>
-                        <div class="action-description">Create business reports</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Recent Activity</h3>
-                    <a href="#" class="btn-secondary">View All</a>
-                </div>
-                <ul class="activity-list" id="recentActivity">
-                    <?php if (!empty($recentActivity)): ?>
-                        <?php foreach ($recentActivity as $activity): ?>
-                            <li class="activity-item">
-                                <div class="activity-icon">
-                                    <i class="fas fa-<?php echo $activity['type'] === 'booking' ? 'car' : ($activity['type'] === 'customer' ? 'user' : 'car'); ?>"></i>
-                                </div>
-                                <div class="activity-content">
-                                    <div class="activity-text"><?php echo htmlspecialchars($activity['activity']); ?></div>
-                                    <div class="activity-time"><?php echo date('M j, Y g:i A', strtotime($activity['timestamp'])); ?></div>
-                                </div>
-                            </li>
+                    <label for="make_id">Make *</label>
+                    <select id="make_id" name="make_id" required>
+                        <option value="">Select Make</option>
+                        <?php foreach ($makes as $make): ?>
+                            <option value="<?php echo $make['make_id']; ?>">
+                                <?php echo htmlspecialchars($make['make_name']); ?>
+                            </option>
                         <?php endforeach; ?>
-                    <?php else: ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model *</label>
+                    <input type="text" id="model" name="model" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year">Year *</label>
+                    <input type="number" id="year" name="year" min="2000" max="2030" value="<?php echo date('Y'); ?>" required>
+                </div>
+                <div class="form-group">
+                    <label for="type_id">Type *</label>
+                    <select id="type_id" name="type_id" required>
+                        <option value="">Select Type</option>
+                        <?php foreach ($carTypes as $type): ?>
+                            <option value="<?php echo $type['type_id']; ?>">
+                                <?php echo htmlspecialchars($type['type_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="price_per_day">Price Per Day (£) *</label>
+                    <input type="number" id="price_per_day" name="price_per_day" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="deposit_required">Deposit Required (£)</label>
+                    <input type="number" id="deposit_required" name="deposit_required" step="0.01" min="0">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="seats">Seats</label>
+                    <input type="number" id="seats" name="seats" min="2" max="9">
+                </div>
+                <div class="form-group">
+                    <label for="doors">Doors</label>
+                    <input type="number" id="doors" name="doors" min="2" max="5">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="status_id">Status *</label>
+                    <select id="status_id" name="status_id" required>
+                        <option value="">Select Status</option>
+                        <?php foreach ($carStatuses as $status): ?>
+                            <option value="<?php echo $status['status_id']; ?>">
+                                <?php echo htmlspecialchars($status['status_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="city_id">City *</label>
+                    <select id="city_id" name="city_id" required>
+                        <option value="">Select City</option>
+                        <?php foreach ($cities as $city): ?>
+                            <option value="<?php echo $city['city_id']; ?>">
+                                <?php echo htmlspecialchars($city['city_name']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="car_images">Car Images (Up to 5 images)</label>
+                <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
+                <small>Recommended: 800x600px, JPG, PNG, GIF, WebP or AVIF format. You can select up to 5 images.</small>
+                <div id="image-preview-container" class="image-preview-container"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="4" placeholder="Enter car description..."></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" onclick="closeAddCarModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Add Car</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal" id="addCityModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Add New City</h3>
+            <button class="close-modal" onclick="closeAddCityModal()">&times;</button>
+        </div>
+        
+        <form method="POST" id="addCityForm">
+            <input type="hidden" name="add_city" value="1">
+            
+            <div class="form-group">
+                <label for="city_name">City Name *</label>
+                <input type="text" id="city_name" name="city_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="region">Region *</label>
+                <input type="text" id="region" name="region" required>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button type="button" onclick="closeAddCityModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Add City</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<section class="admin-header">
+    <div class="admin-welcome">
+        <div class="welcome-text">
+            <h1>Admin Dashboard</h1>
+            <p>Manage your car rental business efficiently</p>
+        </div>
+        <div class="admin-id">Admin ID: <?php echo htmlspecialchars($user['memberId'] ?? $user['id']); ?></div>
+    </div>
+</section>
+
+<nav class="admin-nav">
+    <div class="nav-container">
+        <ul class="admin-tabs">
+            <li class="admin-tab active" data-tab="overview">Overview</li>
+            <li class="admin-tab" data-tab="bookings">Bookings</li>
+            <li class="admin-tab" data-tab="customers">Customers</li>
+            <li class="admin-tab" data-tab="cars">Car Fleet</li>
+            <li class="admin-tab" data-tab="inquiries">Customer Inquiries</li>
+            <li class="admin-tab" data-tab="cities">Cities</li>
+            <li class="admin-tab" data-tab="reports">Reports</li>
+        </ul>
+    </div>
+</nav>
+
+<div class="admin-container">
+    <div class="admin-content active" id="overview">
+        <div class="metrics-grid">
+            <div class="metric-card revenue">
+                <div class="metric-value">£<?php echo number_format($stats['revenue'], 2); ?></div>
+                <div class="metric-label">Total Revenue</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>This month</span>
+                </div>
+            </div>
+            
+            <div class="metric-card customers">
+                <div class="metric-value"><?php echo $stats['customers']; ?></div>
+                <div class="metric-label">Total Customers</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>All time</span>
+                </div>
+            </div>
+            
+            <div class="metric-card bookings">
+                <div class="metric-value"><?php echo $stats['bookings']; ?></div>
+                <div class="metric-label">Monthly Bookings</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>This month</span>
+                </div>
+            </div>
+            
+            <div class="metric-card inquiries">
+                <div class="metric-value"><?php echo $stats['inquiries']; ?></div>
+                <div class="metric-label">New Inquiries</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>Last 30 days</span>
+                </div>
+            </div>
+
+            <div class="metric-card cars">
+                <div class="metric-value"><?php echo $stats['cars']; ?></div>
+                <div class="metric-label">Total Cars</div>
+                <div class="metric-change positive">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>In fleet</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Quick Actions</h3>
+            </div>
+            <div class="quick-actions">
+                <div class="action-card" onclick="showAddCarModal()">
+                    <div class="action-icon">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="action-title">Add New Car</div>
+                    <div class="action-description">Add a new vehicle to the fleet</div>
+                </div>
+                
+                <div class="action-card" onclick="switchTab('bookings')">
+                    <div class="action-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="action-title">View Bookings</div>
+                    <div class="action-description">Manage current reservations</div>
+                </div>
+                
+                <div class="action-card" onclick="switchTab('inquiries')">
+                    <div class="action-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="action-title">Customer Inquiries</div>
+                    <div class="action-description">Respond to customer questions</div>
+                </div>
+                
+                <div class="action-card" onclick="switchTab('reports')">
+                    <div class="action-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <div class="action-title">Generate Reports</div>
+                    <div class="action-description">Create business reports</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Recent Activity</h3>
+            </div>
+            <ul class="activity-list" id="recentActivity">
+                <?php if (!empty($recentActivity)): ?>
+                    <?php foreach ($recentActivity as $activity): ?>
                         <li class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-<?php echo $activity['type'] === 'booking' ? 'car' : ($activity['type'] === 'customer' ? 'user' : 'car'); ?>"></i>
+                            </div>
                             <div class="activity-content">
-                                <div class="activity-text">No recent activity</div>
+                                <div class="activity-text"><?php echo htmlspecialchars($activity['activity']); ?></div>
+                                <div class="activity-time"><?php echo date('M j, Y g:i A', strtotime($activity['timestamp'])); ?></div>
                             </div>
                         </li>
-                    <?php endif; ?>
-                </ul>
-            </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <li class="activity-item">
+                        <div class="activity-content">
+                            <div class="activity-text">No recent activity</div>
+                        </div>
+                    </li>
+                <?php endif; ?>
+            </ul>
         </div>
+    </div>
 
-        <div class="admin-content" id="bookings">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Manage Bookings</h3>
-                    <div class="section-actions">
-                        <button class="btn-secondary">Export Data</button>
-                    </div>
-                </div>
+    <div class="admin-content" id="bookings">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Manage Bookings</h3>
+            </div>
+            <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -1926,7 +1853,7 @@ if ($citiesQuery) {
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="bookingsTable">
+                    <tbody>
                         <?php if (!empty($recentBookings)): ?>
                             <?php foreach ($recentBookings as $booking): ?>
                                 <tr>
@@ -1961,15 +1888,14 @@ if ($citiesQuery) {
                 </table>
             </div>
         </div>
+    </div>
 
-        <div class="admin-content" id="customers">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Customer Management</h3>
-                    <div class="section-actions">
-                        <button class="btn-secondary">Export Data</button>
-                    </div>
-                </div>
+    <div class="admin-content" id="customers">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Customer Management</h3>
+            </div>
+            <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -1979,11 +1905,10 @@ if ($citiesQuery) {
                             <th>Phone</th>
                             <th>Join Date</th>
                             <th>Total Rentals</th>
-                            <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="customersTable">
+                    <tbody>
                         <?php if (!empty($customersData)): ?>
                             <?php foreach ($customersData as $customer): ?>
                                 <tr>
@@ -1993,7 +1918,6 @@ if ($citiesQuery) {
                                     <td><?php echo htmlspecialchars($customer['phone'] ?? 'N/A'); ?></td>
                                     <td><?php echo date('M j, Y', strtotime($customer['created_at'])); ?></td>
                                     <td><?php echo $customer['total_rentals']; ?></td>
-                                    <td><span class="status-badge status-active">Active</span></td>
                                     <td class="action-buttons">
                                         <button class="btn-primary" onclick="contactCustomer('<?php echo htmlspecialchars($customer['email']); ?>', '<?php echo htmlspecialchars($customer['first_name'] . ' ' . $customer['last_name']); ?>')">Contact</button>
                                     </td>
@@ -2001,36 +1925,44 @@ if ($citiesQuery) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="8" style="text-align: center;">No customers found</td>
+                                <td colspan="7" style="text-align: center;">No customers found</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
         </div>
+    </div>
 
-        <div class="admin-content" id="cars">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Car Fleet Management</h3>
-                    <div class="section-actions">
-                        <button class="btn-primary" onclick="showAddCarModal()">Add New Car</button>
-                    </div>
+    <div class="admin-content" id="cars">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Car Fleet Management</h3>
+                <div class="section-actions">
+                    <button class="btn-primary" onclick="showAddCarModal()">Add New Car</button>
                 </div>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Car ID</th>
-                            <th>Images</th>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Daily Rate</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="carsTable">
-                        <?php if (!empty($carsData)): ?>
+            </div>
+            
+            <?php if (empty($carsData)): ?>
+                <div style="text-align: center; padding: 40px;">
+                    <i class="fas fa-car" style="font-size: 48px; color: #ccc;"></i>
+                    <p style="margin-top: 10px;">No cars found. Click "Add New Car" to get started.</p>
+                </div>
+            <?php else: ?>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Car ID</th>
+                                <th>Images</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Daily Rate</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                             <?php foreach ($carsData as $car): ?>
                                 <tr>
                                     <td>#<?php echo $car['car_id']; ?></td>
@@ -2068,26 +2000,63 @@ if ($citiesQuery) {
                                             <button class="btn-warning" onclick="updateCarStatus(<?php echo $car['car_id']; ?>, 2)">Mark Occupied</button>
                                         <?php endif; ?>
                                     </td>
-                                 </tr>
+                                </tr>
                             <?php endforeach; ?>
-                        <?php else: ?>
-                            <tr>
-                                <td colspan="7" style="text-align: center;">No cars found</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="admin-content" id="inquiries">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Customer Inquiries</h3>
-                    <div class="section-actions">
-                        <button class="btn-secondary">Export Data</button>
-                    </div>
+                        </tbody>
+                    </table>
                 </div>
+                
+                <!-- Pagination -->
+                <?php if ($totalPages > 1): ?>
+                    <div class="pagination">
+                        <?php if ($page > 1): ?>
+                            <a href="?car_page=<?php echo $page - 1; ?>&tab=cars">&laquo; Previous</a>
+                        <?php endif; ?>
+                        
+                        <?php 
+                        $startPage = max(1, $page - 2);
+                        $endPage = min($totalPages, $page + 2);
+                        
+                        if ($startPage > 1): ?>
+                            <a href="?car_page=1&tab=cars">1</a>
+                            <?php if ($startPage > 2): ?>
+                                <span class="dots">...</span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                        
+                        <?php for ($i = $startPage; $i <= $endPage; $i++): ?>
+                            <?php if ($i == $page): ?>
+                                <span class="current"><?php echo $i; ?></span>
+                            <?php else: ?>
+                                <a href="?car_page=<?php echo $i; ?>&tab=cars"><?php echo $i; ?></a>
+                            <?php endif; ?>
+                        <?php endfor; ?>
+                        
+                        <?php if ($endPage < $totalPages): ?>
+                            <?php if ($endPage < $totalPages - 1): ?>
+                                <span class="dots">...</span>
+                            <?php endif; ?>
+                            <a href="?car_page=<?php echo $totalPages; ?>&tab=cars"><?php echo $totalPages; ?></a>
+                        <?php endif; ?>
+                        
+                        <?php if ($page < $totalPages): ?>
+                            <a href="?car_page=<?php echo $page + 1; ?>&tab=cars">Next &raquo;</a>
+                        <?php endif; ?>
+                    </div>
+                    <div class="info-text">
+                        Showing <?php echo $offset + 1; ?> to <?php echo min($offset + $carsPerPage, $totalCars); ?> of <?php echo $totalCars; ?> cars
+                    </div>
+                <?php endif; ?>
+            <?php endif; ?>
+        </div>
+    </div>
+
+    <div class="admin-content" id="inquiries">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Customer Inquiries</h3>
+            </div>
+            <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -2101,7 +2070,7 @@ if ($citiesQuery) {
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="inquiriesTable">
+                    <tbody>
                         <?php if (!empty($inquiriesData)): ?>
                             <?php foreach ($inquiriesData as $inquiry): ?>
                                 <tr>
@@ -2113,7 +2082,7 @@ if ($citiesQuery) {
                                     <td><?php echo date('M j, Y', strtotime($inquiry['created_at'])); ?></td>
                                     <td><span class="status-badge status-<?php echo strtolower($inquiry['status']); ?>"><?php echo ucfirst($inquiry['status']); ?></span></td>
                                     <td class="action-buttons">
-                                        <button class="btn-secondary" onclick="viewInquiry(<?php echo $inquiry['inquiry_id']; ?>)">View Details</button>
+                                        <button class="btn-secondary" onclick="viewInquiry(<?php echo $inquiry['inquiry_id']; ?>)">View</button>
                                         <button class="btn-primary" onclick="replyToInquiry('<?php echo htmlspecialchars($inquiry['email']); ?>', '<?php echo htmlspecialchars($inquiry['subject']); ?>')">Reply</button>
                                         <?php if ($inquiry['status'] === 'new'): ?>
                                             <form method="POST" style="display: inline;">
@@ -2135,15 +2104,17 @@ if ($citiesQuery) {
                 </table>
             </div>
         </div>
+    </div>
 
-        <div class="admin-content" id="cities">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Cities & Locations</h3>
-                    <div class="section-actions">
-                        <button class="btn-primary" onclick="showAddCityModal()">Add New City</button>
-                    </div>
+    <div class="admin-content" id="cities">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Cities & Locations</h3>
+                <div class="section-actions">
+                    <button class="btn-primary" onclick="showAddCityModal()">Add New City</button>
                 </div>
+            </div>
+            <div style="overflow-x: auto;">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -2155,7 +2126,7 @@ if ($citiesQuery) {
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="citiesTable">
+                    <tbody>
                         <?php if (!empty($citiesData)): ?>
                             <?php foreach ($citiesData as $city): ?>
                                 <tr>
@@ -2176,89 +2147,90 @@ if ($citiesQuery) {
                 </table>
             </div>
         </div>
+    </div>
 
-        <div class="admin-content" id="reports">
-            <div class="dashboard-section">
-                <div class="section-header">
-                    <h3 class="section-title">Business Reports Summary</h3>
-                    <div class="section-actions">
-                        <button class="btn-secondary" onclick="printReport()">Print Report</button>
+    <div class="admin-content" id="reports">
+        <div class="dashboard-section">
+            <div class="section-header">
+                <h3 class="section-title">Business Reports Summary</h3>
+                <div class="section-actions">
+                    <button class="btn-secondary" onclick="printReport()">Print Report</button>
+                </div>
+            </div>
+            
+            <div class="report-summary">
+                <div class="report-card">
+                    <h4>Financial Overview</h4>
+                    <div class="report-item">
+                        <span class="report-label">Monthly Revenue</span>
+                        <span class="report-value">£<?php echo number_format($stats['revenue'], 2); ?></span>
+                    </div>
+                    <div class="report-item">
+                        <span class="report-label">Monthly Bookings</span>
+                        <span class="report-value"><?php echo $stats['bookings']; ?></span>
+                    </div>
+                    <div class="report-item">
+                        <span class="report-label">Average Booking Value</span>
+                        <span class="report-value">£<?php echo $stats['bookings'] > 0 ? number_format($stats['revenue'] / $stats['bookings'], 2) : '0.00'; ?></span>
                     </div>
                 </div>
                 
-                <div class="report-summary">
-                    <div class="report-card">
-                        <h4>Financial Overview</h4>
-                        <div class="report-item">
-                            <span class="report-label">Monthly Revenue</span>
-                            <span class="report-value">£<?php echo number_format($stats['revenue'], 2); ?></span>
-                        </div>
-                        <div class="report-item">
-                            <span class="report-label">Monthly Bookings</span>
-                            <span class="report-value"><?php echo $stats['bookings']; ?></span>
-                        </div>
-                        <div class="report-item">
-                            <span class="report-label">Average Booking Value</span>
-                            <span class="report-value">£<?php echo $stats['bookings'] > 0 ? number_format($stats['revenue'] / $stats['bookings'], 2) : '0.00'; ?></span>
-                        </div>
+                <div class="report-card">
+                    <h4>Customer Insights</h4>
+                    <div class="report-item">
+                        <span class="report-label">Total Customers</span>
+                        <span class="report-value"><?php echo $stats['customers']; ?></span>
                     </div>
-                    
-                    <div class="report-card">
-                        <h4>Customer Insights</h4>
-                        <div class="report-item">
-                            <span class="report-label">Total Customers</span>
-                            <span class="report-value"><?php echo $stats['customers']; ?></span>
-                        </div>
-                        <div class="report-item">
-                            <span class="report-label">New Inquiries</span>
-                            <span class="report-value"><?php echo $stats['inquiries']; ?></span>
-                        </div>
-                        <div class="report-item">
-                            <span class="report-label">Active Cars</span>
-                            <span class="report-value"><?php echo $stats['cars']; ?></span>
-                        </div>
+                    <div class="report-item">
+                        <span class="report-label">New Inquiries</span>
+                        <span class="report-value"><?php echo $stats['inquiries']; ?></span>
                     </div>
-                    
-                    <div class="report-card">
-                        <h4>Top Performing Cars</h4>
-                        <?php if (!empty($reportsData['top_cars'])): ?>
-                            <?php foreach ($reportsData['top_cars'] as $car): ?>
-                                <div class="report-item">
-                                    <span class="report-label"><?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?></span>
-                                    <span class="report-value">£<?php echo number_format($car['total_revenue'] ?? 0, 2); ?></span>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
+                    <div class="report-item">
+                        <span class="report-label">Active Cars</span>
+                        <span class="report-value"><?php echo $stats['cars']; ?></span>
+                    </div>
+                </div>
+                
+                <div class="report-card">
+                    <h4>Top Performing Cars</h4>
+                    <?php if (!empty($reportsData['top_cars'])): ?>
+                        <?php foreach ($reportsData['top_cars'] as $car): ?>
                             <div class="report-item">
-                                <span class="report-label">No data available</span>
+                                <span class="report-label"><?php echo htmlspecialchars($car['make_name'] . ' ' . $car['model']); ?></span>
+                                <span class="report-value">£<?php echo number_format($car['total_revenue'] ?? 0, 2); ?></span>
                             </div>
-                        <?php endif; ?>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="report-item">
+                            <span class="report-label">No data available</span>
+                        </div>
+                    <?php endif; ?>
                 </div>
-                
-                <div class="dashboard-section">
-                    <h4>Recent Performance Trends</h4>
-                    <div style="background: #f8f8f8; padding: 20px; border-radius: 8px;">
-                        <p><strong>Last 6 Months Revenue:</strong></p>
-                        <?php if (!empty($reportsData['monthly_revenue'])): ?>
-                            <?php foreach ($reportsData['monthly_revenue'] as $month): ?>
-                                <div class="report-item">
-                                    <span class="report-label">
-                                        <?php echo date('F Y', mktime(0, 0, 0, $month['month'], 1, $month['year'])); ?>
-                                    </span>
-                                    <span class="report-value">
-                                        £<?php echo number_format($month['revenue'], 2); ?> (<?php echo $month['bookings']; ?> bookings)
-                                    </span>
-                                </div>
-                            <?php endforeach; ?>
-                        <?php else: ?>
-                            <p>No revenue data available for the last 6 months.</p>
-                        <?php endif; ?>
-                    </div>
+            </div>
+            
+            <div class="dashboard-section">
+                <h4>Recent Performance Trends</h4>
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 8px;">
+                    <p><strong>Last 6 Months Revenue:</strong></p>
+                    <?php if (!empty($reportsData['monthly_revenue'])): ?>
+                        <?php foreach ($reportsData['monthly_revenue'] as $month): ?>
+                            <div class="report-item">
+                                <span class="report-label">
+                                    <?php echo date('F Y', mktime(0, 0, 0, $month['month'], 1, $month['year'])); ?>
+                                </span>
+                                <span class="report-value">
+                                    £<?php echo number_format($month['revenue'], 2); ?> (<?php echo $month['bookings']; ?> bookings)
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p>No revenue data available for the last 6 months.</p>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 <footer>
     <div class="container">
@@ -2318,141 +2290,22 @@ if ($citiesQuery) {
         location.reload();
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        updateFontSizeDisplay();
-        
-        const themeOptions = document.querySelectorAll('.theme-option');
-        themeOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
-                e.preventDefault();
-                const theme = this.getAttribute('data-theme');
-                setTheme(theme);
-            });
-        });
-
-        const decreaseBtn = document.getElementById('font-decrease');
-        const increaseBtn = document.getElementById('font-increase');
-        const resetBtn = document.getElementById('font-reset');
-
-        if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', function() {
-                if (currentFontSize > 70) {
-                    currentFontSize -= 10;
-                    updateFontSizeDisplay();
-                }
-            });
-        }
-
-        if (increaseBtn) {
-            increaseBtn.addEventListener('click', function() {
-                if (currentFontSize < 150) {
-                    currentFontSize += 10;
-                    updateFontSizeDisplay();
-                }
-            });
-        }
-
-        if (resetBtn) {
-            resetBtn.addEventListener('click', function() {
-                currentFontSize = 100;
-                updateFontSizeDisplay();
-            });
-        }
-
-        const languageOptions = document.querySelectorAll('.language-option');
-        languageOptions.forEach(option => {
-            option.addEventListener('click', function(e) {
-                e.preventDefault();
-                const lang = this.getAttribute('data-lang');
-                setLanguage(lang);
-            });
-        });
-
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                }
-            });
-        });
-
-        function switchTab(tabName) {
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
-            
-            document.querySelectorAll('.admin-content').forEach(content => {
-                content.classList.remove('active');
-            });
-            document.getElementById(tabName).classList.add('active');
-        }
-
+    function switchTab(tabName) {
         document.querySelectorAll('.admin-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                switchTab(this.getAttribute('data-tab'));
-            });
+            tab.classList.remove('active');
         });
+        document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
         
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.style.display = 'none';
-                });
-            }
+        document.querySelectorAll('.admin-content').forEach(content => {
+            content.classList.remove('active');
         });
-
-        // Image preview for multiple files
-        const imageInput = document.getElementById('car_images');
-        const previewContainer = document.getElementById('image-preview-container');
+        document.getElementById(tabName).classList.add('active');
         
-        if (imageInput) {
-            imageInput.addEventListener('change', function(e) {
-                previewContainer.innerHTML = '';
-                const files = Array.from(e.target.files);
-                
-                if (files.length > 5) {
-                    alert('You can only upload up to 5 images.');
-                    imageInput.value = '';
-                    return;
-                }
-                
-                files.forEach((file, index) => {
-                    if (file && file.type.startsWith('image/')) {
-                        const reader = new FileReader();
-                        reader.onload = function(ev) {
-                            const previewDiv = document.createElement('div');
-                            previewDiv.className = 'image-preview';
-                            previewDiv.setAttribute('data-index', index);
-                            
-                            const img = document.createElement('img');
-                            img.src = ev.target.result;
-                            
-                            const removeBtn = document.createElement('button');
-                            removeBtn.className = 'remove-image';
-                            removeBtn.innerHTML = '×';
-                            removeBtn.onclick = function() {
-                                // Remove this preview and remove the file from the input
-                                const dt = new DataTransfer();
-                                const currentFiles = Array.from(imageInput.files);
-                                const filteredFiles = currentFiles.filter((f, i) => i !== index);
-                                filteredFiles.forEach(f => dt.items.add(f));
-                                imageInput.files = dt.files;
-                                // Re-trigger change event to refresh previews
-                                const event = new Event('change', { bubbles: true });
-                                imageInput.dispatchEvent(event);
-                            };
-                            
-                            previewDiv.appendChild(img);
-                            previewDiv.appendChild(removeBtn);
-                            previewContainer.appendChild(previewDiv);
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            });
-        }
-    });
+        // Update URL without page reload
+        const url = new URL(window.location);
+        url.searchParams.set('tab', tabName);
+        window.history.pushState({}, '', url);
+    }
 
     function showAddCarModal() {
         document.getElementById('addCarModal').style.display = 'flex';
@@ -2460,7 +2313,6 @@ if ($citiesQuery) {
     
     function closeAddCarModal() {
         document.getElementById('addCarModal').style.display = 'none';
-        // Clear previews
         const previewContainer = document.getElementById('image-preview-container');
         if (previewContainer) previewContainer.innerHTML = '';
         const imageInput = document.getElementById('car_images');
@@ -2473,18 +2325,6 @@ if ($citiesQuery) {
     
     function closeAddCityModal() {
         document.getElementById('addCityModal').style.display = 'none';
-    }
-
-    function switchTab(tabName) {
-        document.querySelectorAll('.admin-tab').forEach(tab => {
-            tab.classList.remove('active');
-        });
-        document.querySelector(`.admin-tab[data-tab="${tabName}"]`).classList.add('active');
-        
-        document.querySelectorAll('.admin-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(tabName).classList.add('active');
     }
 
     function contactCustomer(email, name) {
@@ -2546,19 +2386,6 @@ if ($citiesQuery) {
         const messageEl = document.createElement('div');
         messageEl.className = `temp-message ${type}`;
         messageEl.textContent = message;
-        messageEl.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            z-index: 1000;
-            max-width: 300px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            background: ${type === 'success' ? '#e8f5e9' : '#ffebee'};
-            color: ${type === 'success' ? '#2e7d32' : '#c62828'};
-            border: 1px solid ${type === 'success' ? '#a5d6a7' : '#ef9a9a'};
-        `;
         
         document.body.appendChild(messageEl);
         
@@ -2566,6 +2393,135 @@ if ($citiesQuery) {
             messageEl.remove();
         }, 3000);
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFontSizeDisplay();
+        
+        // Check URL parameters for tab
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam && ['overview', 'bookings', 'customers', 'cars', 'inquiries', 'cities', 'reports'].includes(tabParam)) {
+            switchTab(tabParam);
+        }
+        
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const theme = this.getAttribute('data-theme');
+                setTheme(theme);
+            });
+        });
+
+        const decreaseBtn = document.getElementById('font-decrease');
+        const increaseBtn = document.getElementById('font-increase');
+        const resetBtn = document.getElementById('font-reset');
+
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                if (currentFontSize > 70) {
+                    currentFontSize -= 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                if (currentFontSize < 150) {
+                    currentFontSize += 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                currentFontSize = 100;
+                updateFontSizeDisplay();
+            });
+        }
+
+        const languageOptions = document.querySelectorAll('.language-option');
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                setLanguage(lang);
+            });
+        });
+
+        document.querySelectorAll('.admin-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                switchTab(this.getAttribute('data-tab'));
+            });
+        });
+        
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal').forEach(modal => {
+                    modal.style.display = 'none';
+                });
+            }
+        });
+
+        // Image preview for multiple files
+        const imageInput = document.getElementById('car_images');
+        const previewContainer = document.getElementById('image-preview-container');
+        
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                previewContainer.innerHTML = '';
+                const files = Array.from(e.target.files);
+                
+                if (files.length > 5) {
+                    alert('You can only upload up to 5 images.');
+                    imageInput.value = '';
+                    return;
+                }
+                
+                files.forEach((file, index) => {
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(ev) {
+                            const previewDiv = document.createElement('div');
+                            previewDiv.className = 'image-preview';
+                            previewDiv.setAttribute('data-index', index);
+                            
+                            const img = document.createElement('img');
+                            img.src = ev.target.result;
+                            
+                            const removeBtn = document.createElement('button');
+                            removeBtn.className = 'remove-image';
+                            removeBtn.innerHTML = '×';
+                            removeBtn.onclick = function() {
+                                const dt = new DataTransfer();
+                                const currentFiles = Array.from(imageInput.files);
+                                const filteredFiles = currentFiles.filter((f, i) => i !== index);
+                                filteredFiles.forEach(f => dt.items.add(f));
+                                imageInput.files = dt.files;
+                                const event = new Event('change', { bubbles: true });
+                                imageInput.dispatchEvent(event);
+                            };
+                            
+                            previewDiv.appendChild(img);
+                            previewDiv.appendChild(removeBtn);
+                            previewContainer.appendChild(previewDiv);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+        }
+    });
 </script>
 </body>
 </html>
