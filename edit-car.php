@@ -7,6 +7,19 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 
+// Get user preferences from cookies
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+// Language variables
+$themeText = 'Theme';
+$lightText = 'Light';
+$darkText = 'Dark';
+$fontSizeText = 'Font Size';
+$resetText = 'Reset';
+$languageText = 'Language';
+
 $carId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($carId === 0) {
@@ -311,7 +324,195 @@ while ($city = $citiesQuery->fetch_assoc()) {
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        nav ul {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        nav ul li {
+            margin: 0;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        nav ul li a:hover,
+        nav ul li a.active {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        .language-selector {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .language-selector > a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            line-height: 0;
+            color: white;
+        }
+
+        .language-selector:hover > a {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .language-settings-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333;
+            border-color: #404040;
+            color: white;
+        }
+
+        .language-selector:hover .language-settings-dropdown {
+            display: block;
+        }
+
+        .settings-section {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        [data-theme="dark"] .settings-section {
+            border-color: #404040;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .settings-section h4 {
+            color: #fff;
+        }
+
+        .theme-option, .language-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .theme-option, 
+        [data-theme="dark"] .language-option {
+            color: #fff;
+        }
+
+        .theme-option:hover, .language-option:hover {
+            background-color: #f1f1f1;
+        }
+
+        [data-theme="dark"] .theme-option:hover, 
+        [data-theme="dark"] .language-option:hover {
+            background-color: #404040;
+        }
+
+        .theme-option i, .language-option i {
+            width: 18px;
+            margin-right: 10px;
+            color: var(--vivid-indigo);
+            font-size: 14px;
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .font-btn {
+            background: var(--vivid-indigo);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-btn:hover {
+            background: var(--dark-magenta);
+        }
+
+        .font-size-display {
+            font-size: 14px;
+            color: #333;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .font-size-display {
+            color: #fff;
+        }
+
+        .active-indicator {
+            margin-left: auto;
+            color: var(--vivid-indigo);
+            font-size: 12px;
         }
 
         .edit-car-container {
@@ -657,6 +858,59 @@ while ($city = $citiesQuery->fetch_assoc()) {
             border-top: 1px solid var(--border-color);
         }
         
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-column p {
+            color: var(--footer-text);
+            line-height: 1.6;
+        }
+        
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .footer-column ul li {
+            margin-bottom: 10px;
+        }
+        
+        .footer-column ul li a {
+            color: var(--footer-text);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-column ul li a:hover {
+            color: var(--coral-red);
+        }
+        
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .copyright p {
+            color: var(--footer-text);
+            font-size: 0.9rem;
+        }
+        
         @media (max-width: 768px) {
             .edit-car-content {
                 padding: 20px;
@@ -679,10 +933,15 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 width: 100%;
                 text-align: center;
             }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
         }
     </style>
 </head>
-<body data-theme="<?php echo isset($darkMode) ? $darkMode : 'light'; ?>">
+<body data-theme="<?php echo $darkMode; ?>">
 
 <header>
     <div class="container header-content">
@@ -697,6 +956,64 @@ while ($city = $citiesQuery->fetch_assoc()) {
                     <a href="logout.php" style="color: #ff4444;">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </a>
+                </li>
+                <li class="language-selector">
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                    <div class="language-settings-dropdown">
+                        <div class="settings-section">
+                            <h4><?php echo $themeText; ?></h4>
+                            <a href="#" class="theme-option" data-theme="light">
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                <?php if ($darkMode == 'light'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="theme-option" data-theme="dark">
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                <?php if ($darkMode == 'dark'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $fontSizeText; ?></h4>
+                            <div class="font-controls">
+                                <button class="font-btn" id="font-decrease">A-</button>
+                                <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                <button class="font-btn" id="font-increase">A+</button>
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $languageText; ?></h4>
+                            <a href="#" class="language-option" data-lang="en">
+                                <i class="fas fa-language"></i> English
+                                <?php if ($language == 'en'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="es">
+                                <i class="fas fa-language"></i> Español
+                                <?php if ($language == 'es'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="fr">
+                                <i class="fas fa-language"></i> Français
+                                <?php if ($language == 'fr'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="de">
+                                <i class="fas fa-language"></i> Deutsch
+                                <?php if ($language == 'de'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </nav>
@@ -931,6 +1248,32 @@ while ($city = $citiesQuery->fetch_assoc()) {
 </footer>
 
 <script>
+    let currentFontSize = <?php echo $fontSize; ?>;
+    let currentTheme = '<?php echo $darkMode; ?>';
+    let currentLanguage = '<?php echo $language; ?>';
+
+    function updateFontSizeDisplay() {
+        const display = document.getElementById('font-size-display');
+        if (display) {
+            display.textContent = currentFontSize + '%';
+        }
+        document.documentElement.style.fontSize = currentFontSize + '%';
+        document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    }
+
+    function setTheme(theme) {
+        currentTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
+
     // Image preview for multiple files
     const imageInput = document.getElementById('car_images');
     const previewContainer = document.getElementById('image-preview-container');
@@ -1073,6 +1416,57 @@ while ($city = $citiesQuery->fetch_assoc()) {
             }
         });
     }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFontSizeDisplay();
+        
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const theme = this.getAttribute('data-theme');
+                setTheme(theme);
+            });
+        });
+
+        const decreaseBtn = document.getElementById('font-decrease');
+        const increaseBtn = document.getElementById('font-increase');
+        const resetBtn = document.getElementById('font-reset');
+
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                if (currentFontSize > 70) {
+                    currentFontSize -= 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                if (currentFontSize < 150) {
+                    currentFontSize += 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                currentFontSize = 100;
+                updateFontSizeDisplay();
+            });
+        }
+
+        const languageOptions = document.querySelectorAll('.language-option');
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                setLanguage(lang);
+            });
+        });
+    });
 </script>
 </body>
 </html>
