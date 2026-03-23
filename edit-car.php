@@ -65,11 +65,6 @@ if ($language == 'en') {
     $saveAllChanges = 'Save All Changes';
     $deleteImageConfirm = 'Are you sure you want to delete this image?';
     $saveOrderConfirm = 'Save the new image order?';
-    $imageDeleted = 'Image deleted successfully!';
-    $errorDeletingImage = 'Error deleting image: ';
-    $imageOrderUpdated = 'Image order updated successfully!';
-    $carDetailsUpdated = 'Car details updated successfully!';
-    $imagesAdded = 'image(s) added.';
     $pleaseFillRequired = 'Please fill in all required fields.';
     $errorUpdatingCar = 'Error updating car details: ';
     $maxImagesAllowed = 'Maximum %d images allowed. You currently have %d images.';
@@ -144,11 +139,6 @@ if ($language == 'en') {
     $saveAllChanges = 'Guardar Todos los Cambios';
     $deleteImageConfirm = '¿Está seguro de que desea eliminar esta imagen?';
     $saveOrderConfirm = '¿Guardar el nuevo orden de imágenes?';
-    $imageDeleted = '¡Imagen eliminada con éxito!';
-    $errorDeletingImage = 'Error al eliminar imagen: ';
-    $imageOrderUpdated = '¡Orden de imágenes actualizado con éxito!';
-    $carDetailsUpdated = '¡Detalles del auto actualizados con éxito!';
-    $imagesAdded = 'imagen(es) agregada(s).';
     $pleaseFillRequired = 'Por favor complete todos los campos requeridos.';
     $errorUpdatingCar = 'Error al actualizar detalles del auto: ';
     $maxImagesAllowed = 'Máximo %d imágenes permitidas. Actualmente tiene %d imágenes.';
@@ -223,11 +213,6 @@ if ($language == 'en') {
     $saveAllChanges = 'Enregistrer Toutes les Modifications';
     $deleteImageConfirm = 'Êtes-vous sûr de vouloir supprimer cette image ?';
     $saveOrderConfirm = 'Enregistrer le nouvel ordre des images ?';
-    $imageDeleted = 'Image supprimée avec succès !';
-    $errorDeletingImage = 'Erreur lors de la suppression de l\'image : ';
-    $imageOrderUpdated = 'Ordre des images mis à jour avec succès !';
-    $carDetailsUpdated = 'Détails de la voiture mis à jour avec succès !';
-    $imagesAdded = 'image(s) ajoutée(s).';
     $pleaseFillRequired = 'Veuillez remplir tous les champs obligatoires.';
     $errorUpdatingCar = 'Erreur lors de la mise à jour des détails de la voiture : ';
     $maxImagesAllowed = 'Maximum %d images autorisées. Vous avez actuellement %d images.';
@@ -302,11 +287,6 @@ if ($language == 'en') {
     $saveAllChanges = 'Alle Änderungen speichern';
     $deleteImageConfirm = 'Sind Sie sicher, dass Sie dieses Bild löschen möchten?';
     $saveOrderConfirm = 'Neue Bildreihenfolge speichern?';
-    $imageDeleted = 'Bild erfolgreich gelöscht!';
-    $errorDeletingImage = 'Fehler beim Löschen des Bildes: ';
-    $imageOrderUpdated = 'Bildreihenfolge erfolgreich aktualisiert!';
-    $carDetailsUpdated = 'Autodetails erfolgreich aktualisiert!';
-    $imagesAdded = 'Bild(er) hinzugefügt.';
     $pleaseFillRequired = 'Bitte füllen Sie alle erforderlichen Felder aus.';
     $errorUpdatingCar = 'Fehler beim Aktualisieren der Autodetails: ';
     $maxImagesAllowed = 'Maximal %d Bilder erlaubt. Sie haben derzeit %d Bilder.';
@@ -371,9 +351,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_image'])) {
             if (file_exists($imagePath)) {
                 unlink($imagePath);
             }
-            $successMessage = $imageDeleted;
+            $successMessage = "Image deleted successfully!";
         } else {
-            $errorMessage = $errorDeletingImage . $conn->error;
+            $errorMessage = "Error deleting image: " . $conn->error;
         }
         $deleteQuery->close();
     }
@@ -390,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reorder_images'])) {
         $updateOrderQuery->execute();
         $updateOrderQuery->close();
     }
-    $successMessage = $imageOrderUpdated;
+    $successMessage = "Image order updated successfully!";
 }
 
 // Get car details first
@@ -544,9 +524,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
         if (!empty($uploadErrors)) {
             $errorMessage = implode(" ", $uploadErrors);
         } elseif (isset($carDetailsUpdated)) {
-            $successMessage = $carDetailsUpdated;
+            $successMessage = "Car details updated successfully!";
             if (!empty($uploadedImages)) {
-                $successMessage .= " " . count($uploadedImages) . " " . $imagesAdded;
+                $successMessage .= " " . count($uploadedImages) . " image(s) added.";
             }
             // Refresh car images
             $carImages = getCarImages($conn, $carId);
