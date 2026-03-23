@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit Tests for basket-5.php
+ * Unit Tests for basket.php
  *
  * Covers step resolution, rental day calculation, estimated totals, deposit
  * calculation, individual extra pricing, extras totals, basket totals, grand
@@ -15,7 +15,7 @@
 use PHPUnit\Framework\TestCase;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Helper functions extracted from basket-5.php
+// Helper functions extracted from basket.php
 // These mirror the production logic exactly so they can be tested in isolation
 // without requiring a live database connection or active session.
 // ──────────────────────────────────────────────────────────────────────────────
@@ -23,9 +23,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * Resolves the current checkout step from a raw GET parameter.
  * Returns 'success' for the success string, or an integer for all other values.
- * When no step is provided, the real code on line 14 of basket-5.php defaults
+ * When no step is provided, the real code on line 14 of basket.php defaults
  * to the string '1' before intval is ever called.
- * Mirrors lines 14–20 of basket-5.php.
+ * Mirrors lines 14–20 of basket.php.
  */
 function resolveStep(mixed $rawStep): string|int
 {
@@ -38,7 +38,7 @@ function resolveStep(mixed $rawStep): string|int
 /**
  * Calculates the number of rental days between two date strings.
  * A minimum of 1 day is enforced even when the dates are identical.
- * Mirrors lines 104–107 and 192–193 of basket-5.php.
+ * Mirrors lines 104–107 and 192–193 of basket.php.
  */
 function calculateRentalDays(string $startDate, string $endDate): int
 {
@@ -50,7 +50,7 @@ function calculateRentalDays(string $startDate, string $endDate): int
 
 /**
  * Calculates the estimated total cost for a single basket item.
- * Mirrors line 218 of basket-5.php.
+ * Mirrors line 218 of basket.php.
  */
 function calculateEstimatedTotal(float $pricePerDay, int $rentalDays): float
 {
@@ -59,7 +59,7 @@ function calculateEstimatedTotal(float $pricePerDay, int $rentalDays): float
 
 /**
  * Calculates the deposit amount as 20% of the estimated total.
- * Mirrors line 219 of basket-5.php.
+ * Mirrors line 219 of basket.php.
  */
 function calculateDepositAmount(float $estimatedTotal): float
 {
@@ -69,7 +69,7 @@ function calculateDepositAmount(float $estimatedTotal): float
 /**
  * Calculates the cost of a single extra for a booking.
  * Per-day extras are multiplied by rental days; one-time extras are a fixed charge.
- * Mirrors lines 371–374 of basket-5.php.
+ * Mirrors lines 371–374 of basket.php.
  */
 function calculateExtraPrice(array $extra, int $rentalDays): float
 {
@@ -83,7 +83,7 @@ function calculateExtraPrice(array $extra, int $rentalDays): float
  * Calculates the total cost of all selected extras for a single booking item.
  * One-time extras are only charged once per booking regardless of how many
  * basket items are present — duplicates are tracked and skipped.
- * Mirrors the corrected extras loop in basket-5.php.
+ * Mirrors the corrected extras loop in basket.php.
  *
  * @param array $selectedExtraIds   List of selected extra_id values.
  * @param array $allExtras          Full extras catalogue from basket-5.php.
@@ -116,7 +116,7 @@ function calculateExtrasTotal(
 
 /**
  * Calculates the grand total by summing the basket total and extras total.
- * Mirrors line 586 of basket-5.php.
+ * Mirrors line 586 of basket.php.
  */
 function calculateGrandTotal(float $basketTotal, float $extrasTotal): float
 {
@@ -125,7 +125,7 @@ function calculateGrandTotal(float $basketTotal, float $extrasTotal): float
 
 /**
  * Calculates the running basket total from an array of basket items.
- * Mirrors lines 562–565 of basket-5.php.
+ * Mirrors lines 562–565 of basket.php.
  */
 function calculateBasketTotal(array $basketItems): float
 {
@@ -140,7 +140,7 @@ function calculateBasketTotal(array $basketItems): float
  * Validates the rental details form fields submitted at step 2.
  * Location IDs must be non-zero integers; both date strings must be parseable.
  * Returns an error message string, or an empty string if all inputs are valid.
- * Mirrors lines 164–176 of basket-5.php.
+ * Mirrors lines 164–176 of basket.php.
  */
 function validateRentalDetails(
     int    $pickupLocation,
@@ -163,7 +163,7 @@ function validateRentalDetails(
 
 /**
  * Groups the extras catalogue by category.
- * Mirrors lines 46–53 of basket-5.php.
+ * Mirrors lines 46–53 of basket.php.
  *
  * @param array $extras  Flat array of extra items, each with a 'category' key.
  * @return array         Associative array keyed by category name.
@@ -184,7 +184,7 @@ function groupExtrasByCategory(array $extras): array
 /**
  * Validates the payment method field submitted at step 5.
  * Returns an error message string, or an empty string if valid.
- * Mirrors lines 284–288 of basket-5.php.
+ * Mirrors lines 284–288 of basket.php.
  */
 function validatePaymentMethod(string $paymentMethod): string
 {
@@ -196,7 +196,7 @@ function validatePaymentMethod(string $paymentMethod): string
 
 /**
  * Builds the booking confirmation session payload after a successful payment.
- * Mirrors lines 492–497 of basket-5.php.
+ * Mirrors lines 492–497 of basket.php.
  */
 function buildBookingConfirmation(
     array  $bookingIds,
@@ -213,7 +213,7 @@ function buildBookingConfirmation(
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Shared test fixture — the extras catalogue from basket-5.php lines 31–44
+// Shared test fixture — the extras catalogue from basket.php lines 31–44
 // ──────────────────────────────────────────────────────────────────────────────
 
 function getTestExtras(): array
@@ -263,7 +263,7 @@ class BasketTest extends TestCase
     /**
      * An empty string step resolves to zero via intval.
      * Note: when no step is provided in the URL, the real code on line 14 of
-     * basket-5.php defaults to the string '1' before intval is ever called,
+     * basket.php defaults to the string '1' before intval is ever called,
      * so zero can never occur in production.
      */
     public function testEmptyStepResolvesToZero(): void
@@ -274,7 +274,7 @@ class BasketTest extends TestCase
     /**
      * The real default when no step is present in the URL is '1', which
      * resolves to the integer 1 after intval is applied.
-     * Mirrors the default on line 14 of basket-5.php.
+     * Mirrors the default on line 14 of basket.php.
      */
     public function testDefaultStepResolvesToOne(): void
     {
@@ -294,7 +294,7 @@ class BasketTest extends TestCase
 
     /**
      * Identical start and end dates represent a same-day rental.
-     * The minimum of 1 day must be enforced as per line 107 of basket-5.php.
+     * The minimum of 1 day must be enforced as per line 107 of basket.php.
      */
     public function testSameDayRentalEnforcesMinimumOfOneDay(): void
     {
@@ -321,7 +321,7 @@ class BasketTest extends TestCase
 
     /**
      * The estimated total must equal the daily rate multiplied by rental days.
-     * Mirrors line 218 of basket-5.php.
+     * Mirrors line 218 of basket.php.
      */
     public function testEstimatedTotalCalculatedCorrectly(): void
     {
@@ -341,7 +341,7 @@ class BasketTest extends TestCase
 
     /**
      * The deposit must be exactly 20% of the estimated total.
-     * Mirrors line 219 of basket-5.php.
+     * Mirrors line 219 of basket.php.
      */
     public function testDepositIsExactlyTwentyPercent(): void
     {
@@ -447,7 +447,7 @@ class BasketTest extends TestCase
      * A one-time extra must only be charged once across multiple basket items.
      * If Pre-paid Fuel (£60.00) is selected and there are two basket items,
      * the total charge must still be £60.00 — not £120.00.
-     * This guards against the overcharging bug fixed in basket-5.php.
+     * This guards against the overcharging bug fixed in basket.php.
      */
     public function testOneTimeExtraIsOnlyChargedOnceAcrossMultipleItems(): void
     {
@@ -532,7 +532,7 @@ class BasketTest extends TestCase
 
     /**
      * The grand total must equal basket total plus extras total.
-     * Mirrors line 586 of basket-5.php.
+     * Mirrors line 586 of basket.php.
      */
     public function testGrandTotalIsBasketPlusExtras(): void
     {
@@ -602,7 +602,7 @@ class BasketTest extends TestCase
 
     /**
      * The extras catalogue should be grouped into exactly three categories.
-     * Mirrors lines 46–53 of basket-5.php.
+     * Mirrors lines 46–53 of basket.php.
      */
     public function testExtrasAreGroupedIntoThreeCategories(): void
     {
@@ -652,7 +652,7 @@ class BasketTest extends TestCase
 
     /**
      * An empty payment method should be rejected.
-     * Mirrors lines 284–288 of basket-5.php.
+     * Mirrors lines 284–288 of basket.php.
      */
     public function testPaymentMethodFailsWhenEmpty(): void
     {
@@ -674,7 +674,7 @@ class BasketTest extends TestCase
     /**
      * The booking confirmation array must contain all four required keys with
      * the correct values, matching the session payload built on lines 492–497
-     * of basket-5.php.
+     * of basket.php.
      */
     public function testBookingConfirmationPayloadIsBuiltCorrectly(): void
     {
