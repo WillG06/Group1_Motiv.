@@ -1645,10 +1645,9 @@ extract($lang);
                 <div class="form-divider"></div>
 
                 <div class="form-footer-links">
-                    <div class="form-footer-row">
-                        <span class="txt1"><?php echo $forgotPassword; ?></span>
+                     <div class="form-footer-row">
                         <a class="txt2" href="forgotPassword.php"><?php echo $forgotPassword; ?></a>
-                    </div>
+                     </div>
 
                     <div class="form-footer-row">
                         <a class="txt2" href="#" id="toggleForm">
