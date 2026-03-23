@@ -2126,7 +2126,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_voucher'])) {
                 </div>
                 <div class="profile-actions">
                     <button class="btn-secondary" id="changePasswordBtn" style="margin-right: 10px;"><?php echo $changePassword; ?></button>
-                    <button class="btn-secondary" style="margin-right: 10px;"><?php echo $notificationPrefs; ?></button>
                     <button class="btn-secondary" id="deleteAccountBtn"><?php echo $deleteAccount; ?></button>
                 </div>
             </div>
