@@ -858,57 +858,80 @@ while ($city = $citiesQuery->fetch_assoc()) {
             border-top: 1px solid var(--border-color);
         }
         
+        /* Footer Styles matching about.php */
         footer {
             background-color: var(--footer-bg);
             color: var(--footer-text);
+            padding: 40px 0 20px;
         }
-        
+
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
-        
+
         .footer-column h3 {
             color: white;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            position: relative;
+            padding-bottom: 10px;
         }
-        
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--coral-red);
+        }
+
         .footer-column p {
             color: var(--footer-text);
             line-height: 1.6;
+            opacity: 0.9;
         }
-        
+
         .footer-column ul {
             list-style: none;
             padding: 0;
         }
-        
+
         .footer-column ul li {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
-        
+
         .footer-column ul li a {
             color: var(--footer-text);
             text-decoration: none;
-            transition: color 0.3s ease;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: inline-block;
         }
-        
+
         .footer-column ul li a:hover {
             color: var(--coral-red);
+            padding-left: 5px;
         }
-        
+
+        .footer-column ul li i {
+            margin-right: 10px;
+            color: var(--coral-red);
+        }
+
         .copyright {
             text-align: center;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
-        
+
         .copyright p {
             color: var(--footer-text);
             font-size: 0.9rem;
+            opacity: 0.8;
         }
         
         @media (max-width: 768px) {
@@ -937,6 +960,11 @@ while ($city = $citiesQuery->fetch_assoc()) {
             .footer-content {
                 grid-template-columns: 1fr;
                 text-align: center;
+            }
+            
+            .footer-column h3::after {
+                left: 50%;
+                transform: translateX(-50%);
             }
         }
     </style>
@@ -1228,6 +1256,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 <h3>Quick Links</h3>
                 <ul>
                     <li><a href="landing.php">Home</a></li>
+                    <li><a href="about.php">About Us</a></li>
                     <li><a href="cars.php">Our Fleet</a></li>
                     <li><a href="contact.php">Contact</a></li>
                 </ul>
@@ -1235,9 +1264,9 @@ while ($city = $citiesQuery->fetch_assoc()) {
             <div class="footer-column">
                 <h3>Contact Us</h3>
                 <ul>
-                    <li>New Street Station, Birmingham</li>
-                    <li>0712345678</li>
-                    <li>info@motivcarrental.com</li>
+                    <li><i class="fas fa-map-marker-alt"></i> New Street Station, Birmingham</li>
+                    <li><i class="fas fa-phone"></i> 0712345678</li>
+                    <li><i class="fas fa-envelope"></i> info@motivcarrental.com</li>
                 </ul>
             </div>
         </div>
