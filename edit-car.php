@@ -32,7 +32,7 @@ if ($language == 'en') {
     
     // Form Sections
     $carDetails = 'Car Details';
-    $carImages = 'Car Images';
+    $carImagesText = 'Car Images';
     $imagesCount = 'images';
     $addMoreImages = 'Add More Images (Max 5 total)';
     $selectImages = 'Select Images (JPG, PNG, GIF, WebP, AVIF)';
@@ -111,7 +111,7 @@ if ($language == 'en') {
     
     // Form Sections
     $carDetails = 'Detalles del Auto';
-    $carImages = 'Imágenes del Auto';
+    $carImagesText = 'Imágenes del Auto';
     $imagesCount = 'imágenes';
     $addMoreImages = 'Agregar Más Imágenes (Máx. 5 total)';
     $selectImages = 'Seleccionar Imágenes (JPG, PNG, GIF, WebP, AVIF)';
@@ -190,7 +190,7 @@ if ($language == 'en') {
     
     // Form Sections
     $carDetails = 'Détails de la Voiture';
-    $carImages = 'Images de la Voiture';
+    $carImagesText = 'Images de la Voiture';
     $imagesCount = 'images';
     $addMoreImages = 'Ajouter Plus d\'Images (Max 5 total)';
     $selectImages = 'Sélectionner des Images (JPG, PNG, GIF, WebP, AVIF)';
@@ -269,7 +269,7 @@ if ($language == 'en') {
     
     // Form Sections
     $carDetails = 'Autodetails';
-    $carImages = 'Autobilder';
+    $carImagesText = 'Autobilder';
     $imagesCount = 'Bilder';
     $addMoreImages = 'Weitere Bilder hinzufügen (Max. 5 insgesamt)';
     $selectImages = 'Bilder auswählen (JPG, PNG, GIF, WebP, AVIF)';
@@ -1288,7 +1288,6 @@ while ($city = $citiesQuery->fetch_assoc()) {
         </div>
         <nav>
             <ul>
-                <li><a href="landing.php"><?php echo $homeText; ?></a></li>
                 <li><a href="admin-dashboard.php"><?php echo $adminDashboardText; ?></a></li>
                 <li>
                     <a href="logout.php" style="color: #ff4444;">
@@ -1483,7 +1482,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 
                 <!-- Images Management Section -->
                 <h2 class="section-title">
-                    <i class="fas fa-images"></i> <?php echo $carImages; ?>
+                    <i class="fas fa-images"></i> <?php echo $carImagesText; ?>
                     <span class="image-count">(<?php echo count($carImages); ?>/5 <?php echo $imagesCount; ?>)</span>
                 </h2>
                 
@@ -1495,7 +1494,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
                                     <img src="<?php echo htmlspecialchars($image['image_url']); ?>" alt="Car Image">
                                     <div class="image-order"><?php echo $image['display_order']; ?></div>
                                     <div class="image-actions">
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('<?php echo $deleteImageConfirm; ?>');">
+                                        <form method="POST" style="display: inline;" onsubmit="return confirm('<?php echo addslashes($deleteImageConfirm); ?>');">
                                             <input type="hidden" name="delete_image" value="1">
                                             <input type="hidden" name="image_id" value="<?php echo $image['image_id']; ?>">
                                             <button type="submit" class="delete-image-btn" title="Delete Image">
@@ -1617,16 +1616,22 @@ while ($city = $citiesQuery->fetch_assoc()) {
     const imageInput = document.getElementById('car_images');
     const previewContainer = document.getElementById('image-preview-container');
     const maxNewImages = <?php echo 5 - count($carImages); ?>;
-    const youCanOnlyAddMsg = '<?php echo addslashes($youCanOnlyAdd); ?>';
     const currentImageCount = <?php echo count($carImages); ?>;
-    
+
+    <?php
+    $maxNew = 5 - count($carImages);
+    $currentCount = count($carImages);
+    $alertMessage = sprintf($youCanOnlyAdd, $maxNew, $currentCount);
+    ?>
+    const youCanOnlyAddMsg = '<?php echo addslashes($alertMessage); ?>';
+
     if (imageInput) {
         imageInput.addEventListener('change', function(e) {
             previewContainer.innerHTML = '';
             const files = Array.from(e.target.files);
             
             if (files.length > maxNewImages) {
-                alert(youCanOnlyAddMsg.replace('%d', maxNewImages).replace('%d', currentImageCount));
+                alert(youCanOnlyAddMsg);
                 imageInput.value = '';
                 return;
             }
