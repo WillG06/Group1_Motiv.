@@ -7,6 +7,329 @@ if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
     exit;
 }
 
+// Get user preferences from cookies
+$darkMode = isset($_COOKIE['darkMode']) ? $_COOKIE['darkMode'] : 'light';
+$fontSize = isset($_COOKIE['fontSize']) ? $_COOKIE['fontSize'] : '100';
+$language = isset($_COOKIE['language']) ? $_COOKIE['language'] : 'en';
+
+// Language variables for all text elements
+if ($language == 'en') {
+    // Header
+    $homeText = 'Home';
+    $adminDashboardText = 'Admin Dashboard';
+    $logoutText = 'Logout';
+    $themeText = 'Theme';
+    $lightText = 'Light';
+    $darkText = 'Dark';
+    $fontSizeText = 'Font Size';
+    $resetText = 'Reset';
+    $languageText = 'Language';
+    
+    // Page Header
+    $editCarTitle = 'Edit Car';
+    $editCarSubtitle = 'Update car details, images, and information';
+    $backToDashboard = 'Back to Dashboard';
+    
+    // Form Sections
+    $carDetails = 'Car Details';
+    $carImagesText = 'Car Images';
+    $imagesCount = 'images';
+    $addMoreImages = 'Add More Images (Max 5 total)';
+    $selectImages = 'Select Images (JPG, PNG, GIF, WebP, AVIF)';
+    $maxImagesInfo = 'more images. Recommended: 800x600px';
+    $maxImagesReached = 'Maximum 5 images reached. Delete some images to add more.';
+    $dragInstruction = 'Drag and drop images to reorder them';
+    $saveImageOrder = 'Save Image Order';
+    $noImagesYet = 'No images uploaded yet. Add up to 5 images below.';
+    
+    // Form Labels
+    $makeLabel = 'Make *';
+    $selectMake = 'Select Make';
+    $modelLabel = 'Model *';
+    $yearLabel = 'Year *';
+    $typeLabel = 'Type *';
+    $selectType = 'Select Type';
+    $pricePerDayLabel = 'Price Per Day (£) *';
+    $depositRequiredLabel = 'Deposit Required (£)';
+    $seatsLabel = 'Seats';
+    $doorsLabel = 'Doors';
+    $statusLabel = 'Status *';
+    $selectStatus = 'Select Status';
+    $cityLabel = 'City *';
+    $selectCity = 'Select City';
+    $descriptionLabel = 'Description';
+    $descriptionPlaceholder = 'Enter car description...';
+    
+    // Buttons
+    $cancelText = 'Cancel';
+    $saveAllChanges = 'Save All Changes';
+    $deleteImageConfirm = 'Are you sure you want to delete this image?';
+    $saveOrderConfirm = 'Save the new image order?';
+    $imageDeleted = 'Image deleted successfully!';
+    $errorDeletingImage = 'Error deleting image: ';
+    $imageOrderUpdated = 'Image order updated successfully!';
+    $carDetailsUpdated = 'Car details updated successfully!';
+    $imagesAdded = 'image(s) added.';
+    $pleaseFillRequired = 'Please fill in all required fields.';
+    $errorUpdatingCar = 'Error updating car details: ';
+    $maxImagesAllowed = 'Maximum %d images allowed. You currently have %d images.';
+    $errorUploadingFile = 'Error uploading file: ';
+    $invalidFormat = 'File %s: Invalid format.';
+    $notValidImage = 'File %s is not a valid image.';
+    $errorUploading = 'Error uploading %s.';
+    $errorInsertingImage = 'Error inserting image into database';
+    $youCanOnlyAdd = 'You can only add up to %d more images. You currently have %d images.';
+    
+    // Footer
+    $motivTagline = 'Your trusted partner for car rental services in Birmingham and beyond.';
+    $quickLinks = 'Quick Links';
+    $aboutUs = 'About Us';
+    $cars = 'Cars';
+    $contact = 'Contact';
+    $contactUs = 'Contact Us';
+    $address = 'New Street Station, Birmingham';
+    $phone = '0712345678';
+    $email = 'info@motivcarrental.com';
+    $copyright = 'All rights reserved.';
+    
+} elseif ($language == 'es') {
+    // Header
+    $homeText = 'Inicio';
+    $adminDashboardText = 'Panel de Administración';
+    $logoutText = 'Cerrar sesión';
+    $themeText = 'Tema';
+    $lightText = 'Claro';
+    $darkText = 'Oscuro';
+    $fontSizeText = 'Tamaño de fuente';
+    $resetText = 'Reiniciar';
+    $languageText = 'Idioma';
+    
+    // Page Header
+    $editCarTitle = 'Editar Auto';
+    $editCarSubtitle = 'Actualizar detalles del auto, imágenes e información';
+    $backToDashboard = 'Volver al Panel';
+    
+    // Form Sections
+    $carDetails = 'Detalles del Auto';
+    $carImagesText = 'Imágenes del Auto';
+    $imagesCount = 'imágenes';
+    $addMoreImages = 'Agregar Más Imágenes (Máx. 5 total)';
+    $selectImages = 'Seleccionar Imágenes (JPG, PNG, GIF, WebP, AVIF)';
+    $maxImagesInfo = 'más imágenes. Recomendado: 800x600px';
+    $maxImagesReached = 'Máximo 5 imágenes alcanzado. Elimine algunas imágenes para agregar más.';
+    $dragInstruction = 'Arrastre y suelte imágenes para reordenarlas';
+    $saveImageOrder = 'Guardar Orden de Imágenes';
+    $noImagesYet = 'Aún no se han subido imágenes. Agregue hasta 5 imágenes a continuación.';
+    
+    // Form Labels
+    $makeLabel = 'Marca *';
+    $selectMake = 'Seleccionar Marca';
+    $modelLabel = 'Modelo *';
+    $yearLabel = 'Año *';
+    $typeLabel = 'Tipo *';
+    $selectType = 'Seleccionar Tipo';
+    $pricePerDayLabel = 'Precio por Día (£) *';
+    $depositRequiredLabel = 'Depósito Requerido (£)';
+    $seatsLabel = 'Asientos';
+    $doorsLabel = 'Puertas';
+    $statusLabel = 'Estado *';
+    $selectStatus = 'Seleccionar Estado';
+    $cityLabel = 'Ciudad *';
+    $selectCity = 'Seleccionar Ciudad';
+    $descriptionLabel = 'Descripción';
+    $descriptionPlaceholder = 'Ingrese la descripción del auto...';
+    
+    // Buttons
+    $cancelText = 'Cancelar';
+    $saveAllChanges = 'Guardar Todos los Cambios';
+    $deleteImageConfirm = '¿Está seguro de que desea eliminar esta imagen?';
+    $saveOrderConfirm = '¿Guardar el nuevo orden de imágenes?';
+    $imageDeleted = '¡Imagen eliminada con éxito!';
+    $errorDeletingImage = 'Error al eliminar imagen: ';
+    $imageOrderUpdated = '¡Orden de imágenes actualizado con éxito!';
+    $carDetailsUpdated = '¡Detalles del auto actualizados con éxito!';
+    $imagesAdded = 'imagen(es) agregada(s).';
+    $pleaseFillRequired = 'Por favor complete todos los campos requeridos.';
+    $errorUpdatingCar = 'Error al actualizar detalles del auto: ';
+    $maxImagesAllowed = 'Máximo %d imágenes permitidas. Actualmente tiene %d imágenes.';
+    $errorUploadingFile = 'Error al subir archivo: ';
+    $invalidFormat = 'Archivo %s: Formato inválido.';
+    $notValidImage = 'El archivo %s no es una imagen válida.';
+    $errorUploading = 'Error al subir %s.';
+    $errorInsertingImage = 'Error al insertar imagen en la base de datos';
+    $youCanOnlyAdd = 'Solo puede agregar hasta %d imágenes más. Actualmente tiene %d imágenes.';
+    
+    // Footer
+    $motivTagline = 'Su socio de confianza para servicios de alquiler de autos en Birmingham y más allá.';
+    $quickLinks = 'Enlaces rápidos';
+    $aboutUs = 'Sobre Nosotros';
+    $cars = 'Autos';
+    $contact = 'Contacto';
+    $contactUs = 'Contáctenos';
+    $address = 'New Street Station, Birmingham';
+    $phone = '0712345678';
+    $email = 'info@motivcarrental.com';
+    $copyright = 'Todos los derechos reservados.';
+    
+} elseif ($language == 'fr') {
+    // Header
+    $homeText = 'Accueil';
+    $adminDashboardText = 'Tableau de bord Admin';
+    $logoutText = 'Déconnexion';
+    $themeText = 'Thème';
+    $lightText = 'Clair';
+    $darkText = 'Sombre';
+    $fontSizeText = 'Taille de police';
+    $resetText = 'Réinitialiser';
+    $languageText = 'Langue';
+    
+    // Page Header
+    $editCarTitle = 'Modifier la Voiture';
+    $editCarSubtitle = 'Mettre à jour les détails, images et informations de la voiture';
+    $backToDashboard = 'Retour au Tableau de bord';
+    
+    // Form Sections
+    $carDetails = 'Détails de la Voiture';
+    $carImagesText = 'Images de la Voiture';
+    $imagesCount = 'images';
+    $addMoreImages = 'Ajouter Plus d\'Images (Max 5 total)';
+    $selectImages = 'Sélectionner des Images (JPG, PNG, GIF, WebP, AVIF)';
+    $maxImagesInfo = 'images supplémentaires. Recommandé: 800x600px';
+    $maxImagesReached = 'Maximum de 5 images atteint. Supprimez des images pour en ajouter d\'autres.';
+    $dragInstruction = 'Glissez et déposez les images pour les réorganiser';
+    $saveImageOrder = 'Enregistrer l\'Ordre des Images';
+    $noImagesYet = 'Aucune image téléchargée. Ajoutez jusqu\'à 5 images ci-dessous.';
+    
+    // Form Labels
+    $makeLabel = 'Marque *';
+    $selectMake = 'Sélectionner une Marque';
+    $modelLabel = 'Modèle *';
+    $yearLabel = 'Année *';
+    $typeLabel = 'Type *';
+    $selectType = 'Sélectionner un Type';
+    $pricePerDayLabel = 'Prix par Jour (£) *';
+    $depositRequiredLabel = 'Dépôt Requis (£)';
+    $seatsLabel = 'Sièges';
+    $doorsLabel = 'Portes';
+    $statusLabel = 'Statut *';
+    $selectStatus = 'Sélectionner un Statut';
+    $cityLabel = 'Ville *';
+    $selectCity = 'Sélectionner une Ville';
+    $descriptionLabel = 'Description';
+    $descriptionPlaceholder = 'Entrez la description de la voiture...';
+    
+    // Buttons
+    $cancelText = 'Annuler';
+    $saveAllChanges = 'Enregistrer Toutes les Modifications';
+    $deleteImageConfirm = 'Êtes-vous sûr de vouloir supprimer cette image ?';
+    $saveOrderConfirm = 'Enregistrer le nouvel ordre des images ?';
+    $imageDeleted = 'Image supprimée avec succès !';
+    $errorDeletingImage = 'Erreur lors de la suppression de l\'image : ';
+    $imageOrderUpdated = 'Ordre des images mis à jour avec succès !';
+    $carDetailsUpdated = 'Détails de la voiture mis à jour avec succès !';
+    $imagesAdded = 'image(s) ajoutée(s).';
+    $pleaseFillRequired = 'Veuillez remplir tous les champs obligatoires.';
+    $errorUpdatingCar = 'Erreur lors de la mise à jour des détails de la voiture : ';
+    $maxImagesAllowed = 'Maximum %d images autorisées. Vous avez actuellement %d images.';
+    $errorUploadingFile = 'Erreur lors du téléchargement du fichier : ';
+    $invalidFormat = 'Fichier %s : Format invalide.';
+    $notValidImage = 'Le fichier %s n\'est pas une image valide.';
+    $errorUploading = 'Erreur lors du téléchargement de %s.';
+    $errorInsertingImage = 'Erreur lors de l\'insertion de l\'image dans la base de données';
+    $youCanOnlyAdd = 'Vous ne pouvez ajouter que %d images supplémentaires. Vous avez actuellement %d images.';
+    
+    // Footer
+    $motivTagline = 'Votre partenaire de confiance pour les services de location de voitures à Birmingham et au-delà.';
+    $quickLinks = 'Liens rapides';
+    $aboutUs = 'À propos';
+    $cars = 'Voitures';
+    $contact = 'Contact';
+    $contactUs = 'Contactez-nous';
+    $address = 'New Street Station, Birmingham';
+    $phone = '0712345678';
+    $email = 'info@motivcarrental.com';
+    $copyright = 'Tous droits réservés.';
+    
+} else { // German (de)
+    // Header
+    $homeText = 'Startseite';
+    $adminDashboardText = 'Admin-Dashboard';
+    $logoutText = 'Abmelden';
+    $themeText = 'Design';
+    $lightText = 'Hell';
+    $darkText = 'Dunkel';
+    $fontSizeText = 'Schriftgröße';
+    $resetText = 'Zurücksetzen';
+    $languageText = 'Sprache';
+    
+    // Page Header
+    $editCarTitle = 'Auto bearbeiten';
+    $editCarSubtitle = 'Autodetails, Bilder und Informationen aktualisieren';
+    $backToDashboard = 'Zurück zum Dashboard';
+    
+    // Form Sections
+    $carDetails = 'Autodetails';
+    $carImagesText = 'Autobilder';
+    $imagesCount = 'Bilder';
+    $addMoreImages = 'Weitere Bilder hinzufügen (Max. 5 insgesamt)';
+    $selectImages = 'Bilder auswählen (JPG, PNG, GIF, WebP, AVIF)';
+    $maxImagesInfo = 'weitere Bilder. Empfohlen: 800x600px';
+    $maxImagesReached = 'Maximal 5 Bilder erreicht. Löschen Sie einige Bilder, um weitere hinzuzufügen.';
+    $dragInstruction = 'Ziehen Sie Bilder per Drag & Drop, um sie neu anzuordnen';
+    $saveImageOrder = 'Bildreihenfolge speichern';
+    $noImagesYet = 'Noch keine Bilder hochgeladen. Fügen Sie bis zu 5 Bilder hinzu.';
+    
+    // Form Labels
+    $makeLabel = 'Marke *';
+    $selectMake = 'Marke auswählen';
+    $modelLabel = 'Modell *';
+    $yearLabel = 'Jahr *';
+    $typeLabel = 'Typ *';
+    $selectType = 'Typ auswählen';
+    $pricePerDayLabel = 'Preis pro Tag (£) *';
+    $depositRequiredLabel = 'Kaution erforderlich (£)';
+    $seatsLabel = 'Sitzplätze';
+    $doorsLabel = 'Türen';
+    $statusLabel = 'Status *';
+    $selectStatus = 'Status auswählen';
+    $cityLabel = 'Stadt *';
+    $selectCity = 'Stadt auswählen';
+    $descriptionLabel = 'Beschreibung';
+    $descriptionPlaceholder = 'Autobeschreibung eingeben...';
+    
+    // Buttons
+    $cancelText = 'Abbrechen';
+    $saveAllChanges = 'Alle Änderungen speichern';
+    $deleteImageConfirm = 'Sind Sie sicher, dass Sie dieses Bild löschen möchten?';
+    $saveOrderConfirm = 'Neue Bildreihenfolge speichern?';
+    $imageDeleted = 'Bild erfolgreich gelöscht!';
+    $errorDeletingImage = 'Fehler beim Löschen des Bildes: ';
+    $imageOrderUpdated = 'Bildreihenfolge erfolgreich aktualisiert!';
+    $carDetailsUpdated = 'Autodetails erfolgreich aktualisiert!';
+    $imagesAdded = 'Bild(er) hinzugefügt.';
+    $pleaseFillRequired = 'Bitte füllen Sie alle erforderlichen Felder aus.';
+    $errorUpdatingCar = 'Fehler beim Aktualisieren der Autodetails: ';
+    $maxImagesAllowed = 'Maximal %d Bilder erlaubt. Sie haben derzeit %d Bilder.';
+    $errorUploadingFile = 'Fehler beim Hochladen der Datei: ';
+    $invalidFormat = 'Datei %s: Ungültiges Format.';
+    $notValidImage = 'Die Datei %s ist kein gültiges Bild.';
+    $errorUploading = 'Fehler beim Hochladen von %s.';
+    $errorInsertingImage = 'Fehler beim Einfügen des Bildes in die Datenbank';
+    $youCanOnlyAdd = 'Sie können nur %d weitere Bilder hinzufügen. Sie haben derzeit %d Bilder.';
+    
+    // Footer
+    $motivTagline = 'Ihr vertrauenswürdiger Partner für Autovermietungen in Birmingham und darüber hinaus.';
+    $quickLinks = 'Schnelllinks';
+    $aboutUs = 'Über uns';
+    $cars = 'Autos';
+    $contact = 'Kontakt';
+    $contactUs = 'Kontaktieren Sie uns';
+    $address = 'New Street Station, Birmingham';
+    $phone = '0712345678';
+    $email = 'info@motivcarrental.com';
+    $copyright = 'Alle Rechte vorbehalten.';
+}
+
 $carId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 
 if ($carId === 0) {
@@ -48,9 +371,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_image'])) {
             if (file_exists($imagePath)) {
                 unlink($imagePath);
             }
-            $successMessage = "Image deleted successfully!";
+            $successMessage = $imageDeleted;
         } else {
-            $errorMessage = "Error deleting image: " . $conn->error;
+            $errorMessage = $errorDeletingImage . $conn->error;
         }
         $deleteQuery->close();
     }
@@ -67,7 +390,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reorder_images'])) {
         $updateOrderQuery->execute();
         $updateOrderQuery->close();
     }
-    $successMessage = "Image order updated successfully!";
+    $successMessage = $imageOrderUpdated;
 }
 
 // Get car details first
@@ -110,7 +433,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
     
     // Update car details first
     if (empty($model) || empty($year) || empty($pricePerDay)) {
-        $errorMessage = "Please fill in all required fields.";
+        $errorMessage = $pleaseFillRequired;
     } else {
         $updateQuery = $conn->prepare("
             UPDATE cars SET 
@@ -128,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
         if ($updateQuery->execute()) {
             $carDetailsUpdated = true;
         } else {
-            $errorMessage = "Error updating car details: " . $conn->error;
+            $errorMessage = $errorUpdatingCar . $conn->error;
         }
         $updateQuery->close();
     }
@@ -154,7 +477,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
         }
         
         if ($currentCount + $fileCount > $maxFiles) {
-            $uploadErrors[] = "Maximum $maxFiles images allowed. You currently have $currentCount images.";
+            $uploadErrors[] = sprintf($maxImagesAllowed, $maxFiles, $currentCount);
         } else {
             for ($i = 0; $i < count($files['name']); $i++) {
                 if (empty($files['name'][$i])) continue;
@@ -164,19 +487,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
                 $originalName = $files['name'][$i];
                 
                 if ($fileError !== UPLOAD_ERR_OK) {
-                    $uploadErrors[] = "Error uploading file: $originalName";
+                    $uploadErrors[] = $errorUploadingFile . $originalName;
                     continue;
                 }
                 
                 $fileExtension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
                 if (!in_array($fileExtension, $allowedExtensions)) {
-                    $uploadErrors[] = "File $originalName: Invalid format.";
+                    $uploadErrors[] = sprintf($invalidFormat, $originalName);
                     continue;
                 }
                 
                 $check = getimagesize($tmpName);
                 if ($check === false) {
-                    $uploadErrors[] = "File $originalName is not a valid image.";
+                    $uploadErrors[] = sprintf($notValidImage, $originalName);
                     continue;
                 }
                 
@@ -186,7 +509,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
                 if (move_uploaded_file($tmpName, $targetPath)) {
                     $uploadedImages[] = $targetPath;
                 } else {
-                    $uploadErrors[] = "Error uploading $originalName.";
+                    $uploadErrors[] = sprintf($errorUploading, $originalName);
                 }
             }
         }
@@ -207,7 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
             foreach ($uploadedImages as $imagePath) {
                 $imageInsertQuery->bind_param("isi", $carId, $imagePath, $displayOrder);
                 if (!$imageInsertQuery->execute()) {
-                    $uploadErrors[] = "Error inserting image into database";
+                    $uploadErrors[] = $errorInsertingImage;
                     break;
                 }
                 $displayOrder++;
@@ -221,9 +544,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_complete'])) {
         if (!empty($uploadErrors)) {
             $errorMessage = implode(" ", $uploadErrors);
         } elseif (isset($carDetailsUpdated)) {
-            $successMessage = "Car details updated successfully!";
+            $successMessage = $carDetailsUpdated;
             if (!empty($uploadedImages)) {
-                $successMessage .= " " . count($uploadedImages) . " image(s) added.";
+                $successMessage .= " " . count($uploadedImages) . " " . $imagesAdded;
             }
             // Refresh car images
             $carImages = getCarImages($conn, $carId);
@@ -276,7 +599,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Car - Motiv Car Hire</title>
+    <title><?php echo $editCarTitle; ?> - Motiv Car Hire</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -311,7 +634,195 @@ while ($city = $citiesQuery->fetch_assoc()) {
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
+            font-size: <?php echo $fontSize; ?>%;
             transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        nav ul {
+            display: flex;
+            gap: 25px;
+            list-style: none;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+        }
+        
+        nav ul li {
+            margin: 0;
+        }
+        
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 12px;
+            border-radius: 4px;
+            transition: 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        nav ul li a:hover,
+        nav ul li a.active {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+        
+        .language-selector {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .language-selector > a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+            font-size: 18px;
+            line-height: 0;
+            color: white;
+        }
+
+        .language-selector:hover > a {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .language-settings-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 100%;
+            min-width: 200px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        [data-theme="dark"] .language-settings-dropdown {
+            background-color: #333333;
+            border-color: #404040;
+            color: white;
+        }
+
+        .language-selector:hover .language-settings-dropdown {
+            display: block;
+        }
+
+        .settings-section {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        [data-theme="dark"] .settings-section {
+            border-color: #404040;
+        }
+
+        .settings-section:last-child {
+            border-bottom: none;
+        }
+
+        .settings-section h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .settings-section h4 {
+            color: #fff;
+        }
+
+        .theme-option, .language-option {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            color: #333;
+            text-decoration: none;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+            margin-bottom: 2px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        [data-theme="dark"] .theme-option, 
+        [data-theme="dark"] .language-option {
+            color: #fff;
+        }
+
+        .theme-option:hover, .language-option:hover {
+            background-color: #f1f1f1;
+        }
+
+        [data-theme="dark"] .theme-option:hover, 
+        [data-theme="dark"] .language-option:hover {
+            background-color: #404040;
+        }
+
+        .theme-option i, .language-option i {
+            width: 18px;
+            margin-right: 10px;
+            color: var(--vivid-indigo);
+            font-size: 14px;
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .font-btn {
+            background: var(--vivid-indigo);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-btn:hover {
+            background: var(--dark-magenta);
+        }
+
+        .font-size-display {
+            font-size: 14px;
+            color: #333;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        [data-theme="dark"] .font-size-display {
+            color: #fff;
+        }
+
+        .active-indicator {
+            margin-left: auto;
+            color: var(--vivid-indigo);
+            font-size: 12px;
         }
 
         .edit-car-container {
@@ -657,6 +1168,82 @@ while ($city = $citiesQuery->fetch_assoc()) {
             border-top: 1px solid var(--border-color);
         }
         
+        /* Footer Styles */
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+            padding: 40px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .footer-column h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--coral-red);
+        }
+
+        .footer-column p {
+            color: var(--footer-text);
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .footer-column ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 12px;
+        }
+
+        .footer-column ul li a {
+            color: var(--footer-text);
+            text-decoration: none;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--coral-red);
+            padding-left: 5px;
+        }
+
+        .footer-column ul li i {
+            margin-right: 10px;
+            color: var(--coral-red);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .copyright p {
+            color: var(--footer-text);
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         @media (max-width: 768px) {
             .edit-car-content {
                 padding: 20px;
@@ -679,10 +1266,20 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 width: 100%;
                 text-align: center;
             }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .footer-column h3::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
         }
     </style>
 </head>
-<body data-theme="<?php echo isset($darkMode) ? $darkMode : 'light'; ?>">
+<body data-theme="<?php echo $darkMode; ?>">
 
 <header>
     <div class="container header-content">
@@ -691,12 +1288,69 @@ while ($city = $citiesQuery->fetch_assoc()) {
         </div>
         <nav>
             <ul>
-                <li><a href="landing.php">Home</a></li>
-                <li><a href="admin-dashboard.php">Admin Dashboard</a></li>
+                <li><a href="admin-dashboard.php"><?php echo $adminDashboardText; ?></a></li>
                 <li>
                     <a href="logout.php" style="color: #ff4444;">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                        <i class="fas fa-sign-out-alt"></i> <?php echo $logoutText; ?>
                     </a>
+                </li>
+                <li class="language-selector">
+                    <a href="#"><i class="fa-solid fa-circle-info" style="color: white;"></i></a>
+                    <div class="language-settings-dropdown">
+                        <div class="settings-section">
+                            <h4><?php echo $themeText; ?></h4>
+                            <a href="#" class="theme-option" data-theme="light">
+                                <i class="fas fa-sun"></i> <?php echo $lightText; ?>
+                                <?php if ($darkMode == 'light'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="theme-option" data-theme="dark">
+                                <i class="fas fa-moon"></i> <?php echo $darkText; ?>
+                                <?php if ($darkMode == 'dark'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $fontSizeText; ?></h4>
+                            <div class="font-controls">
+                                <button class="font-btn" id="font-decrease">A-</button>
+                                <span class="font-size-display" id="font-size-display"><?php echo $fontSize; ?>%</span>
+                                <button class="font-btn" id="font-increase">A+</button>
+                                <button class="font-btn" id="font-reset" aria-label="<?php echo $resetText; ?>"><i class="fas fa-redo"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <h4><?php echo $languageText; ?></h4>
+                            <a href="#" class="language-option" data-lang="en">
+                                <i class="fas fa-language"></i> English
+                                <?php if ($language == 'en'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="es">
+                                <i class="fas fa-language"></i> Español
+                                <?php if ($language == 'es'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="fr">
+                                <i class="fas fa-language"></i> Français
+                                <?php if ($language == 'fr'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                            <a href="#" class="language-option" data-lang="de">
+                                <i class="fas fa-language"></i> Deutsch
+                                <?php if ($language == 'de'): ?>
+                                    <i class="fas fa-check active-indicator"></i>
+                                <?php endif; ?>
+                            </a>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </nav>
@@ -705,15 +1359,15 @@ while ($city = $citiesQuery->fetch_assoc()) {
 
 <section class="edit-car-header">
     <div class="container">
-        <h1>Edit Car</h1>
-        <p>Update car details, images, and information</p>
+        <h1><?php echo $editCarTitle; ?></h1>
+        <p><?php echo $editCarSubtitle; ?></p>
     </div>
 </section>
 
 <section class="edit-car-container">
     <div class="container">
         <a href="admin-dashboard.php" class="back-button">
-            <i class="fas fa-arrow-left"></i> Back to Dashboard
+            <i class="fas fa-arrow-left"></i> <?php echo $backToDashboard; ?>
         </a>
         
         <div class="edit-car-content">
@@ -735,14 +1389,14 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 
                 <!-- Car Details Section -->
                 <h2 class="section-title">
-                    <i class="fas fa-car"></i> Car Details
+                    <i class="fas fa-car"></i> <?php echo $carDetails; ?>
                 </h2>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="make_id">Make *</label>
+                        <label for="make_id"><?php echo $makeLabel; ?></label>
                         <select id="make_id" name="make_id" required>
-                            <option value="">Select Make</option>
+                            <option value=""><?php echo $selectMake; ?></option>
                             <?php foreach ($makes as $make): ?>
                                 <option value="<?php echo $make['make_id']; ?>" <?php echo $car['make_id'] == $make['make_id'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($make['make_name']); ?>
@@ -751,20 +1405,20 @@ while ($city = $citiesQuery->fetch_assoc()) {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="model">Model *</label>
+                        <label for="model"><?php echo $modelLabel; ?></label>
                         <input type="text" id="model" name="model" value="<?php echo htmlspecialchars($car['model']); ?>" required>
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="year">Year *</label>
+                        <label for="year"><?php echo $yearLabel; ?></label>
                         <input type="number" id="year" name="year" min="2000" max="2030" value="<?php echo htmlspecialchars($car['year']); ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="type_id">Type *</label>
+                        <label for="type_id"><?php echo $typeLabel; ?></label>
                         <select id="type_id" name="type_id" required>
-                            <option value="">Select Type</option>
+                            <option value=""><?php echo $selectType; ?></option>
                             <?php foreach ($carTypes as $type): ?>
                                 <option value="<?php echo $type['type_id']; ?>" <?php echo $car['type_id'] == $type['type_id'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($type['type_name']); ?>
@@ -776,31 +1430,31 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="price_per_day">Price Per Day (£) *</label>
+                        <label for="price_per_day"><?php echo $pricePerDayLabel; ?></label>
                         <input type="number" id="price_per_day" name="price_per_day" step="0.01" min="0" value="<?php echo htmlspecialchars($car['price_per_day']); ?>" required>
                     </div>
                     <div class="form-group">
-                        <label for="deposit_required">Deposit Required (£)</label>
+                        <label for="deposit_required"><?php echo $depositRequiredLabel; ?></label>
                         <input type="number" id="deposit_required" name="deposit_required" step="0.01" min="0" value="<?php echo htmlspecialchars($car['deposit_required']); ?>">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="seats">Seats</label>
+                        <label for="seats"><?php echo $seatsLabel; ?></label>
                         <input type="number" id="seats" name="seats" min="2" max="9" value="<?php echo htmlspecialchars($car['seats']); ?>">
                     </div>
                     <div class="form-group">
-                        <label for="doors">Doors</label>
+                        <label for="doors"><?php echo $doorsLabel; ?></label>
                         <input type="number" id="doors" name="doors" min="2" max="5" value="<?php echo htmlspecialchars($car['doors']); ?>">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="status_id">Status *</label>
+                        <label for="status_id"><?php echo $statusLabel; ?></label>
                         <select id="status_id" name="status_id" required>
-                            <option value="">Select Status</option>
+                            <option value=""><?php echo $selectStatus; ?></option>
                             <?php foreach ($carStatuses as $status): ?>
                                 <option value="<?php echo $status['status_id']; ?>" <?php echo $car['status_id'] == $status['status_id'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($status['status_name']); ?>
@@ -809,9 +1463,9 @@ while ($city = $citiesQuery->fetch_assoc()) {
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="city_id">City *</label>
+                        <label for="city_id"><?php echo $cityLabel; ?></label>
                         <select id="city_id" name="city_id" required>
-                            <option value="">Select City</option>
+                            <option value=""><?php echo $selectCity; ?></option>
                             <?php foreach ($cities as $city): ?>
                                 <option value="<?php echo $city['city_id']; ?>" <?php echo $car['city_id'] == $city['city_id'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($city['city_name']); ?>
@@ -822,14 +1476,14 @@ while ($city = $citiesQuery->fetch_assoc()) {
                 </div>
                 
                 <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" rows="5" placeholder="Enter car description..."><?php echo htmlspecialchars($car['description']); ?></textarea>
+                    <label for="description"><?php echo $descriptionLabel; ?></label>
+                    <textarea id="description" name="description" rows="5" placeholder="<?php echo $descriptionPlaceholder; ?>"><?php echo htmlspecialchars($car['description']); ?></textarea>
                 </div>
                 
                 <!-- Images Management Section -->
                 <h2 class="section-title">
-                    <i class="fas fa-images"></i> Car Images
-                    <span class="image-count">(<?php echo count($carImages); ?>/5 images)</span>
+                    <i class="fas fa-images"></i> <?php echo $carImagesText; ?>
+                    <span class="image-count">(<?php echo count($carImages); ?>/5 <?php echo $imagesCount; ?>)</span>
                 </h2>
                 
                 <?php if (!empty($carImages)): ?>
@@ -840,7 +1494,7 @@ while ($city = $citiesQuery->fetch_assoc()) {
                                     <img src="<?php echo htmlspecialchars($image['image_url']); ?>" alt="Car Image">
                                     <div class="image-order"><?php echo $image['display_order']; ?></div>
                                     <div class="image-actions">
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this image?');">
+                                        <form method="POST" style="display: inline;" onsubmit="return confirm('<?php echo addslashes($deleteImageConfirm); ?>');">
                                             <input type="hidden" name="delete_image" value="1">
                                             <input type="hidden" name="image_id" value="<?php echo $image['image_id']; ?>">
                                             <button type="submit" class="delete-image-btn" title="Delete Image">
@@ -858,41 +1512,41 @@ while ($city = $citiesQuery->fetch_assoc()) {
                             <?php endforeach; ?>
                         </div>
                         <div class="drag-instruction">
-                            <i class="fas fa-arrows-alt"></i> Drag and drop images to reorder them
+                            <i class="fas fa-arrows-alt"></i> <?php echo $dragInstruction; ?>
                         </div>
                         <div style="margin-top: 15px; text-align: right;">
-                            <button type="submit" name="reorder_images" value="1" class="btn-primary btn-sm" id="saveOrderBtn">Save Image Order</button>
+                            <button type="submit" name="reorder_images" value="1" class="btn-primary btn-sm" id="saveOrderBtn"><?php echo $saveImageOrder; ?></button>
                         </div>
                     </div>
                 <?php else: ?>
                     <div style="text-align: center; padding: 40px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 20px;">
                         <i class="fas fa-camera" style="font-size: 48px; color: #ccc;"></i>
-                        <p style="margin-top: 10px; color: var(--text-secondary);">No images uploaded yet. Add up to 5 images below.</p>
+                        <p style="margin-top: 10px; color: var(--text-secondary);"><?php echo $noImagesYet; ?></p>
                     </div>
                 <?php endif; ?>
                 
                 <!-- Add New Images Section -->
                 <?php if (count($carImages) < 5): ?>
                     <div class="add-images-section">
-                        <h3><i class="fas fa-plus-circle"></i> Add More Images (Max 5 total)</h3>
+                        <h3><i class="fas fa-plus-circle"></i> <?php echo $addMoreImages; ?></h3>
                         <div class="form-group">
-                            <label for="car_images">Select Images (JPG, PNG, GIF, WebP, AVIF)</label>
+                            <label for="car_images"><?php echo $selectImages; ?></label>
                             <input type="file" id="car_images" name="car_images[]" accept="image/*" multiple>
-                            <small>You can select up to <?php echo 5 - count($carImages); ?> more images. Recommended: 800x600px</small>
+                            <small><?php echo (5 - count($carImages)); ?> <?php echo $maxImagesInfo; ?></small>
                             <div id="image-preview-container" class="image-preview-container"></div>
                         </div>
                     </div>
                 <?php else: ?>
                     <div class="message info">
-                        <i class="fas fa-info-circle"></i> Maximum 5 images reached. Delete some images to add more.
+                        <i class="fas fa-info-circle"></i> <?php echo $maxImagesReached; ?>
                     </div>
                 <?php endif; ?>
                 
                 <!-- Single Submit Button at the End -->
                 <div class="form-actions">
-                    <a href="admin-dashboard.php" class="btn-secondary">Cancel</a>
+                    <a href="admin-dashboard.php" class="btn-secondary"><?php echo $cancelText; ?></a>
                     <button type="submit" class="btn-primary">
-                        <i class="fas fa-save"></i> Save All Changes
+                        <i class="fas fa-save"></i> <?php echo $saveAllChanges; ?>
                     </button>
                 </div>
             </form>
@@ -905,44 +1559,79 @@ while ($city = $citiesQuery->fetch_assoc()) {
         <div class="footer-content">
             <div class="footer-column">
                 <h3>Motiv, Car Rental</h3>
-                <p>Your trusted partner for car rental services in Birmingham and beyond.</p>
+                <p><?php echo $motivTagline; ?></p>
             </div>
             <div class="footer-column">
-                <h3>Quick Links</h3>
+                <h3><?php echo $quickLinks; ?></h3>
                 <ul>
-                    <li><a href="landing.php">Home</a></li>
-                    <li><a href="cars.php">Our Fleet</a></li>
-                    <li><a href="contact.php">Contact</a></li>
+                    <li><a href="landing.php"><?php echo $homeText; ?></a></li>
+                    <li><a href="about.php"><?php echo $aboutUs; ?></a></li>
+                    <li><a href="cars.php"><?php echo $cars; ?></a></li>
+                    <li><a href="contact.php"><?php echo $contact; ?></a></li>
                 </ul>
             </div>
             <div class="footer-column">
-                <h3>Contact Us</h3>
+                <h3><?php echo $contactUs; ?></h3>
                 <ul>
-                    <li>New Street Station, Birmingham</li>
-                    <li>0712345678</li>
-                    <li>info@motivcarrental.com</li>
+                    <li><i class="fas fa-map-marker-alt"></i> <?php echo $address; ?></li>
+                    <li><i class="fas fa-phone"></i> <?php echo $phone; ?></li>
+                    <li><i class="fas fa-envelope"></i> <?php echo $email; ?></li>
                 </ul>
             </div>
         </div>
         <div class="copyright">
-            <p>&copy; 2025 Motiv Car Rental. All rights reserved.</p>
+            <p>&copy; 2025 Motiv Car Rental. <?php echo $copyright; ?></p>
         </div>
     </div>
 </footer>
 
 <script>
+    let currentFontSize = <?php echo $fontSize; ?>;
+    let currentTheme = '<?php echo $darkMode; ?>';
+    let currentLanguage = '<?php echo $language; ?>';
+
+    function updateFontSizeDisplay() {
+        const display = document.getElementById('font-size-display');
+        if (display) {
+            display.textContent = currentFontSize + '%';
+        }
+        document.documentElement.style.fontSize = currentFontSize + '%';
+        document.cookie = "fontSize=" + currentFontSize + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+    }
+
+    function setTheme(theme) {
+        currentTheme = theme;
+        document.body.setAttribute('data-theme', theme);
+        document.cookie = "darkMode=" + theme + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
+
+    function setLanguage(lang) {
+        currentLanguage = lang;
+        document.cookie = "language=" + lang + "; path=/; max-age=" + (60 * 60 * 24 * 365);
+        location.reload();
+    }
+
     // Image preview for multiple files
     const imageInput = document.getElementById('car_images');
     const previewContainer = document.getElementById('image-preview-container');
-    
+    const maxNewImages = <?php echo 5 - count($carImages); ?>;
+    const currentImageCount = <?php echo count($carImages); ?>;
+
+    <?php
+    $maxNew = 5 - count($carImages);
+    $currentCount = count($carImages);
+    $alertMessage = sprintf($youCanOnlyAdd, $maxNew, $currentCount);
+    ?>
+    const youCanOnlyAddMsg = '<?php echo addslashes($alertMessage); ?>';
+
     if (imageInput) {
         imageInput.addEventListener('change', function(e) {
             previewContainer.innerHTML = '';
             const files = Array.from(e.target.files);
-            const maxNewImages = <?php echo 5 - count($carImages); ?>;
             
             if (files.length > maxNewImages) {
-                alert(`You can only add up to ${maxNewImages} more images. You currently have ${<?php echo count($carImages); ?>} images.`);
+                alert(youCanOnlyAddMsg);
                 imageInput.value = '';
                 return;
             }
@@ -1066,13 +1755,65 @@ while ($city = $citiesQuery->fetch_assoc()) {
     
     // Save order button confirmation
     const saveOrderBtn = document.getElementById('saveOrderBtn');
+    const saveOrderConfirmMsg = '<?php echo addslashes($saveOrderConfirm); ?>';
     if (saveOrderBtn) {
         saveOrderBtn.addEventListener('click', function(e) {
-            if (!confirm('Save the new image order?')) {
+            if (!confirm(saveOrderConfirmMsg)) {
                 e.preventDefault();
             }
         });
     }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        updateFontSizeDisplay();
+        
+        const themeOptions = document.querySelectorAll('.theme-option');
+        themeOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const theme = this.getAttribute('data-theme');
+                setTheme(theme);
+            });
+        });
+
+        const decreaseBtn = document.getElementById('font-decrease');
+        const increaseBtn = document.getElementById('font-increase');
+        const resetBtn = document.getElementById('font-reset');
+
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', function() {
+                if (currentFontSize > 70) {
+                    currentFontSize -= 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', function() {
+                if (currentFontSize < 150) {
+                    currentFontSize += 10;
+                    updateFontSizeDisplay();
+                }
+            });
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function() {
+                currentFontSize = 100;
+                updateFontSizeDisplay();
+            });
+        }
+
+        const languageOptions = document.querySelectorAll('.language-option');
+        languageOptions.forEach(option => {
+            option.addEventListener('click', function(e) {
+                e.preventDefault();
+                const lang = this.getAttribute('data-lang');
+                setLanguage(lang);
+            });
+        });
+    });
 </script>
 </body>
 </html>
